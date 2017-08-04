@@ -1,0 +1,253 @@
+<html>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+		<script type="text/javascript" src="/js/bower_components/pathfinding/pathfinding-browser.min.js"></script>
+		<style>		
+			html, body {
+				margin: 0;
+				padding: 0;
+				width: 100vw;
+				height: 100vh;
+				background-color: black;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div class="game"></div>
+		
+		<script>
+			var PIXEL_RATIO = (function () {
+			    var ctx = document.createElement('canvas').getContext('2d'),
+			        dpr = window.devicePixelRatio || 1,
+			        bsr = ctx.webkitBackingStorePixelRatio ||
+			              ctx.mozBackingStorePixelRatio ||
+			              ctx.msBackingStorePixelRatio ||
+			              ctx.oBackingStorePixelRatio ||
+			              ctx.backingStorePixelRatio || 1
+			
+			    return dpr / bsr
+			})()
+			
+			var w = window.innerWidth > window.innerHeight ? window.innerWidth : window.innerHeight
+			var h = window.innerHeight < window.innerWidth ? window.innerHeight : window.innerWidth
+			
+			var matrix = [
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+				[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+			]
+			
+			var elements = [
+				{
+					type: 'paper',
+					ctx: createHiDPICanvas(w, h, 2),
+					start: [0, 12],
+					end: [19, 0],
+					shapes: {
+						fillStyle: 'red',
+						strokeStyle: 'rgba(0, 0, 0, 0)'
+					}
+				},
+				{
+					type: 'paper',
+					ctx: createHiDPICanvas(w, h, 2),
+					start: [0, 11],
+					end: [19, 0],
+					shapes: {
+						fillStyle: 'red',
+						strokeStyle: 'rgba(0, 0, 0, 0)'
+					}
+				},
+				{
+					type: 'rock',
+					ctx: createHiDPICanvas(w, h, 2),
+					start: [19, 0],
+					end: [0, 12],
+					shapes: {
+						fillStyle: 'red',
+						strokeStyle: 'rgba(0, 0, 0, 0)'
+					}
+				},
+				{
+					type: 'rock',
+					ctx: createHiDPICanvas(w, h, 2),
+					start: [19, 1],
+					end: [0, 12],
+					shapes: {
+						fillStyle: 'red',
+						strokeStyle: 'rgba(0, 0, 0, 0)'
+					}
+				}
+			]
+			
+			var shapes = {
+				border: {
+					fillStyle: 'white',
+					strokeStyle: 'rgba(0, 0, 0, 0)'
+				},
+				path: {
+					fillStyle: 'blue',
+					strokeStyle: 'rgba(0, 0, 0, 0)'
+				}
+			}
+			
+			var grid = new PF.Grid(matrix)
+			
+			for (var i = 0; i < horizontal; i++) {
+				for (var j = 0; j < vertical; j++) {
+					if (matrix[j][i] == 0) grid.setWalkableAt(j, i, false)
+				}
+			}
+			
+			var finder = new PF.AStarFinder({
+			    allowDiagonal: true
+			})
+			
+			var ctx1 = createHiDPICanvas(w, h, 1)
+			
+			var horizontal = matrix[0].length
+			var vertical = matrix.length
+			for (var i = 0; i < horizontal; i++) { 
+				line(ctx1, w / horizontal * i, 0, w / horizontal * i, h)
+			}
+			
+			for (var i = 0; i < vertical; i++) {
+				line(ctx1, 0, h / vertical * i, w, h / vertical * i)
+			}
+			
+			//build scene
+			for (var i = 0; i < horizontal; i++) {
+				for (var j = 0; j < vertical; j++) {
+					if (matrix[j][i] == 1) rect(ctx1, shapes.border, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
+					else if (matrix[j][i] > 1) {
+						rect(ctx1, shapes.element, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
+					}
+				}
+			}
+			
+			for (var p = 0; p < elements.length; p++) {
+				var element = elements[p]
+				var path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], grid.clone())
+				elements[p].path = path
+				
+				/*
+				for (var n = 0; n < path.length; n++) {
+					var i = path[n][0]
+					var j = path[n][1]
+					
+					rect(ctx1, shapes.path, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
+				}
+				*/
+			}
+			
+			var walk = false
+			setInterval(function() {
+				walk = true
+			}, 50)
+			
+			function animate() {
+				requestAnimationFrame(animate)
+				
+				if (walk) {
+					walk = false
+					
+					for (var p = 0; p < elements.length; p++) {
+						var element = elements[p]
+
+						if (element.path.length) {
+							element.ctx.clearRect(0, 0, w, h)
+							
+							var alive = true
+							for (var r = 0; r < elements.length; r++) {
+								if (r == p) continue //don't update the same object
+								
+								if (
+									element.path.length &&
+									elements[r].path.length &&
+									elements[r].path[0][0] == element.path[0][0] &&
+									elements[r].path[0][1] == element.path[0][1]
+									
+								) {
+									if (!fight(element.type, elements[r].type)) {
+										elements[p].ctx.clearRect(0, 0, w, h)
+										elements[p].dead = true
+										break
+									}
+									if (!fight(elements[r].type, element.type)) {
+										elements[r].ctx.clearRect(0, 0, w, h)
+										elements[r].dead = true
+										break
+									}
+								}
+							}
+
+							if (elements[p] && !elements[p].dead) {
+								rect(element.ctx, element.shapes, element.path[0][0] * w / horizontal, element.path[0][1] * h / vertical, w / horizontal, h / vertical)
+								elements[p].path.shift()	
+							}
+						}
+					}
+				}
+			}
+			requestAnimationFrame(animate)
+			
+			function fight(a, b) {
+				switch(a) {
+				    case 'rock':
+						if (b == 'paper') return false
+				        break
+				    case 'paper':
+						if (b == 'scissors') return false
+						break
+				    case 'scissors':
+						if (b == 'rock') return false
+	
+				}
+				return true
+			}
+			
+			function line(ctx, x1, y1, x2, y2) {
+				ctx.beginPath()
+				ctx.moveTo(x1, y1)
+				ctx.lineTo(x2, y2)
+				ctx.stroke()
+			}
+			
+			function rect(ctx, shape, x1, y1, x2, y2) {
+				ctx.beginPath()
+				ctx.rect(x1, y1, x2, y2)
+				ctx.fillStyle = shape.fillStyle
+				ctx.fill()
+				ctx.lineWidth = 7
+				ctx.strokeStyle = shape.strokeStyle
+				ctx.stroke()	
+			}
+			
+			function createHiDPICanvas (w, h, z) {
+			    ratio = PIXEL_RATIO
+			    var can = document.createElement('canvas')
+			    can.width = w * ratio
+			    can.height = h * ratio
+			    can.style.width = w + 'px'
+			    can.style.height = h + 'px'
+			    can.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
+				can.style.position = 'absolute'
+				can.style.zIndex = z
+				document.getElementsByClassName('game')[0].appendChild(can)
+				return can.getContext('2d')
+			}
+		</script>
+	</body>
+</html>
