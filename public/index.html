@@ -236,6 +236,8 @@
 			function animate() {
 				requestAnimationFrame(animate)
 				
+				ctx2.clearRect(0, 0, w, h)
+				
 				if (walk) {
 					walk = false
 					
@@ -248,39 +250,36 @@
 								if (r == p) continue //don't update the same object
 								
 								if (
-									element.path.length &&
-									elements[r].path.length &&
-									elements[r].path[0][0] == element.path[0][0] &&
-									elements[r].path[0][1] == element.path[0][1]
+									element.path[1] &&
+									elements[r].path &&
+									elements[r].path[1] &&
+									elements[r].path[1][0] &&
+									elements[r].path[1][0] == element.path[1][0] &&
+									elements[r].path[1][1] == element.path[1][1]
 									
 								) {
 									if (!fight(element.type, elements[r].type)) {
-										console.log('removed 1')
 										elements[p].path = []
 										continue
 									}
 									if (!fight(elements[r].type, element.type)) {
-										console.log('removed 2')
 										elements[r].path = []
 										continue
 									}
 								}
 							}
 
-							if (!elements[p].removed) elements[p].path.shift()
+							elements[p].path.shift()
 						}
 					}
 				}
-				
-				ctx2.clearRect(0, 0, w, h)
 				
 				for (var p = 0; p < elements.length; p++) {
 					var element = elements[p]
 					
 					if (
 						element.path[1] &&
-						element.path[1].length &&
-						!elements[p].removed
+						element.path[1].length
 					) {
 						var x1 = element.path[0][0] * w / horizontal
 						var y1 = element.path[0][1] * h / vertical
