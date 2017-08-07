@@ -2,7 +2,15 @@
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 		<script type="text/javascript" src="/js/bower_components/pathfinding/pathfinding-browser.min.js"></script>
-		<style>		
+		<style>
+			.unselectable {
+				user-select: none;
+				-moz-user-select: none;
+				-khtml-user-select: none;
+				-webkit-user-select: none;
+				-o-user-select: none;
+			}
+			
 			html, body {
 				margin: 0;
 				padding: 0;
@@ -13,13 +21,22 @@
 			}
 			
 			.controller {
+				display: none;
 				position: absolute;
 				top: 0;
-				right: 1vw;
 				width: calc(100vw / 7 - 2vw);
 				color: black;
 				top: 50%;
 				transform: translateY(-50%);
+				z-index: 2;
+			}
+			
+			.controller.left {
+				left: 1vw;
+			}
+		
+			.controller.right {
+				right: 1vw;
 			}
 			
 			.elements {
@@ -29,7 +46,6 @@
 				flex-direction: column;
 				align-items: center;
 				justify-content: center;
-				//padding: 16vh 0;
 			}
 			
 			.element {
@@ -40,7 +56,6 @@
 				height: calc(100vh / 6);
 				margin: 0.5vh 2vw;
 				box-sizing: border-box;
-				user-select: none;
 				cursor: pointer;
 				color: white;
 				font-size: 1em;
@@ -59,30 +74,56 @@
 				background-color: blue;
 			}
 			
+			canvas {
+				margin:0 auto;
+				left: 0;
+				right: 0;
+			}
+			
 			canvas:nth-child(1) {
-				border-right: 1px solid black;	
+				border-right: 1px solid black;
 			}
 		</style
 	</head>
 
 	<body>
 		<div class="game"></div>
-		<div class="controller">
+		<div class="controller left">
 			<div class="elements">
-				<div class="element rock">rock</div>
-				<div class="element paper">paper</div>
-				<div class="element scissors">scissors</div>
+				<div class="element rock unselectable">rock</div>
+				<div class="element paper unselectable">paper</div>
+				<div class="element scissors unselectable">scissors</div>
+			</div>
+		</div>
+		<div class="controller right">
+			<div class="elements">
+				<div class="element rock unselectable">rock</div>
+				<div class="element paper unselectable">paper</div>
+				<div class="element scissors unselectable">scissors</div>
 			</div>
 		</div>
 		
 		<script>
-			document.getElementsByClassName('rock')[0].addEventListener('click', function() { createElement('rock') })
-			document.getElementsByClassName('paper')[0].addEventListener('click', function() { createElement('paper') })
-			document.getElementsByClassName('scissors')[0].addEventListener('click', function() { createElement('scissors') })
+			/*
+			document.getElementsByClassName('rock')[0].addEventListener('mousedown', function() { createElement1('rock') })
+			document.getElementsByClassName('paper')[0].addEventListener('mousedown', function() { createElement1('paper') })
+			document.getElementsByClassName('scissors')[0].addEventListener('mousedown', function() { createElement1('scissors') })
 			
-			document.getElementsByClassName('rock')[0].addEventListener('touchstart', function() { createElement('rock') })	
-			document.getElementsByClassName('paper')[0].addEventListener('touchstart', function() { createElement('paper') })
-			document.getElementsByClassName('scissors')[0].addEventListener('click', function() { createElement('scissors') })
+			document.getElementsByClassName('rock')[1].addEventListener('mousedown', function() { createElement2('rock') })	
+			document.getElementsByClassName('paper')[1].addEventListener('mousedown', function() { createElement2('paper') })
+			document.getElementsByClassName('scissors')[1].addEventListener('mousedown', function() { createElement2('scissors') })
+			
+			
+			document.getElementsByClassName('rock')[0].addEventListener('touchstart', function() { createElement1('rock') })
+			document.getElementsByClassName('paper')[0].addEventListener('touchstart', function() { createElement1('paper') })
+			document.getElementsByClassName('scissors')[0].addEventListener('touchstart', function() { createElement1('scissors') })
+			
+			document.getElementsByClassName('rock')[1].addEventListener('touchstart', function() { createElement2('rock') })	
+			document.getElementsByClassName('paper')[1].addEventListener('touchstart', function() { createElement2('paper') })
+			document.getElementsByClassName('scissors')[1].addEventListener('touchstart', function() { createElement2('scissors') })
+			*/
+			
+			document.addEventListener('touchstart', function(event) { createElement(event.touches[0]) })
 			
 			var PIXEL_RATIO = (function () {
 			    var ctx = document.createElement('canvas').getContext('2d'),
@@ -96,27 +137,25 @@
 			    return dpr / bsr
 			})()
 			
-			var iw = window.innerWidth - (window.innerWidth / 7)
+			var iw = window.innerWidth
 			var ih = window.innerHeight
 			var w = iw > ih ? iw : ih
 			var h = ih < iw ? ih : iw
 			
 			var matrix = [
-				[0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-				[0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+				[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 			]
 			
+			var buildings = []
 			var elements = []
 			
 			var shapes = {
@@ -127,6 +166,9 @@
 				path: {
 					fillStyle: 'blue',
 					strokeStyle: 'rgba(0, 0, 0, 0)'
+				},
+				active: {
+					fillStyle: 'rgba(0, 0, 0, 0.25)'
 				},
 				rock: {
 					fillStyle: 'red',
@@ -146,6 +188,7 @@
 			var walk = true
 			var time = (new Date).getTime()
 			var added = false
+			
 			setInterval(function() {
 				walk = true
 				time = (new Date).getTime()
@@ -164,79 +207,89 @@
 			    allowDiagonal: true
 			})
 			
-			var ctx1 = createHiDPICanvas(w, h, 1)
-			var ctx2 = createHiDPICanvas(w, h, 2)
+			var canvas = {
+				background: createHiDPICanvas(w, h, 1),
+				buildings: createHiDPICanvas(w, h, 2),
+				elements: createHiDPICanvas(w, h, 3),
+				menu: createHiDPICanvas(w, h, 4)
+			}
 			
 			var horizontal = matrix[0].length
 			var vertical = matrix.length
 			for (var i = 0; i < horizontal; i++) { 
-				line(ctx1, w / horizontal * i, 0, w / horizontal * i, h)
+				line(canvas.background, w / horizontal * i, 0, w / horizontal * i, h)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(ctx1, 0, h / vertical * i, w, h / vertical * i)
+				line(canvas.background, 0, h / vertical * i, w, h / vertical * i)
 			}
 			
 			//build scene
 			for (var i = 0; i < horizontal; i++) {
 				for (var j = 0; j < vertical; j++) {
-					if (matrix[j][i] == 1) rect(ctx1, shapes.border, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
+					if (matrix[j][i] == 1) rect(canvas.background, shapes.border, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
 					else if (matrix[j][i] > 1) {
-						rect(ctx1, shapes.element, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
+						rect(canvas.background, shapes.element, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
 					}
 				}
 			}
 			
-			function createElement(type) {
-				if (added) return // allow just one element per step
+			var creatingElement = false
+			function createElement(event) {
+				canvas.menu.clearRect(0, 0, w, h)
 				
-				var start = [19, 0]
-				var end = [0, 12]
-				var element = {
-					type: type,
-					start: start,
-					end: end,
-					shapes: shapes[type],
-					path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+				var x = event.clientX
+				var y = event.clientY
+				var xBlock = Math.floor(x / (w / horizontal))
+				var yBlock = Math.floor(y / (h / vertical))
+				
+				if (!creatingElement) {
+					creatingElement = [xBlock, yBlock]
+					
+					rect(canvas.menu, shapes.rock, (xBlock - 2) * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
+					rect(canvas.menu, shapes.paper, (xBlock - 1) * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
+					rect(canvas.menu, shapes.scissors, xBlock * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
 				}
-				
-				elements.push(element)
-				
-				var types = ['rock', 'paper', 'scissors']
-				type = types[Math.floor(Math.random() * types.length)]
-				start = [0, 12]
-				end = [19, 0]
-				element = {
-					type: type,
-					start: start,
-					end: end,
-					shapes: shapes[type],
-					path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+				else if (
+					creatingElement[0] - 2 == xBlock ||
+					creatingElement[0] - 1 == xBlock ||
+					creatingElement[0] == xBlock &&
+					creatingElement[1] == yBlock
+				) {	
+					var types = ['rock', 'paper', 'scissors']
+					var type = xBlock - creatingElement[0] + types.length - 1
+					var start = [creatingElement[0], creatingElement[1]]
+					var end = [0, start[1]]
+					
+					rect(canvas.buildings, shapes[types[type]], start[0] *  w / horizontal, start[1] * h / vertical, w / horizontal, h / vertical)
+					
+					var element = {
+						type: types[type],
+						start: start,
+						end: end,
+						shapes: shapes[types[type]],
+						path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+					}
+					
+					elements.push(element)
+					
+					creatingElement = false
 				}
-				
-				elements.push(element)
-				added = true
+				else {
+					creatingElement = false
+				}
 			}
 			
 			for (var p = 0; p < elements.length; p++) {
 				var element = elements[p]
 				var path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], grid.clone())
 				elements[p].path = path
-				
-				/*
-				for (var n = 0; n < path.length; n++) {
-					var i = path[n][0]
-					var j = path[n][1]
-					
-					rect(ctx1, shapes.path, w / horizontal * i, h / vertical * j, w / horizontal, h / vertical)
-				}
-				*/
 			}
 			
 			function animate() {
 				requestAnimationFrame(animate)
 				
-				ctx2.clearRect(0, 0, w, h)
+				canvas.elements.clearRect(0, 0, w, h)
 				
 				if (walk) {
 					walk = false
@@ -248,15 +301,16 @@
 							
 							for (var r = 0; r < elements.length; r++) {
 								if (r == p) continue //don't update the same object
-								
+
 								if (
+									element.path &&
 									element.path[1] &&
+									element.path[1].length &&
 									elements[r].path &&
 									elements[r].path[1] &&
-									elements[r].path[1][0] &&
+									elements[r].path[1].length &&
 									elements[r].path[1][0] == element.path[1][0] &&
 									elements[r].path[1][1] == element.path[1][1]
-									
 								) {
 									if (!fight(element.type, elements[r].type)) {
 										elements[p].path = []
@@ -290,7 +344,7 @@
 						var dx = x1 - (x1 - x2) * dt / step
 						var dy = y1 - (y1 - y2) * dt / step
 						
-						rect(ctx2, element.shapes, dx, dy, w / horizontal, h / vertical)	
+						rect(canvas.elements, element.shapes, dx, dy, w / horizontal, h / vertical)	
 					}
 						
 				}
@@ -323,10 +377,7 @@
 				ctx.beginPath()
 				ctx.rect(x1, y1, x2, y2)
 				ctx.fillStyle = shape.fillStyle
-				ctx.fill()
-				ctx.lineWidth = 7
-				ctx.strokeStyle = shape.strokeStyle
-				ctx.stroke()	
+				ctx.fill()	
 			}
 			
 			function createHiDPICanvas (w, h, z) {
