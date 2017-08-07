@@ -240,15 +240,17 @@
 				
 				var x = event.clientX
 				var y = event.clientY
-				var xBlock = Math.floor(x / (w / horizontal))
-				var yBlock = Math.floor(y / (h / vertical))
+				var blockWidth = w / horizontal
+				var blockHeight = h / vertical
+				var xBlock = Math.floor(x / blockWidth)
+				var yBlock = Math.floor(y / blockHeight)
 				
 				if (!creatingElement) {
 					creatingElement = [xBlock, yBlock]
 					
-					rect(canvas.menu, shapes.rock, (xBlock - 2) * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
-					rect(canvas.menu, shapes.paper, (xBlock - 1) * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
-					rect(canvas.menu, shapes.scissors, xBlock * (w / horizontal), yBlock * (h / vertical), w / horizontal, h / vertical)
+					rect(canvas.menu, shapes.rock, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+					rect(canvas.menu, shapes.paper, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+					rect(canvas.menu, shapes.scissors, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 				}
 				else if (
 					creatingElement[0] - 2 == xBlock ||
@@ -261,7 +263,7 @@
 					var start = [creatingElement[0], creatingElement[1]]
 					var end = [0, start[1]]
 					
-					rect(canvas.buildings, shapes[types[type]], start[0] *  w / horizontal, start[1] * h / vertical, w / horizontal, h / vertical)
+					rect(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 					
 					var element = {
 						type: types[type],
