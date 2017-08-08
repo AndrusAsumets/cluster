@@ -168,7 +168,7 @@
 					strokeStyle: 'rgba(0, 0, 0, 0)'
 				},
 				active: {
-					fillStyle: 'rgba(0, 0, 0, 0.25)'
+					fillStyle: 'rgba(0, 0, 0, 0.15)'
 				},
 				rock: {
 					fillStyle: 'red',
@@ -188,6 +188,7 @@
 			var walk = true
 			var time = (new Date).getTime()
 			var added = false
+			var recharge = 10000
 			
 			setInterval(function() {
 				walk = true
@@ -245,40 +246,106 @@
 				var xBlock = Math.floor(x / blockWidth)
 				var yBlock = Math.floor(y / blockHeight)
 				
-				if (!creatingElement) {
-					creatingElement = [xBlock, yBlock]
-					
-					rect(canvas.menu, shapes.rock, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-					rect(canvas.menu, shapes.paper, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-					rect(canvas.menu, shapes.scissors, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-				}
-				else if (
-					creatingElement[0] - 2 == xBlock ||
-					creatingElement[0] - 1 == xBlock ||
-					creatingElement[0] == xBlock &&
-					creatingElement[1] == yBlock
-				) {	
-					var types = ['rock', 'paper', 'scissors']
-					var type = xBlock - creatingElement[0] + types.length - 1
-					var start = [creatingElement[0], creatingElement[1]]
-					var end = [0, start[1]]
-					
-					rect(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
-					
-					var element = {
-						type: types[type],
-						start: start,
-						end: end,
-						shapes: shapes[types[type]],
-						path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+				if (xBlock < matrix[0].length / 2) {
+					if (!creatingElement) {
+						creatingElement = [xBlock, yBlock]
+						
+						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						rect(canvas.menu, shapes.active, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						rect(canvas.menu, shapes.active, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						
+						circle(canvas.menu, shapes.rock, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.paper, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.scissors, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 					}
-					
-					elements.push(element)
-					
-					creatingElement = false
+					else if (
+						creatingElement[0] == xBlock ||
+						creatingElement[0] + 1 == xBlock ||
+						creatingElement[0] + 2 == xBlock &&
+						creatingElement[1] == yBlock
+					) {	
+						var types = ['rock', 'paper', 'scissors']
+						var type = xBlock - creatingElement[0]
+						var id = elements.length
+						var start = [creatingElement[0], creatingElement[1]]
+						var end = [matrix[0].length - 1, start[1]]
+						
+						// create a building
+						grid.setWalkableAt(start[0], start[1], false)
+						circle(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+			
+						var element = {
+							id: id,
+							type: types[type],
+							start: start,
+							end: end,
+							shapes: shapes[types[type]],
+							path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
+							recharge: (function () {
+								setInterval(function() {
+									var p = getElementIndex(id)
+									elements[p].path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+								}, recharge)
+							})()
+						}
+						
+						elements.push(element)
+						creatingElement = false
+					}
+					else {
+						creatingElement = false
+					}
 				}
+				
 				else {
-					creatingElement = false
+					if (!creatingElement) {
+						creatingElement = [xBlock, yBlock]
+						
+						rect(canvas.menu, shapes.active, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						rect(canvas.menu, shapes.active, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)						
+						
+						circle(canvas.menu, shapes.rock, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.paper, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.scissors, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+					}
+					else if (
+						creatingElement[0] - 2 == xBlock ||
+						creatingElement[0] - 1 == xBlock ||
+						creatingElement[0] == xBlock &&
+						creatingElement[1] == yBlock
+					) {	
+						var types = ['rock', 'paper', 'scissors']
+						var type = xBlock - creatingElement[0] + types.length - 1
+						var id = elements.length
+						var start = [creatingElement[0], creatingElement[1]]
+						var end = [0, start[1]]
+						
+						// create a building
+						grid.setWalkableAt(start[0], start[1], false)
+						circle(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						
+						var element = {
+							id: id,
+							type: types[type],
+							start: start,
+							end: end,
+							shapes: shapes[types[type]],
+							path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
+							recharge: (function () {
+								setInterval(function() {
+									var p = getElementIndex(id)
+									elements[p].path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+								}, recharge)
+							})()
+						}
+						
+						elements.push(element)
+						creatingElement = false
+					}
+					else {
+						creatingElement = false
+					}
 				}
 			}
 			
@@ -324,8 +391,14 @@
 									}
 								}
 							}
-
-							elements[p].path.shift()
+							
+							if (
+								element.path &&
+								element.path[1] &&
+								element.path[1].length
+							) {
+								elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+							}
 						}
 					}
 				}
@@ -346,7 +419,7 @@
 						var dx = x1 - (x1 - x2) * dt / step
 						var dy = y1 - (y1 - y2) * dt / step
 						
-						rect(canvas.elements, element.shapes, dx, dy, w / horizontal, h / vertical)	
+						circle(canvas.elements, element.shapes, dx, dy, w / horizontal, h / vertical)	
 					}
 						
 				}
@@ -382,6 +455,13 @@
 				ctx.fill()	
 			}
 			
+			function circle(ctx, shape, x1, y1, x2, y2) {
+				ctx.beginPath()
+				ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 + y2), 0, 2 * Math.PI, false)
+				ctx.fillStyle = shape.fillStyle
+				ctx.fill()	
+			}
+			
 			function createHiDPICanvas (w, h, z) {
 			    ratio = PIXEL_RATIO
 			    var can = document.createElement('canvas')
@@ -394,6 +474,12 @@
 				can.style.zIndex = z
 				document.getElementsByClassName('game')[0].appendChild(can)
 				return can.getContext('2d')
+			}
+			
+			function getElementIndex(id) {
+				for (var p = 0; p < elements.length; p++) {
+					if (elements[p].id == id) return p
+				}
 			}
 		</script>
 	</body>
