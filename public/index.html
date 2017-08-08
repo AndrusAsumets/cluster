@@ -148,7 +148,7 @@
 			}
 			
 			var overflow = 2
-			var xCount = 20 + overflow
+			var xCount = 20
 			var yCount = 10
 			var step = 500
 			var walk = true
@@ -185,7 +185,8 @@
 			*/
 			
 			var finder = new PF.AStarFinder({
-			    allowDiagonal: true
+			    allowDiagonal: true,
+    			dontCrossCorners: true
 			})
 			
 			var horizontal = matrix[0].length - overflow
@@ -197,8 +198,7 @@
 			var blockWidth = w / horizontal
 			var blockHeight = h / vertical
 			
-			// add  overflow
-			w = w + blockWidth * 2
+			//w = w + blockWidth * 2
 			
 			var canvas = {
 				background: createHiDPICanvas(w, h, 1),
@@ -234,19 +234,18 @@
 				
 				var x = event.clientX
 				var y = event.clientY
-				// add a block width because of overflow
-				var xBlock = Math.floor((x) / blockWidth) + 1
+				var xBlock = Math.floor(x / blockWidth)
 				var yBlock = Math.floor(y / blockHeight)
 				
 				if (xBlock < horizontal / 2) {
 					if (!creatingElement) {
 						creatingElement = [xBlock, yBlock]
 						
-						rect(canvas.menu, shapes.active, (xBlock + 0) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						rect(canvas.menu, shapes.active, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						rect(canvas.menu, shapes.active, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						
-						circle(canvas.menu, shapes.rock, (xBlock + 0) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.rock, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						circle(canvas.menu, shapes.paper, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						circle(canvas.menu, shapes.scissors, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 					}
@@ -263,7 +262,7 @@
 						var end = [horizontal, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0] - 1, start[1], false)
+						grid.setWalkableAt(start[0], start[1], false)
 						circle(canvas.buildings, shapes[types[type]], start[0] * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 			
 						var element = {
@@ -295,11 +294,11 @@
 						
 						rect(canvas.menu, shapes.active, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						rect(canvas.menu, shapes.active, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						rect(canvas.menu, shapes.active, (xBlock + 0) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)						
+						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)						
 						
 						circle(canvas.menu, shapes.rock, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						circle(canvas.menu, shapes.paper, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						circle(canvas.menu, shapes.scissors, (xBlock + 0) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						circle(canvas.menu, shapes.scissors, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 					}
 					else if (
 						creatingElement[0] - 2 == xBlock ||
@@ -314,8 +313,7 @@
 						var end = [0, start[1]]
 						
 						// create a building
-						// subtract one because of overflow
-						grid.setWalkableAt(start[0] - 1, start[1], false)
+						grid.setWalkableAt(start[0], start[1], false)
 						circle(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 						
 						var element = {
@@ -324,12 +322,12 @@
 							start: start,
 							end: end,
 							shapes: shapes[types[type]],
-							// subtract two because of overflow
-							path: finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone()),
+							// subtract one because of overflow
+							path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
 							recharge: (function () {
 								setInterval(function() {
 									var p = getElementIndex(id)
-									elements[p].path = finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone())
+									elements[p].path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
 								}, recharge)
 							})()
 						}
@@ -361,28 +359,30 @@
 					walk = false
 					
 					for (var p = 0; p < elements.length; p++) {
-						if (elements[p].path.length) {
+						var element = elements[p]
+
+						if (element.path.length) {
 							
 							for (var r = 0; r < elements.length; r++) {
 								if (r == p) continue //don't update the same object
 
 								if (
-									elements[p].path &&
-									elements[p].path[1] &&
-									elements[p].path[1].length &&
+									element.path &&
+									element.path[1] &&
+									element.path[1].length &&
 									elements[r].path &&
 									elements[r].path[1] &&
 									elements[r].path[1].length &&
-									elements[r].path[1][0] == elements[p].path[1][0] &&
-									elements[r].path[1][1] == elements[p].path[1][1]
+									elements[r].path[1][0] == element.path[1][0] &&
+									elements[r].path[1][1] == element.path[1][1]
 								) {
-									if (fight(elements[r].type, elements[p].type)) {
-										elements[r].path = []
-										break
-									}
-									else {
+									if (!fight(element.type, elements[r].type)) {
 										elements[p].path = []
-										break
+										continue
+									}
+									if (!fight(elements[r].type, element.type)) {
+										elements[r].path = []
+										continue
 									}
 								}
 							}
@@ -390,13 +390,15 @@
 					}
 					
 					for (var p = 0; p < elements.length; p++) {
+						var element = elements[p]
+						
 						if (
-							elements[p].path &&
-							elements[p].path[1] &&
-							elements[p].path[1].length
+							element.path &&
+							element.path[1] &&
+							element.path[1].length
 						) {
 							elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
-						}	
+						}
 					}
 				}
 				
@@ -409,10 +411,9 @@
 						element.path[1] &&
 						element.path[1].length
 					) {
-						//add one block width because of overflow
-						var x1 = (element.path[0][0] * w) / horizontal
+						var x1 = element.path[0][0] * w / horizontal
 						var y1 = element.path[0][1] * h / vertical
-						var x2 = (element.path[1][0] * w) / horizontal
+						var x2 = element.path[1][0] * w / horizontal
 						var y2 = element.path[1][1] * h / vertical
 						
 						var dt = ((new Date).getTime() - time)
