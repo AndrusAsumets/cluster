@@ -238,8 +238,6 @@
 				var xBlock = Math.floor((x + blockWidth) / blockWidth)
 				var yBlock = Math.floor(y / blockHeight)
 				
-				console.log(w, xBlock)
-				
 				if (xBlock < horizontal / 2) {
 					if (!creatingElement) {
 						creatingElement = [xBlock, yBlock]
@@ -325,12 +323,12 @@
 							start: start,
 							end: end,
 							shapes: shapes[types[type]],
-							// subtract one because of overflow
-							path: finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone()),
+							// subtract two because of overflow
+							path: finder.findPath(start[0] - overflow, start[1], end[0], end[1], grid.clone()),
 							recharge: (function () {
 								setInterval(function() {
 									var p = getElementIndex(id)
-									elements[p].path = finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone())
+									elements[p].path = finder.findPath(start[0] - overflow, start[1], end[0], end[1], grid.clone())
 								}, recharge)
 							})()
 						}
@@ -410,6 +408,7 @@
 						element.path[1] &&
 						element.path[1].length
 					) {
+						//add one block width because of overflow
 						var x1 = (element.path[0][0] * w + blockWidth) / horizontal
 						var y1 = element.path[0][1] * h / vertical
 						var x2 = (element.path[1][0] * w + blockWidth) / horizontal
