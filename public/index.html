@@ -75,9 +75,8 @@
 			}
 			
 			canvas {
-				margin:0 auto;
-				left: 0;
-				right: 0;
+				left: 50%;
+				transform: translate(-50%, 0);
 			}
 			
 			canvas:nth-child(1) {
@@ -103,26 +102,7 @@
 			</div>
 		</div>
 		
-		<script>
-			/*
-			document.getElementsByClassName('rock')[0].addEventListener('mousedown', function() { createElement1('rock') })
-			document.getElementsByClassName('paper')[0].addEventListener('mousedown', function() { createElement1('paper') })
-			document.getElementsByClassName('scissors')[0].addEventListener('mousedown', function() { createElement1('scissors') })
-			
-			document.getElementsByClassName('rock')[1].addEventListener('mousedown', function() { createElement2('rock') })	
-			document.getElementsByClassName('paper')[1].addEventListener('mousedown', function() { createElement2('paper') })
-			document.getElementsByClassName('scissors')[1].addEventListener('mousedown', function() { createElement2('scissors') })
-			
-			
-			document.getElementsByClassName('rock')[0].addEventListener('touchstart', function() { createElement1('rock') })
-			document.getElementsByClassName('paper')[0].addEventListener('touchstart', function() { createElement1('paper') })
-			document.getElementsByClassName('scissors')[0].addEventListener('touchstart', function() { createElement1('scissors') })
-			
-			document.getElementsByClassName('rock')[1].addEventListener('touchstart', function() { createElement2('rock') })	
-			document.getElementsByClassName('paper')[1].addEventListener('touchstart', function() { createElement2('paper') })
-			document.getElementsByClassName('scissors')[1].addEventListener('touchstart', function() { createElement2('scissors') })
-			*/
-			
+		<script>			
 			document.addEventListener('touchstart', function(event) { createElement(event.touches[0]) })
 			
 			var PIXEL_RATIO = (function () {
@@ -136,11 +116,6 @@
 			
 			    return dpr / bsr
 			})()
-			
-			var iw = window.innerWidth
-			var ih = window.innerHeight
-			var w = iw > ih ? iw : ih
-			var h = ih < iw ? ih : iw
 			
 			var matrix = []
 			var buildings = []
@@ -172,7 +147,8 @@
 				}
 			}
 			
-			var xCount = 20
+			var overflow = 2
+			var xCount = 20 + overflow
 			var yCount = 10
 			var step = 500
 			var walk = true
@@ -212,6 +188,18 @@
 			    allowDiagonal: true
 			})
 			
+			var horizontal = matrix[0].length - overflow
+			var vertical = matrix.length
+			var iw = window.innerWidth
+			var ih = window.innerHeight
+			var w = iw > ih ? iw : ih
+			var h = ih < iw ? ih : iw
+			var blockWidth = w / horizontal
+			var blockHeight = h / vertical
+			
+			// add  overflow
+			w = w + blockWidth * 2
+			
 			var canvas = {
 				background: createHiDPICanvas(w, h, 1),
 				buildings: createHiDPICanvas(w, h, 2),
@@ -220,14 +208,12 @@
 			}
 				
 			// create a visual UI grid
-			var horizontal = matrix[0].length
-			var vertical = matrix.length
-			for (var i = 0; i < horizontal; i++) { 
-				line(canvas.background, w / horizontal * i, 0, w / horizontal * i, h)
+			for (var i = 0; i < horizontal + 2; i++) { 
+				line(canvas.background, blockWidth * i, 0, blockWidth * i, h)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(canvas.background, 0, h / vertical * i, w, h / vertical * i)
+				line(canvas.background, 0, blockHeight * i, w, blockHeight * i)
 			}
 			
 			/*
@@ -248,12 +234,13 @@
 				
 				var x = event.clientX
 				var y = event.clientY
-				var blockWidth = w / horizontal
-				var blockHeight = h / vertical
-				var xBlock = Math.floor(x / blockWidth)
+				// add a block width because of overflow
+				var xBlock = Math.floor((x + blockWidth) / blockWidth)
 				var yBlock = Math.floor(y / blockHeight)
 				
-				if (xBlock < matrix[0].length / 2) {
+				console.log(w, xBlock)
+				
+				if (xBlock < horizontal / 2) {
 					if (!creatingElement) {
 						creatingElement = [xBlock, yBlock]
 						
@@ -275,10 +262,10 @@
 						var type = xBlock - creatingElement[0]
 						var id = elements.length
 						var start = [creatingElement[0], creatingElement[1]]
-						var end = [matrix[0].length - 1, start[1]]
+						var end = [horizontal, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0], start[1], false)
+						grid.setWalkableAt(start[0] - 1, start[1], false)
 						circle(canvas.buildings, shapes[types[type]], start[0] * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 			
 						var element = {
@@ -329,7 +316,7 @@
 						var end = [0, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0], start[1], false)
+						grid.setWalkableAt(start[0] - 1, start[1], false)
 						circle(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 						
 						var element = {
@@ -338,11 +325,12 @@
 							start: start,
 							end: end,
 							shapes: shapes[types[type]],
-							path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
+							// subtract one because of overflow
+							path: finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone()),
 							recharge: (function () {
 								setInterval(function() {
 									var p = getElementIndex(id)
-									elements[p].path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+									elements[p].path = finder.findPath(start[0] - 1, start[1], end[0], end[1], grid.clone())
 								}, recharge)
 							})()
 						}
@@ -422,9 +410,9 @@
 						element.path[1] &&
 						element.path[1].length
 					) {
-						var x1 = element.path[0][0] * w / horizontal
+						var x1 = (element.path[0][0] * w + blockWidth) / horizontal
 						var y1 = element.path[0][1] * h / vertical
-						var x2 = element.path[1][0] * w / horizontal
+						var x2 = (element.path[1][0] * w + blockWidth) / horizontal
 						var y2 = element.path[1][1] * h / vertical
 						
 						var dt = ((new Date).getTime() - time)
