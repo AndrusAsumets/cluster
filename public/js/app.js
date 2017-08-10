@@ -171,10 +171,10 @@ function createElement(event) {
 			}
 		}
 		else if (
-			(creatingElement[0] == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] - 1 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] + 0 == xBlock && creatingElement[1] == yBlock) ||
 			(creatingElement[0] + 1 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 3 == xBlock && creatingElement[1] == yBlock)
+			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock)
 			
 		) {
 			var type = xBlock - creatingElement[0]
