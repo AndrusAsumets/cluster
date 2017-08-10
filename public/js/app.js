@@ -153,11 +153,11 @@ function createElement(event) {
 			}
 		}
 		else if (
-			creatingElement[0] == xBlock ||
-			creatingElement[0] + 1 == xBlock ||
-			creatingElement[0] + 2 == xBlock ||
-			creatingElement[0] + 3 == xBlock &&
-			creatingElement[1] == yBlock
+			(creatingElement[0] == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] + 1 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] + 3 == xBlock && creatingElement[1] == yBlock)
+			
 		) {
 			var type = xBlock - creatingElement[0]
 			var id = elements.length
@@ -215,11 +215,10 @@ function createElement(event) {
 			}
 		}
 		else if (
-			creatingElement[0] - 3 == xBlock ||
-			creatingElement[0] - 2 == xBlock ||
-			creatingElement[0] - 1 == xBlock ||
-			creatingElement[0] == xBlock &&
-			creatingElement[1] == yBlock
+			(creatingElement[0] - 3 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] - 2 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] - 1 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] == xBlock && creatingElement[1] == yBlock)
 		) {	
 			var type = xBlock - creatingElement[0] + types.length - 1
 			var id = elements.length
@@ -439,7 +438,7 @@ function rect(ctx, shape, x1, y1, x2, y2) {
 
 function circle(ctx, shape, x1, y1, x2, y2) {
 	ctx.beginPath()
-	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 + y2), 0, 2 * Math.PI, false)
+	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 4), 0, 2 * Math.PI, false)
 	ctx.fillStyle = shape.fillStyle
 	ctx.fill()	
 }
