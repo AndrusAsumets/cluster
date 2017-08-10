@@ -23,7 +23,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	border: {
-		strokeStyle: 'rgba(255, 255, 255, 0.25)'
+		strokeStyle: 'rgba(255, 255, 255, 0.1)'
 	},
 	active: {
 		fillStyle: 'rgba(0, 0, 0, 1)'
@@ -65,7 +65,7 @@ setInterval(function() {
 for (var i = 0; i < yCount; i++) {
 	matrix.push([])
 	
-	for (var j = 0; j < xCount; j++) {
+	for (var j = 0; j < xCount ; j++) {
 		matrix[i].push(0)
 	}
 }
@@ -87,7 +87,7 @@ var finder = new PF.AStarFinder({
 	dontCrossCorners: true
 })
 
-var horizontal = matrix[0].length - overflow
+var horizontal = matrix[0].length - 1
 var vertical = matrix.length + 1
 var iw = window.innerWidth
 var ih = window.innerHeight
@@ -96,7 +96,6 @@ var h = ih < iw ? ih : iw
 var blockWidth = w / horizontal
 var blockHeight = h / vertical
 
-w = w + blockWidth * overflow
 h = h - blockHeight
 
 var canvas = {
@@ -107,7 +106,7 @@ var canvas = {
 }
 	
 // create a visual UI grid
-for (var i = 0; i < horizontal + 1; i++) { 
+for (var i = 0; i < horizontal; i++) { 
 	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 }
 
@@ -119,6 +118,25 @@ for (var i = 0; i < horizontal + 4; i++) {
 	for (var j = 0; j < vertical; j++) {
 		//rect(canvas.background, shapes.background, blockWidth * i, blockHeight * j, blockWidth, blockHeight)
 	}
+}
+
+// separate left from right
+for (var i = 0; i < horizontal; i++) {
+	for (var j = 0; j < vertical; j++) {
+		var x1 = blockWidth * i
+		var y1 = blockHeight * j
+		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+	}
+}
+
+function diagonal(ctx, shape, x1, y1, x2, y2) {
+	ctx.beginPath()
+	ctx.moveTo(x1, y1)
+	ctx.lineTo(x2, y2)
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = shape.strokeStyle
+	ctx.stroke()
 }
 
 /*
@@ -139,7 +157,7 @@ function createElement(event) {
 	
 	var x = event.clientX
 	var y = event.clientY
-	var xBlock = Math.floor(x / blockWidth) + 1
+	var xBlock = Math.floor(x / blockWidth)
 	var yBlock = Math.floor(y / blockHeight) - 1
 	
 	if (xBlock < horizontal / 2) {
@@ -162,7 +180,7 @@ function createElement(event) {
 			var type = xBlock - creatingElement[0]
 			var id = elements.length
 			var start = [creatingElement[0], creatingElement[1]]
-			var end = [horizontal + 1, start[1]]
+			var end = [horizontal, start[1]]
 			
 			// create a building
 			var building = {
@@ -172,6 +190,8 @@ function createElement(event) {
 				start: start,
 				end: end
 			}
+			
+			if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone())) return
 			
 			/*
 			grid.setWalkableAt(start[0], start[1], false)
@@ -233,6 +253,10 @@ function createElement(event) {
 				start: start,
 				end: end
 			}
+			var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+			console.log(path)
+			
+			if (!path) return
 			
 			/*
 			grid.setWalkableAt(start[0], start[1], false)

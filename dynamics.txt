@@ -2,7 +2,7 @@
 * check for open path
 * counter
 * lives
-* side picking
+* differentiate both sides
 * grid x 4?
 
 
@@ -78,7 +78,40 @@ wind    |  1         |  1         |  4        |  4         |  4        |  4     
 |----|----|----|
 |  .. .... ..
 |   . .... .
-|      ..  
+|      ..   
 |----|----|----|
+
+
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+xxxx        xxxx        xxxx        xxxx
+
+
+
+
+xx    11    xx
+x1    11    1x
+
+11    00    11
+11    00    11
+
+x1    11    1x
+xx    11    xx
 
 
