@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+		<script type="text/javascript" src="/js/libs/socket.io.js"></script>
 		<script type="text/javascript" src="/js/bower_components/pathfinding/pathfinding-browser.min.js"></script>
 		<style>
 			.unselectable {
@@ -114,7 +115,9 @@
 			</div>
 		</div>
 		
-		<script>			
+		<script>
+			var socket = io.connect()
+		
 			document.addEventListener('touchstart', function(event) { createElement(event.touches[0]) })
 			
 			var PIXEL_RATIO = (function () {
@@ -133,7 +136,6 @@
 			var matrix = []
 			var buildings = []
 			var elements = []
-			
 			var shapes = {
 				background: {
 					fillStyle: 'rgba(0, 0, 0, 1)'
@@ -281,6 +283,13 @@
 						var end = [horizontal + 1, start[1]]
 						
 						// create a building
+						var building = {
+							id: id,
+							type: type,
+							start: start,
+							end: end
+						}
+						
 						grid.setWalkableAt(start[0], start[1], false)
 						circle(canvas.buildings, shapes[types[type]], (start[0]) * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 			
@@ -301,6 +310,8 @@
 						
 						elements.push(element)
 						creatingElement = false
+						
+						socket.emit('message', { action: 'building', data: building })
 					}
 					else {
 						creatingElement = false
@@ -330,10 +341,16 @@
 						var end = [0, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0], start[1], false)
-						circle(canvas.buildings, shapes[types[type]], (start[0]) *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						var building = {
+							id: id,
+							type: type,
+							start: start,
+							end: end
+						}
 						
-						/*
+						grid.setWalkableAt(start[0], start[1], false)
+						circle(canvas.buildings, shapes[types[type]], (building[0]) *  blockWidth, building[1] * blockHeight, blockWidth, blockHeight)
+							
 						var element = {
 							id: id,
 							type: types[type],
@@ -351,8 +368,10 @@
 						}
 						
 						elements.push(element)
-						*/
+
 						creatingElement = false
+						
+						socket.emit('message', { action: 'building', data: building })
 					}
 					else {
 						creatingElement = false
@@ -463,6 +482,39 @@
 				}
 			}
 			requestAnimationFrame(animate)
+			
+			
+			socket.on('message', function(message) {
+				var action = message.action
+				var data = message.data
+				switch(action) {
+					case 'connected':
+						console.log('connected to ws')
+						break
+					case 'building':
+						grid.setWalkableAt(data.start[0], data.start[1], false)
+						circle(canvas.buildings, shapes[types[data.type]], (data.start[0]) * blockWidth, data.start[1] * blockHeight, blockWidth, blockHeight)
+						
+						var element = {
+							id: data.id,
+							type: types[data.type],
+							start: data.start,
+							end: data.end,
+							shapes: shapes[types[data.type]],
+							// subtract one because of overflow
+							path: finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone()),
+							recharge: (function () {
+								setInterval(function() {
+									var p = getElementIndex(id)
+									elements[p].path = finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone())
+								}, recharge)
+							})()
+						}
+						
+						elements.push(element)
+						break
+				}
+			})
 			
 			function fight(a, b) {
 				switch(a) {

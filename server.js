@@ -15,14 +15,15 @@ app.use(serve('./public'), { hidden: true })
 
 io.attach(app)
 
-io.on('connection', (context, data) => {
+io.on('connection', context => {
 	console.log('new connection')
 	
-	io.broadcast('buffer', buffer)
+	context.socket.emit('message',  { action: 'connected' })
 })
 
 io.on('message', (context, data) => {
 	io.broadcast('message', data)
+	context.socket.emit('message',  data)
 })
 
 app.listen(PORT)
