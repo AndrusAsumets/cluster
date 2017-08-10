@@ -158,7 +158,7 @@
 			var walk = true
 			var time = (new Date).getTime()
 			var added = false
-			var recharge = 20000
+			var recharge = 60000
 			
 			setInterval(function() {
 				walk = true
@@ -267,7 +267,7 @@
 						var type = xBlock - creatingElement[0]
 						var id = elements.length
 						var start = [creatingElement[0], creatingElement[1]]
-						var end = [horizontal, start[1]]
+						var end = [horizontal + 1, start[1]]
 						
 						// create a building
 						grid.setWalkableAt(start[0], start[1], false)
@@ -319,7 +319,7 @@
 						var end = [0, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0] + 1, start[1], false)
+						grid.setWalkableAt(start[0], start[1], false)
 						circle(canvas.buildings, shapes[types[type]], (start[0]) *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 						
 						/*
