@@ -53,7 +53,7 @@ var step = 1000
 var walk = true
 var time = (new Date).getTime()
 var added = false
-var recharge = 60000
+var recharge = 30000
 
 setInterval(function() {
 	walk = true
@@ -346,7 +346,6 @@ function animate() {
 		}
 	}
 	
-	
 	// move the elements according to their positions in space and time
 	for (var p = 0; p < elements.length; p++) {
 		var element = elements[p]
@@ -371,14 +370,15 @@ function animate() {
 }
 requestAnimationFrame(animate)
 
-
 socket.on('message', function(message) {
 	var action = message.action
 	var data = message.data
+	
 	switch(action) {
 		case 'connected':
 			console.log('connected to ws')
 			break
+			
 		case 'building':
 			grid.setWalkableAt(data.start[0], data.start[1], false)
 			circle(canvas.buildings, shapes[types[data.type]], (data.start[0]) * blockWidth, data.start[1] * blockHeight, blockWidth, blockHeight)
@@ -393,7 +393,7 @@ socket.on('message', function(message) {
 					path: finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone()),
 					recharge: (function () {
 						setInterval(function() {
-							var p = getElementIndex(id)
+							var p = getElementIndex(data.id)
 							elements[p].path = finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone())
 						}, recharge)
 					})()

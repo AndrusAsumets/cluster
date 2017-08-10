@@ -1,0 +1,33 @@
+* fighting
+* check for open path
+* counter
+* lives
+* side picking
+* grid x 4?
+
+
+
+
+
+
+
+
+slowy
+
+ x
+ x
+ x
+ x x x x
+ 
+
+
+
+element |  strength  |  power    |  range    |  speed     |  armour   |  slow     |  height    |  cost     |
+--------|------------|-----------|-----------|------------|-----------|-----------|------------|-----------|
+earth   |  4         |  4        |  1        |  1         |  4        |  1        |  1         |  1        |
+water   |  3         |  3        |  2        |  2         |  3        |  2        |  2         |  2        |
+fire    |  2         |  2        |  3        |  3         |  2        |  3        |  3         |  3        |
+wind    |  1         |  1        |  4        |  4         |  1        |  4        |  4         |  4        |
+
+
+upgrade: damage + splash, cost: n squared
