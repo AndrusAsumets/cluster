@@ -14,9 +14,20 @@
 			html, body {
 				margin: 0;
 				padding: 0;
-				width: 100vw;
-				height: 100vh;
+				min-width: 100vw;
+				max-width: 100vw;
+				min-height: 100vh;
+				max-height: 100vh;
 				background-color: black;
+				overflow: hidden;
+			}
+			
+			.game {
+				position: absolute;
+				min-width: 100vw;
+				max-width: 100vw;
+				min-height: 100vh;
+				max-height: 100vh;
 				overflow: hidden;
 			}
 			
@@ -202,7 +213,7 @@
 			var blockHeight = h / vertical
 			
 			w = w + blockWidth * overflow
-			h = h + blockHeight
+			h = h - blockHeight
 			
 			var canvas = {
 				background: createHiDPICanvas(w, h, 1),
