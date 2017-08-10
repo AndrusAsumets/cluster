@@ -244,7 +244,7 @@
 				
 				var x = event.clientX
 				var y = event.clientY
-				var xBlock = Math.floor(x / blockWidth)
+				var xBlock = Math.floor(x / blockWidth) + 1
 				var yBlock = Math.floor(y / blockHeight) - 1
 				
 				if (xBlock < horizontal / 2) {
@@ -252,9 +252,9 @@
 						creatingElement = [xBlock, yBlock]
 						
 						for (var i = 0; i < types.length; i++) {
-							rect(canvas.menu, shapes.active, (xBlock + i + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							rect(canvas.menu, shapes.active, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 							
-							circle(canvas.menu, shapes[types[i]], (xBlock + i + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							circle(canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						}
 					}
 					else if (
@@ -271,7 +271,7 @@
 						
 						// create a building
 						grid.setWalkableAt(start[0], start[1], false)
-						circle(canvas.buildings, shapes[types[type]], (start[0] + 1) * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						circle(canvas.buildings, shapes[types[type]], (start[0]) * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 			
 						var element = {
 							id: id,
@@ -301,9 +301,9 @@
 						creatingElement = [xBlock, yBlock]
 						
 						for (var i = 0; i < types.length; i++) {
-							rect(canvas.menu, shapes.active, (xBlock + i - types.length + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							rect(canvas.menu, shapes.active, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 							
-							circle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							circle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 						}
 					}
 					else if (
@@ -319,9 +319,10 @@
 						var end = [0, start[1]]
 						
 						// create a building
-						grid.setWalkableAt(start[0], start[1], false)
-						circle(canvas.buildings, shapes[types[type]], (start[0] + 1) *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						grid.setWalkableAt(start[0] + 1, start[1], false)
+						circle(canvas.buildings, shapes[types[type]], (start[0]) *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 						
+						/*
 						var element = {
 							id: id,
 							type: types[type],
@@ -339,6 +340,7 @@
 						}
 						
 						elements.push(element)
+						*/
 						creatingElement = false
 					}
 					else {
@@ -363,6 +365,8 @@
 				
 				if (walk) {
 					walk = false
+					
+					/*
 					
 					for (var p = 0; p < elements.length; p++) {
 						if (elements[p].path.length) {
@@ -408,7 +412,8 @@
 								}
 							}
 						}
-					}
+					}					
+					*/
 					
 					for (var p = 0; p < elements.length; p++) {
 						var element = elements[p]
