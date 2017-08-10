@@ -16,7 +16,7 @@
 				padding: 0;
 				width: 100vw;
 				height: 100vh;
-				background-color: white;
+				background-color: black;
 				overflow: hidden;
 			}
 			
@@ -76,6 +76,7 @@
 			
 			canvas {
 				left: 50%;
+				top: calc(100% / 9);
 				transform: translate(-50%, 0);
 			}
 			
@@ -117,51 +118,53 @@
 			    return dpr / bsr
 			})()
 			
+			var types = ['earth', 'water', 'fire', 'air']
 			var matrix = []
 			var buildings = []
 			var elements = []
 			
 			var shapes = {
-				border: {
-					fillStyle: 'black',
-					strokeStyle: 'rgba(0, 0, 0, 0)'
+				background: {
+					fillStyle: 'rgba(0, 0, 0, 1)'
 				},
-				path: {
-					fillStyle: 'blue',
-					strokeStyle: 'rgba(0, 0, 0, 0)'
+				border: {
+					strokeStyle: 'rgba(255, 255, 255, 0.25)'
 				},
 				active: {
-					fillStyle: 'rgba(0, 0, 0, 0.15)'
+					fillStyle: 'rgba(0, 0, 0, 1)'
 				},
-				rock: {
-					fillStyle: 'red',
-					strokeStyle: 'rgba(0, 0, 0, 0)'
-				},
-				paper: {
+				earth: {
 					fillStyle: 'green',
 					strokeStyle: 'rgba(0, 0, 0, 0)'
 				},
-				scissors: {
+				water: {
 					fillStyle: 'blue',
+					strokeStyle: 'rgba(0, 0, 0, 0)'
+				},
+				fire: {
+					fillStyle: 'red',
+					strokeStyle: 'rgba(0, 0, 0, 0)'
+				},
+				air: {
+					fillStyle: 'white',
 					strokeStyle: 'rgba(0, 0, 0, 0)'
 				}
 			}
 			
 			var overflow = 2
 			var xCount = 20
-			var yCount = 10
-			var step = 500
+			var yCount = 9
+			var step = 1000
 			var walk = true
 			var time = (new Date).getTime()
 			var added = false
-			var recharge = 10000
+			var recharge = 20000
 			
 			setInterval(function() {
 				walk = true
 				time = (new Date).getTime()
 				added = false
 			}, step)
-			
 			
 			// create the matrix
 			for (var i = 0; i < yCount; i++) {
@@ -190,7 +193,7 @@
 			})
 			
 			var horizontal = matrix[0].length - overflow
-			var vertical = matrix.length
+			var vertical = matrix.length + 1
 			var iw = window.innerWidth
 			var ih = window.innerHeight
 			var w = iw > ih ? iw : ih
@@ -198,7 +201,8 @@
 			var blockWidth = w / horizontal
 			var blockHeight = h / vertical
 			
-			//w = w + blockWidth * 2
+			w = w + blockWidth * overflow
+			h = h + blockHeight
 			
 			var canvas = {
 				background: createHiDPICanvas(w, h, 1),
@@ -208,12 +212,18 @@
 			}
 				
 			// create a visual UI grid
-			for (var i = 0; i < horizontal + 2; i++) { 
-				line(canvas.background, blockWidth * i, 0, blockWidth * i, h)
+			for (var i = 0; i < horizontal + 1; i++) { 
+				line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 			}
 			
-			for (var i = 0; i < vertical; i++) {
-				line(canvas.background, 0, blockHeight * i, w, blockHeight * i)
+			for (var i = 1; i < vertical; i++) {
+				line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
+			}
+			
+			for (var i = 0; i < horizontal + 4; i++) {
+				for (var j = 0; j < vertical; j++) {
+					//rect(canvas.background, shapes.background, blockWidth * i, blockHeight * j, blockWidth, blockHeight)
+				}
 			}
 			
 			/*
@@ -235,27 +245,25 @@
 				var x = event.clientX
 				var y = event.clientY
 				var xBlock = Math.floor(x / blockWidth)
-				var yBlock = Math.floor(y / blockHeight)
+				var yBlock = Math.floor(y / blockHeight) - 1
 				
 				if (xBlock < horizontal / 2) {
 					if (!creatingElement) {
 						creatingElement = [xBlock, yBlock]
 						
-						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						rect(canvas.menu, shapes.active, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						rect(canvas.menu, shapes.active, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						
-						circle(canvas.menu, shapes.rock, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						circle(canvas.menu, shapes.paper, (xBlock + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						circle(canvas.menu, shapes.scissors, (xBlock + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						for (var i = 0; i < types.length; i++) {
+							rect(canvas.menu, shapes.active, (xBlock + i + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							
+							circle(canvas.menu, shapes[types[i]], (xBlock + i + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						}
 					}
 					else if (
 						creatingElement[0] == xBlock ||
 						creatingElement[0] + 1 == xBlock ||
-						creatingElement[0] + 2 == xBlock &&
+						creatingElement[0] + 2 == xBlock ||
+						creatingElement[0] + 3 == xBlock &&
 						creatingElement[1] == yBlock
-					) {	
-						var types = ['rock', 'paper', 'scissors']
+					) {
 						var type = xBlock - creatingElement[0]
 						var id = elements.length
 						var start = [creatingElement[0], creatingElement[1]]
@@ -263,7 +271,7 @@
 						
 						// create a building
 						grid.setWalkableAt(start[0], start[1], false)
-						circle(canvas.buildings, shapes[types[type]], start[0] * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						circle(canvas.buildings, shapes[types[type]], (start[0] + 1) * blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 			
 						var element = {
 							id: id,
@@ -292,21 +300,19 @@
 					if (!creatingElement) {
 						creatingElement = [xBlock, yBlock]
 						
-						rect(canvas.menu, shapes.active, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						rect(canvas.menu, shapes.active, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						rect(canvas.menu, shapes.active, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)						
-						
-						circle(canvas.menu, shapes.rock, (xBlock - 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						circle(canvas.menu, shapes.paper, (xBlock - 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-						circle(canvas.menu, shapes.scissors, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						for (var i = 0; i < types.length; i++) {
+							rect(canvas.menu, shapes.active, (xBlock + i - types.length + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+							
+							circle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 2) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+						}
 					}
 					else if (
+						creatingElement[0] - 3 == xBlock ||
 						creatingElement[0] - 2 == xBlock ||
 						creatingElement[0] - 1 == xBlock ||
 						creatingElement[0] == xBlock &&
 						creatingElement[1] == yBlock
 					) {	
-						var types = ['rock', 'paper', 'scissors']
 						var type = xBlock - creatingElement[0] + types.length - 1
 						var id = elements.length
 						var start = [creatingElement[0], creatingElement[1]]
@@ -314,7 +320,7 @@
 						
 						// create a building
 						grid.setWalkableAt(start[0], start[1], false)
-						circle(canvas.buildings, shapes[types[type]], start[0] *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
+						circle(canvas.buildings, shapes[types[type]], (start[0] + 1) *  blockWidth, start[1] * blockHeight, blockWidth, blockHeight)
 						
 						var element = {
 							id: id,
@@ -359,28 +365,43 @@
 					walk = false
 					
 					for (var p = 0; p < elements.length; p++) {
-						var element = elements[p]
-
-						if (element.path.length) {
+						if (elements[p].path.length) {
 							
 							for (var r = 0; r < elements.length; r++) {
 								if (r == p) continue //don't update the same object
+								
+								//console.log(elements[p].path[1][0], elements[r].path[1][0])
 
 								if (
-									element.path &&
-									element.path[1] &&
-									element.path[1].length &&
+									elements[p].path &&
+									elements[p].path[1] &&
+									elements[p].path[1].length &&
+									elements[p].path[1][0] &&
+									elements[p].path[1][1] &&
 									elements[r].path &&
 									elements[r].path[1] &&
 									elements[r].path[1].length &&
-									elements[r].path[1][0] == element.path[1][0] &&
-									elements[r].path[1][1] == element.path[1][1]
+									elements[r].path[1][0] &&
+									elements[r].path[1][1] &&
+										(
+											elements[p].path[0][0] == elements[r].path[0][0] ||
+											elements[p].path[0][0] == elements[r].path[1][0] ||
+											elements[p].path[1][0] == elements[r].path[0][0] ||
+											elements[p].path[1][0] == elements[r].path[1][0]
+										) 
+									&&
+										(
+											elements[p].path[0][1] == elements[r].path[0][1] ||
+											elements[p].path[0][1] == elements[r].path[1][1] ||
+											elements[p].path[1][1] == elements[r].path[0][1] ||
+											elements[p].path[1][1] == elements[r].path[1][1]
+										)									
 								) {
-									if (!fight(element.type, elements[r].type)) {
+									if (!fight(elements[p].type, elements[r].type)) {
 										elements[p].path = []
 										continue
 									}
-									if (!fight(elements[r].type, element.type)) {
+									if (!fight(elements[r].type, elements[p].type)) {
 										elements[r].path = []
 										continue
 									}
@@ -411,16 +432,16 @@
 						element.path[1] &&
 						element.path[1].length
 					) {
-						var x1 = element.path[0][0] * w / horizontal
-						var y1 = element.path[0][1] * h / vertical
-						var x2 = element.path[1][0] * w / horizontal
-						var y2 = element.path[1][1] * h / vertical
+						var x1 = element.path[0][0] * blockWidth
+						var y1 = element.path[0][1] * blockHeight
+						var x2 = element.path[1][0] * blockWidth
+						var y2 = element.path[1][1] * blockHeight
 						
 						var dt = ((new Date).getTime() - time)
 						var dx = x1 - (x1 - x2) * dt / step
 						var dy = y1 - (y1 - y2) * dt / step
 						
-						circle(canvas.elements, element.shapes, dx, dy, w / horizontal, h / vertical)	
+						circle(canvas.elements, element.shapes, dx, dy, blockWidth, blockHeight)	
 					}
 						
 				}
@@ -442,10 +463,12 @@
 				return true
 			}
 			
-			function line(ctx, x1, y1, x2, y2) {
+			function line(ctx, shape, x1, y1, x2, y2) {
 				ctx.beginPath()
 				ctx.moveTo(x1, y1)
 				ctx.lineTo(x2, y2)
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = shape.strokeStyle
 				ctx.stroke()
 			}
 			
