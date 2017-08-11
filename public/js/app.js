@@ -231,44 +231,17 @@ function animate() {
 	
 	if (walk) {
 		walk = false
-
-		for (var p = 0; p < buildings.length; p++) {
-			if (buildings[p].position != 'right') continue
-			
-			if (
-				!buildings[p].start ||
-				!buildings[p].start.length
-			) continue
-			
-			var positionA = buildings[p].start
-			for (var r = 0; r < elements.length; r++) {
-				if (
-					!elements[r].path ||
-					!elements[r].path[1] ||
-					!elements[r].path[1].length
-				) continue
-
-				var positionB = elements[r].path[1]
-				if (!isNear(positionA, positionB)) continue
-				
-				circle(canvas.projectiles, buildings[p].shape, elements[r].path[1][0] * blockWidth, elements[r].path[1][1] * blockHeight, blockWidth, blockHeight)
-			}
-		}
 		
-		for (var p = 0; p < elements.length; p++) {
-			var element = elements[p]
-			
-			if (
-				element.path &&
-				element.path[1] &&
-				element.path[1].length
-			) {
-				elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
-			}
-		}
+		attack()
+		nextPath()
 	}
 	
-	// move the elements according to their positions in space and time
+	move()
+}
+requestAnimationFrame(animate)
+
+// move the elements according to their positions in space and time
+function move() {
 	for (var p = 0; p < elements.length; p++) {
 		var element = elements[p]
 		
@@ -286,11 +259,48 @@ function animate() {
 			var dy = y1 - (y1 - y2) * dt / step
 			
 			circle(canvas.elements, element.shape, dx, dy, blockWidth, blockHeight)	
-		}
-			
+		}	
 	}
 }
-requestAnimationFrame(animate)
+
+function attack() {
+	for (var p = 0; p < buildings.length; p++) {
+		if (buildings[p].position != 'right') continue
+		
+		if (
+			!buildings[p].start ||
+			!buildings[p].start.length
+		) continue
+		
+		var positionA = buildings[p].start
+		for (var r = 0; r < elements.length; r++) {
+			if (
+				!elements[r].path ||
+				!elements[r].path[1] ||
+				!elements[r].path[1].length
+			) continue
+
+			var positionB = elements[r].path[1]
+			if (!isNear(positionA, positionB)) continue
+			
+			circle(canvas.projectiles, buildings[p].shape, elements[r].path[1][0] * blockWidth, elements[r].path[1][1] * blockHeight, blockWidth, blockHeight)
+		}
+	}
+}
+
+function nextPath() {
+	for (var p = 0; p < elements.length; p++) {
+		var element = elements[p]
+		
+		if (
+			element.path &&
+			element.path[1] &&
+			element.path[1].length
+		) {
+			elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+		}
+	}
+}
 
 function isNear(positionA, positionB) {
 	for (var q = 0; q < 3; q++) {
