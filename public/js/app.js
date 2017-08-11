@@ -245,13 +245,10 @@ function animate() {
 				if (
 					!elements[r].path ||
 					!elements[r].path[1] ||
-					!elements[r].path[1].length ||
-					!elements[r].path[1][0] ||
-					!elements[r].path[1][1]
+					!elements[r].path[1].length
 				) continue
 
 				var positionB = elements[r].path[1]
-				
 				if (!isNear(positionA, positionB)) continue
 				
 				circle(canvas.projectiles, buildings[p].shape, elements[r].path[1][0] * blockWidth, elements[r].path[1][1] * blockHeight, blockWidth, blockHeight)
