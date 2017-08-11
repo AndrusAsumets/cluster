@@ -1,12 +1,14 @@
 * fighting
 * check for open path
-* counter
-* lives
-* grid x 2?
+* time counter
+* life counter
 * forbid making two spheres at the same place, instead ask to upgrade or remove
 * recharging status for spheres
+* slide menu
 
 
+
+nodemon --ignore 'public/' server/server.js 
 
 
 
