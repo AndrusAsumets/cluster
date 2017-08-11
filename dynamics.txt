@@ -1,4 +1,6 @@
-* fighting
+sf88r.com
+
+* end path when outside of screen from right
 * check for open path
 * time counter
 * life counter
@@ -31,7 +33,7 @@ fire    |  2         |  2         |  3        |  3         |  2        |  3     
 wind    |  1         |  1         |  4        |  4         |  1        |  4        |  4         |  4        |
 
 
-upgrade: damage + splash, cost: n squaredv
+upgrade: damage + splash, cost: n squared
 
 element |  strength  |  power     |  range    |  speed     |  slow     |  height    |
 --------|------------|------------|-----------|------------|-----------|------------|
@@ -43,12 +45,12 @@ wind    |  1         |  1         |  4        |  4         |  4        |  4     
 
 
 
-element |  strength  |  power     |  range    |  speed     |  slow     |  cost      |
+element |  strength  |  power     |  range    |  speed     |  slow     |  splash    |
 --------|------------|------------|-----------|------------|-----------|------------|
-earth   |  4         |  4         |  1        |  1         |  1        |  1         |
-water   |  3         |  3         |  2        |  2         |  2        |  2         |
-fire    |  2         |  2         |  3        |  3         |  3        |  3         |
-wind    |  1         |  1         |  4        |  4         |  4        |  4         |
+earth   |  8         |  8         |  1        |  1         |  1        |  8         |
+water   |  4         |  4         |  2        |  2         |  2        |  4         |
+fire    |  2         |  2         |  4        |  4         |  4        |  2         |
+wind    |  1         |  1         |  8        |  8         |  8        |  1         |
 
 
 

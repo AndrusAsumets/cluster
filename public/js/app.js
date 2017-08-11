@@ -54,7 +54,7 @@ var step = 1000
 var walk = true
 var time = (new Date).getTime()
 var added = false
-var recharge = 30000
+var recharge = 60000
 
 setInterval(function() {
 	walk = true
@@ -118,15 +118,6 @@ for (var i = 0; i < horizontal; i++) {
 		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
 		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
-}
-
-function diagonal(ctx, shape, x1, y1, x2, y2) {
-	ctx.beginPath()
-	ctx.moveTo(x1, y1)
-	ctx.lineTo(x2, y2)
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = shape.strokeStyle
-	ctx.stroke()
 }
 
 var creatingElement = false
@@ -226,10 +217,8 @@ function animate() {
 	
 	if (walk) {
 		walk = false
-		
 		projectiles = []
-		
-		nextPath()
+		path()
 		attack()
 	}
 	
@@ -238,7 +227,7 @@ function animate() {
 }
 requestAnimationFrame(animate)
 
-function nextPath() {
+function path() {
 	for (var p = 0; p < elements.length; p++) {
 		var element = elements[p]
 		
@@ -395,6 +384,15 @@ function circle(ctx, shape, x1, y1, x2, y2) {
 	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 8), 0, 2 * Math.PI, true)
 	ctx.fillStyle = shape.fillStyle
 	ctx.fill()	
+}
+
+function diagonal(ctx, shape, x1, y1, x2, y2) {
+	ctx.beginPath()
+	ctx.moveTo(x1, y1)
+	ctx.lineTo(x2, y2)
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = shape.strokeStyle
+	ctx.stroke()
 }
 
 function createHiDPICanvas (w, h, z) {
