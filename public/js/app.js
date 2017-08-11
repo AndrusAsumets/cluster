@@ -23,7 +23,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	border: {
-		strokeStyle: 'rgba(255, 255, 255, 0.1)'
+		strokeStyle: 'rgba(255, 255, 255, 0.3)'
 	},
 	active: {
 		fillStyle: 'rgba(0, 0, 0, 1)'
@@ -114,6 +114,9 @@ for (var i = 1; i < vertical; i++) {
 	line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
 }
 
+line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
+line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
+
 for (var i = 0; i < horizontal + 4; i++) {
 	for (var j = 0; j < vertical; j++) {
 		//rect(canvas.background, shapes.background, blockWidth * i, blockHeight * j, blockWidth, blockHeight)
@@ -125,8 +128,8 @@ for (var i = 0; i < horizontal; i++) {
 	for (var j = 0; j < vertical; j++) {
 		var x1 = blockWidth * i
 		var y1 = blockHeight * j
-		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
 }
 
@@ -171,10 +174,10 @@ function createElement(event) {
 			}
 		}
 		else if (
-			(creatingElement[0] - 1 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 0 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] - 0 == xBlock && creatingElement[1] == yBlock) ||
 			(creatingElement[0] + 1 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock)
+			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] + 3 == xBlock && creatingElement[1] == yBlock)
 			
 		) {
 			var type = xBlock - creatingElement[0]
@@ -463,6 +466,7 @@ function rect(ctx, shape, x1, y1, x2, y2) {
 function circle(ctx, shape, x1, y1, x2, y2) {
 	ctx.beginPath()
 	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 4), 0, 2 * Math.PI, false)
+	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 8), 0, 2 * Math.PI, true)
 	ctx.fillStyle = shape.fillStyle
 	ctx.fill()	
 }

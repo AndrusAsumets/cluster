@@ -2,9 +2,8 @@
 * check for open path
 * counter
 * lives
-* differentiate both sides
-* grid x 4?
-
+* grid x 2?
+* forbid making two spheres at the same place, instead ask to upgrade or remove
 
 
 
