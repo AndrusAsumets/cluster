@@ -110,12 +110,6 @@ for (var i = 1; i < vertical; i++) {
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 
-for (var i = 0; i < horizontal + 4; i++) {
-	for (var j = 0; j < vertical; j++) {
-		//rect(canvas.background, shapes.background, blockWidth * i, blockHeight * j, blockWidth, blockHeight)
-	}
-}
-
 // separate left from right
 for (var i = 0; i < horizontal; i++) {
 	for (var j = 0; j < vertical; j++) {
@@ -228,37 +222,54 @@ function animate() {
 	requestAnimationFrame(animate)
 	
 	canvas.elements.clearRect(0, 0, w, h)
+	canvas.projectiles.clearRect(0, 0, w, h)
 	
 	if (walk) {
 		walk = false
 		
-		attack()
+		projectiles = []
+		
 		nextPath()
+		attack()
 	}
 	
-	move()
+	move(elements, 'elements')
+	move(projectiles, 'projectiles')
 }
 requestAnimationFrame(animate)
 
-// move the elements according to their positions in space and time
-function move() {
+function nextPath() {
 	for (var p = 0; p < elements.length; p++) {
 		var element = elements[p]
 		
 		if (
+			element.path &&
 			element.path[1] &&
 			element.path[1].length
 		) {
-			var x1 = element.path[0][0] * blockWidth
-			var y1 = element.path[0][1] * blockHeight
-			var x2 = element.path[1][0] * blockWidth
-			var y2 = element.path[1][1] * blockHeight
-			
+			elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+		}
+	}
+}
+
+// move the elements according to their positions in space and time
+function move(objects, layer) {
+	for (var p = 0; p < objects.length; p++) {
+		var object = objects[p]
+		
+		if (
+			object.path[1] &&
+			object.path[1].length
+		) {
+			var x1 = object.path[0][0] * blockWidth
+			var y1 = object.path[0][1] * blockHeight
+			var x2 = object.path[1][0] * blockWidth
+			var y2 = object.path[1][1] * blockHeight
 			var dt = ((new Date).getTime() - time)
 			var dx = x1 - (x1 - x2) * dt / step
 			var dy = y1 - (y1 - y2) * dt / step
 			
-			circle(canvas.elements, element.shape, dx, dy, blockWidth, blockHeight)	
+			circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)
 		}	
 	}
 }
@@ -283,21 +294,15 @@ function attack() {
 			var positionB = elements[r].path[1]
 			if (!isNear(positionA, positionB)) continue
 			
-			circle(canvas.projectiles, buildings[p].shape, elements[r].path[1][0] * blockWidth, elements[r].path[1][1] * blockHeight, blockWidth, blockHeight)
-		}
-	}
-}
-
-function nextPath() {
-	for (var p = 0; p < elements.length; p++) {
-		var element = elements[p]
-		
-		if (
-			element.path &&
-			element.path[1] &&
-			element.path[1].length
-		) {
-			elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+			var projectile = {
+				path: [
+					buildings[p].start,
+					elements[r].path[1]
+				],
+				shape: buildings[p].shape
+			}
+			
+			projectiles.push(projectile)
 		}
 	}
 }
