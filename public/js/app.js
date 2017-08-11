@@ -23,7 +23,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	border: {
-		strokeStyle: 'rgba(255, 255, 255, 0.3)'
+		strokeStyle: 'rgba(255, 255, 255, 0.2)'
 	},
 	active: {
 		fillStyle: 'rgba(0, 0, 0, 1)'
@@ -46,7 +46,7 @@ var shapes = {
 	}
 }
 
-var overflow = 2
+var gridMultiplier = 2 // make the grid n times larger, so we could get spheres that pass from the corners
 var xCount = 20
 var yCount = 9
 var step = 1000
@@ -62,10 +62,10 @@ setInterval(function() {
 }, step)
 
 // create the matrix
-for (var i = 0; i < yCount; i++) {
+for (var i = 0; i < yCount * gridMultiplier; i++) {
 	matrix.push([])
 	
-	for (var j = 0; j < xCount ; j++) {
+	for (var j = 0; j < xCount * gridMultiplier ; j++) {
 		matrix[i].push(0)
 	}
 }
@@ -73,22 +73,28 @@ for (var i = 0; i < yCount; i++) {
 // make a grid from the matrix
 var grid = new PF.Grid(matrix)
 
-/*
-// make some blocks unwalkable if needed
-for (var i = 0; i < horizontal; i++) {
-	for (var j = 0; j < vertical; j++) {
-		if (matrix[j][i] == 0) grid.setWalkableAt(j, i, false)
+// make unseeable grid unwalkable
+for (var i = 0; i < matrix[0].length; i++) {
+	var horizontallyWalkable = matrix[0].length / gridMultiplier + 1
+	var verticallyWalkable = matrix.length / gridMultiplier
+	
+	for (var j = 0; j < matrix.length; j++) {
+		if (
+			i >= horizontallyWalkable ||
+			j >= verticallyWalkable
+		) {
+			grid.setWalkableAt(i, j, false)
+		}
 	}
 }
-*/
 
 var finder = new PF.AStarFinder({
     allowDiagonal: true,
 	dontCrossCorners: true
 })
 
-var horizontal = matrix[0].length - 1
-var vertical = matrix.length + 1
+var horizontal = matrix[0].length / gridMultiplier - 1
+var vertical = matrix.length / gridMultiplier + 1
 var iw = window.innerWidth
 var ih = window.innerHeight
 var w = iw > ih ? iw : ih
@@ -116,12 +122,6 @@ for (var i = 1; i < vertical; i++) {
 
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
-
-for (var i = 0; i < horizontal + 4; i++) {
-	for (var j = 0; j < vertical; j++) {
-		//rect(canvas.background, shapes.background, blockWidth * i, blockHeight * j, blockWidth, blockHeight)
-	}
-}
 
 // separate left from right
 for (var i = 0; i < horizontal; i++) {
@@ -174,7 +174,7 @@ function createElement(event) {
 			}
 		}
 		else if (
-			(creatingElement[0] - 0 == xBlock && creatingElement[1] == yBlock) ||
+			(creatingElement[0] == xBlock && creatingElement[1] == yBlock) ||
 			(creatingElement[0] + 1 == xBlock && creatingElement[1] == yBlock) ||
 			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock) ||
 			(creatingElement[0] + 3 == xBlock && creatingElement[1] == yBlock)
@@ -193,8 +193,6 @@ function createElement(event) {
 				start: start,
 				end: end
 			}
-			
-			if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone())) return
 			
 			/*
 			grid.setWalkableAt(start[0], start[1], false)
@@ -256,10 +254,6 @@ function createElement(event) {
 				start: start,
 				end: end
 			}
-			var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
-			console.log(path)
-			
-			if (!path) return
 			
 			/*
 			grid.setWalkableAt(start[0], start[1], false)

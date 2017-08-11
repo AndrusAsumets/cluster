@@ -4,7 +4,7 @@
 * lives
 * grid x 2?
 * forbid making two spheres at the same place, instead ask to upgrade or remove
-
+* recharging status for spheres
 
 
 
