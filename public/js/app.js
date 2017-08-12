@@ -1,7 +1,7 @@
 var socket = io.connect()
 
-document.addEventListener('touchstart', function(event) { createElement(event.touches[0]) })
-document.addEventListener('mousedown', function(event) { createElement(event) })
+document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
+document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
 
 var PIXEL_RATIO = (function () {
     var ctx = document.createElement('canvas').getContext('2d'),
@@ -15,7 +15,7 @@ var PIXEL_RATIO = (function () {
     return dpr / bsr
 })()
 
-var types = ['earth', 'water', 'fire', 'air']
+var types = ['earth', 'water', 'fire', 'wind']
 var matrix = []
 var buildings = []
 var elements = []
@@ -25,7 +25,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	border: {
-		strokeStyle: 'rgba(255, 255, 255, 0.25)'
+		strokeStyle: 'rgba(255, 255, 255, 0.30)'
 	},
 	active: {
 		fillStyle: 'rgba(0, 0, 0, 1)'
@@ -42,20 +42,19 @@ var shapes = {
 		fillStyle: 'red',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
-	air: {
+	wind: {
 		fillStyle: 'white',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	}
 }
 
-var overflow = 2
 var xCount = 20
-var yCount = 9
+var yCount = 8
 var step = 1000
 var walk = true
 var time = (new Date).getTime()
 var added = false
-var recharge = 60000
+var recharge = 5 * 1000
 
 setInterval(function() {
 	walk = true
@@ -88,40 +87,46 @@ var w = iw > ih ? iw : ih
 var h = ih < iw ? ih : iw
 var blockWidth = w / horizontal
 var blockHeight = h / vertical
-h = h - blockHeight
+h = h - blockHeight * 1
 
 var canvas = {
 	background: createHiDPICanvas(w, h, 1),
-	buildings: createHiDPICanvas(w, h, 2),
-	elements: createHiDPICanvas(w, h, 3),
+	movement: createHiDPICanvas(w, h, 3),
 	menu: createHiDPICanvas(w, h, 4)
+}
+
+var layers = document.getElementsByClassName('layer')
+for (var i = 0;i < layers.length; i++) {
+    layers[i].style.top = blockHeight + 'px'
 }
 	
 // create a visual UI grid
-for (var i = 0; i < horizontal; i++) { 
+for (var i = -2; i < horizontal + 4; i++) { 
 	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 }
 
-for (var i = 1; i < vertical; i++) {
+for (var i = 0; i < vertical + 1; i++) {
 	line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
 }
 
+// separate left from right
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 
-// separate left from right
+//diagonals
 for (var i = 0; i < horizontal; i++) {
 	for (var j = 0; j < vertical; j++) {
 		var x1 = blockWidth * i
 		var y1 = blockHeight * j
-		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
 }
 
 var creatingElement = false
 function createElement(event) {
-	event.preventDefault() 
+	event.preventDefault()
+	if ('touches' in event) event = event.touches[0]
 	
 	canvas.menu.clearRect(0, 0, w, h)
 	
@@ -137,7 +142,7 @@ function createElement(event) {
 			for (var i = 0; i < types.length; i++) {
 				rect(canvas.menu, shapes.active, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 				
-				circle(canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 		else if (
@@ -177,7 +182,7 @@ function createElement(event) {
 			for (var i = 0; i < types.length; i++) {
 				rect(canvas.menu, shapes.active, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 				
-				circle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 		else if (
@@ -210,22 +215,38 @@ function createElement(event) {
 	}
 }
 
-function animate() {
-	requestAnimationFrame(animate)
-	
-	canvas.elements.clearRect(0, 0, w, h)
-	
-	if (walk) {
-		walk = false
-		projectiles = []
-		path()
-		attack()
-	}
-	
-	move(elements, 'elements')
-	move(projectiles, 'elements')
+function convertRange(value, r1, r2) { 
+    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
 }
-requestAnimationFrame(animate)
+
+function charge(objects, layer) {
+	for (var p = 0; p < objects.length; p++) {
+		var object = objects[p]
+		
+		if (object.charge < 100) {
+			object.charge = object.charge + convertRange(1 / 60, [0, recharge / 1000], [0, 100])
+			objects[p].charge = object.charge
+		}
+		else if (object.charge >= 100) {
+			if (object.position == 'left') {
+				objects[p].charge = 0
+				
+				var element = {
+					id: elements.length,
+					type: object.type,
+					start: object.start,
+					end: object.end,
+					shape: object.shape,
+					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone())
+				}
+				
+				elements.push(element)
+			}
+		}
+		
+		borderedCircle(canvas[layer], shapes[object.type], (object.start[0]) * blockWidth, object.start[1] * blockHeight, blockWidth, blockHeight, object.charge)
+	}
+}
 
 function path() {
 	for (var p = 0; p < elements.length; p++) {
@@ -254,7 +275,7 @@ function move(objects, layer) {
 			var y1 = object.path[0][1] * blockHeight
 			var x2 = object.path[1][0] * blockWidth
 			var y2 = object.path[1][1] * blockHeight
-			var dt = ((new Date).getTime() - time)
+			var dt = (new Date).getTime() - time
 			var dx = x1 - (x1 - x2) * dt / step
 			var dy = y1 - (y1 - y2) * dt / step
 			
@@ -307,6 +328,24 @@ function isNear(positionA, positionB) {
 	return false
 }
 
+function animate() {
+	requestAnimationFrame(animate)
+	
+	canvas.movement.clearRect(0, 0, w, h)
+	
+	if (walk) {
+		walk = false
+		projectiles = []
+		path()
+		attack()
+	}
+	
+	charge(buildings, 'movement')
+	move(elements, 'movement')
+	move(projectiles, 'movement')
+}
+requestAnimationFrame(animate)
+
 socket.on('message', function(message) {
 	var action = message.action
 	var data = message.data
@@ -318,41 +357,30 @@ socket.on('message', function(message) {
 			
 		case 'building':
 			grid.setWalkableAt(data.start[0], data.start[1], false)
-			circle(canvas.buildings, shapes[types[data.type]], (data.start[0]) * blockWidth, data.start[1] * blockHeight, blockWidth, blockHeight)
-			
+
 			if (data.position == 'left') {
 				var path = finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone())
-				path = PF.Util.smoothenPath(grid, path)
-				path = PF.Util.expandPath(path)
 			
-				var element = {
+				var building = {
 					id: data.id,
 					type: types[data.type],
 					start: data.start,
 					end: data.end,
 					shape: shapes[types[data.type]],
-					path: path,
-					recharge: (function () {
-						setInterval(function() {
-							var path = finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone())
-							path = PF.Util.smoothenPath(grid, path)
-							path = PF.Util.expandPath(path)
-							var p = getElementIndex(data.id)
-							elements[p].path = path
-						}, recharge)
-					})()
+					position: data.position,
+					charge: 0
 				}
 				
-				elements.push(element)
+				buildings.push(building)
 			}
 			else {
 				var building = {
 					id: data.id,
 					type: types[data.type],
 					start: data.start,
-					path: path,
 					shape: shapes[types[data.type]],
-					position: data.position
+					position: data.position,
+					charge: 0
 				}
 				
 				buildings.push(building)
@@ -369,6 +397,7 @@ function line(ctx, shape, x1, y1, x2, y2) {
 	ctx.lineWidth = 1;
 	ctx.strokeStyle = shape.strokeStyle
 	ctx.stroke()
+	ctx.closePath()
 }
 
 function rect(ctx, shape, x1, y1, x2, y2) {
@@ -376,19 +405,47 @@ function rect(ctx, shape, x1, y1, x2, y2) {
 	ctx.rect(x1, y1, x2, y2)
 	ctx.fillStyle = shape.fillStyle
 	ctx.fill()	
+	ctx.closePath()
 }
 
-function circle(ctx, shape, x1, y1, x2, y2) {
+function circle(ctx, shape, x1, y1, x2, y2, percent) {
+	var centerX = x1 + (x2 / 2)
+	var centerY = y1 + (y2 / 2)
+	var radius = Math.sqrt(x2 + y2)
+	var degrees = percent ? percent * 3.6 : 360
+	
 	ctx.beginPath()
-	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 4), 0, 2 * Math.PI, false)
-	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 8), 0, 2 * Math.PI, true)
+	ctx.moveTo(centerX, centerY)
+	ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), false)
 	ctx.fillStyle = shape.fillStyle
-	ctx.fill()	
+	ctx.fill()
+	ctx.closePath()
+}
+
+function borderedCircle(ctx, shape, x1, y1, x2, y2, percent) {
+	var centerX = x1 + (x2 / 2)
+	var centerY = y1 + (y2 / 2)
+	var radius = Math.sqrt(x2 + y2)
+	var degrees = percent ? percent * 3.6 : 360
+
+	ctx.beginPath()
+	ctx.moveTo(centerX, centerY)
+	ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, false)
+	ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI, true)
+	ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), true)
+	ctx.fillStyle = shape.fillStyle
+	ctx.fill()
+	ctx.closePath()
+}
+
+function degreesToRadians(degrees) {
+    return (degrees * Math.PI) / 180
 }
 
 function createHiDPICanvas (w, h, z) {
     ratio = PIXEL_RATIO
     var can = document.createElement('canvas')
+    can.className = 'layer'
     can.width = w * ratio
     can.height = h * ratio
     can.style.width = w + 'px'
@@ -398,10 +455,4 @@ function createHiDPICanvas (w, h, z) {
 	can.style.zIndex = z
 	document.getElementsByClassName('game')[0].appendChild(can)
 	return can.getContext('2d')
-}
-
-function getElementIndex(id) {
-	for (var p = 0; p < elements.length; p++) {
-		if (elements[p].id == id) return p
-	}
 }

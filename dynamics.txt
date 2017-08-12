@@ -7,6 +7,7 @@ sf88r.com
 * forbid making two spheres at the same place, instead ask to upgrade or remove
 * recharging status for spheres
 * slide menu
+* sync time
 
 
 
@@ -23,14 +24,16 @@ slowy
  x x x x
  
 
+water: slow/speed, wind: range/air, fire: splash/armour, earth: damage/strength
 
 
-element |  strength  |  power     |  range    |  speed     |  armour   |  slow     |  height    |  cost     |
---------|------------|------------|-----------|------------|-----------|-----------|------------|-----------|
-earth   |  4         |  4         |  1        |  1         |  4        |  1        |  1         |  1        |
-water   |  3         |  3         |  2        |  2         |  3        |  2        |  2         |  2        |
-fire    |  2         |  2         |  3        |  3         |  2        |  3        |  3         |  3        |
-wind    |  1         |  1         |  4        |  4         |  1        |  4        |  4         |  4        |
+
+element |  strength  |  power     |  range    |  speed     |  armour   |  slow     |  height    |
+--------|------------|------------|-----------|------------|-----------|-----------|------------|
+earth   |  8         |  8         |  1        |  1         |  8        |  1        |  1         |
+water   |  4         |  4         |  2        |  2         |  4        |  2        |  2         |
+fire    |  2         |  2         |  4        |  4         |  2        |  4        |  4         |
+wind    |  1         |  1         |  8        |  8         |  1        |  8        |  8         |
 
 
 upgrade: damage + splash, cost: n squared

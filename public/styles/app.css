@@ -51,7 +51,6 @@ html, body {
 
 canvas {
 	left: 50%;
-	top: calc(100% / 9);
 	transform: translate(-50%, 0);
 }
 
