@@ -242,9 +242,11 @@ function animate() {
 	
 	if (walk) {
 		walk = false
+		health()
 		projectiles = []
 		path()
 		attack()
+		hit()
 	}
 	
 	charge(buildings, 'movement')
@@ -252,6 +254,27 @@ function animate() {
 	move(projectiles, 'movement')
 }
 requestAnimationFrame(animate)
+
+function health() {
+	for (var r = 0; r < elements.length; r++) {
+		if (elements[r].health <= 0) elements.splice(r, 1)
+	}
+}
+
+function hit() {
+	for (var r = 0; r < elements.length; r++) {
+		var x2 = elements[r].path[1][0]
+		var y2 = elements[r].path[1][1]
+		
+		for (var p = 0; p < projectiles.length; p++) {
+			var x1 = projectiles[p].path[1][0]
+			var y1 = projectiles[p].path[1][1]
+			
+			if (x1 == x2 && y1 == y2) elements[r].health = elements[r].health - 1
+		}
+
+	}
+}
 
 function charge(objects, layer) {
 	for (var p = 0; p < objects.length; p++) {
@@ -271,7 +294,8 @@ function charge(objects, layer) {
 					start: object.start,
 					end: object.end,
 					shape: object.shape,
-					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone())
+					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
+					health: 2
 				}
 				
 				elements.push(element)
