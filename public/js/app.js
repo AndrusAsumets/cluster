@@ -56,12 +56,6 @@ var time = (new Date).getTime()
 var added = false
 var recharge = 5 * 1000
 
-setInterval(function() {
-	walk = true
-	time = (new Date).getTime()
-	added = false
-}, step)
-
 // create the matrix
 for (var i = 0; i < yCount; i++) {
 	matrix.push([])
@@ -234,6 +228,12 @@ socket.on('message', function(message) {
 			break
 	}
 })
+
+setInterval(function() {
+	walk = true
+	time = (new Date).getTime()
+	added = false
+}, step)
 
 function animate() {
 	requestAnimationFrame(animate)
