@@ -161,9 +161,11 @@ function createElement(event) {
 			var building = {
 				id: id,
 				position: 'left',
-				type: type,
+				type: types[type],
 				start: start,
-				end: end
+				end: end,
+				shape: shapes[types[type]],
+				charge: 0
 			}
 			
 			socket.emit('message', { action: 'building', data: building })
@@ -200,9 +202,11 @@ function createElement(event) {
 			var building = {
 				id: id,
 				position: 'right',
-				type: type,
+				type: types[type],
 				start: start,
-				end: end
+				end: end,
+				shape: shapes[types[type]],
+				charge: 0
 			}
 			
 			socket.emit('message', { action: 'building', data: building })
@@ -215,9 +219,39 @@ function createElement(event) {
 	}
 }
 
-function convertRange(value, r1, r2) { 
-    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
+socket.on('message', function(message) {
+	var action = message.action
+	var data = message.data
+	
+	switch(action) {
+		case 'connected':
+			console.log('connected to ws')
+			break
+			
+		case 'building':
+			grid.setWalkableAt(data.start[0], data.start[1], false)
+			buildings.push(data)
+			break
+	}
+})
+
+function animate() {
+	requestAnimationFrame(animate)
+	
+	canvas.movement.clearRect(0, 0, w, h)
+	
+	if (walk) {
+		walk = false
+		projectiles = []
+		path()
+		attack()
+	}
+	
+	charge(buildings, 'movement')
+	move(elements, 'movement')
+	move(projectiles, 'movement')
 }
+requestAnimationFrame(animate)
 
 function charge(objects, layer) {
 	for (var p = 0; p < objects.length; p++) {
@@ -328,68 +362,6 @@ function isNear(positionA, positionB) {
 	return false
 }
 
-function animate() {
-	requestAnimationFrame(animate)
-	
-	canvas.movement.clearRect(0, 0, w, h)
-	
-	if (walk) {
-		walk = false
-		projectiles = []
-		path()
-		attack()
-	}
-	
-	charge(buildings, 'movement')
-	move(elements, 'movement')
-	move(projectiles, 'movement')
-}
-requestAnimationFrame(animate)
-
-socket.on('message', function(message) {
-	var action = message.action
-	var data = message.data
-	
-	switch(action) {
-		case 'connected':
-			console.log('connected to ws')
-			break
-			
-		case 'building':
-			grid.setWalkableAt(data.start[0], data.start[1], false)
-
-			if (data.position == 'left') {
-				var path = finder.findPath(data.start[0], data.start[1], data.end[0], data.end[1], grid.clone())
-			
-				var building = {
-					id: data.id,
-					type: types[data.type],
-					start: data.start,
-					end: data.end,
-					shape: shapes[types[data.type]],
-					position: data.position,
-					charge: 0
-				}
-				
-				buildings.push(building)
-			}
-			else {
-				var building = {
-					id: data.id,
-					type: types[data.type],
-					start: data.start,
-					shape: shapes[types[data.type]],
-					position: data.position,
-					charge: 0
-				}
-				
-				buildings.push(building)
-			}
-			
-			break
-	}
-})
-
 function line(ctx, shape, x1, y1, x2, y2) {
 	ctx.beginPath()
 	ctx.moveTo(x1, y1)
@@ -440,6 +412,10 @@ function borderedCircle(ctx, shape, x1, y1, x2, y2, percent) {
 
 function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180
+}
+
+function convertRange(value, r1, r2) { 
+    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
 }
 
 function createHiDPICanvas (w, h, z) {
