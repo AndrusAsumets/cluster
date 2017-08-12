@@ -1,6 +1,7 @@
 var socket = io.connect()
 
 document.addEventListener('touchstart', function(event) { createElement(event.touches[0]) })
+document.addEventListener('mousedown', function(event) { createElement(event) })
 
 var PIXEL_RATIO = (function () {
     var ctx = document.createElement('canvas').getContext('2d'),
@@ -87,15 +88,13 @@ var w = iw > ih ? iw : ih
 var h = ih < iw ? ih : iw
 var blockWidth = w / horizontal
 var blockHeight = h / vertical
-
 h = h - blockHeight
 
 var canvas = {
 	background: createHiDPICanvas(w, h, 1),
 	buildings: createHiDPICanvas(w, h, 2),
 	elements: createHiDPICanvas(w, h, 3),
-	projectiles: createHiDPICanvas(w, h, 4),
-	menu: createHiDPICanvas(w, h, 5)
+	menu: createHiDPICanvas(w, h, 4)
 }
 	
 // create a visual UI grid
@@ -115,13 +114,15 @@ for (var i = 0; i < horizontal; i++) {
 	for (var j = 0; j < vertical; j++) {
 		var x1 = blockWidth * i
 		var y1 = blockHeight * j
-		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-		diagonal(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.15)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
 }
 
 var creatingElement = false
 function createElement(event) {
+	event.preventDefault() 
+	
 	canvas.menu.clearRect(0, 0, w, h)
 	
 	var x = event.clientX
@@ -213,7 +214,6 @@ function animate() {
 	requestAnimationFrame(animate)
 	
 	canvas.elements.clearRect(0, 0, w, h)
-	canvas.projectiles.clearRect(0, 0, w, h)
 	
 	if (walk) {
 		walk = false
@@ -223,7 +223,7 @@ function animate() {
 	}
 	
 	move(elements, 'elements')
-	move(projectiles, 'projectiles')
+	move(projectiles, 'elements')
 }
 requestAnimationFrame(animate)
 
@@ -384,15 +384,6 @@ function circle(ctx, shape, x1, y1, x2, y2) {
 	ctx.arc(x1 + (x2 / 2), y1 + (y2 / 2), Math.sqrt(x2 / 4 + y2 / 8), 0, 2 * Math.PI, true)
 	ctx.fillStyle = shape.fillStyle
 	ctx.fill()	
-}
-
-function diagonal(ctx, shape, x1, y1, x2, y2) {
-	ctx.beginPath()
-	ctx.moveTo(x1, y1)
-	ctx.lineTo(x2, y2)
-	ctx.lineWidth = 1;
-	ctx.strokeStyle = shape.strokeStyle
-	ctx.stroke()
 }
 
 function createHiDPICanvas (w, h, z) {
