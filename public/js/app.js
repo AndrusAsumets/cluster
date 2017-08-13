@@ -16,7 +16,6 @@ var PIXEL_RATIO = (function () {
 })()
 
 var types = ['earth', 'water', 'fire', 'wind']
-var matrix = []
 var buildings = []
 var elements = []
 var projectiles = []
@@ -48,23 +47,28 @@ var shapes = {
 	}
 }
 
-var xCount = 20
-var yCount = 8
-var step = 1000	
-var walk = true
+var gridMultiplier = 4
+var uiXNum = 20
+var uiYNum = 8
+var gameXNum = uiXNum * gridMultiplier
+var gameYNum = uiYNum * gridMultiplier
+var step = 1000 / gridMultiplier
+var walkable = true
+var attackable = true
 var time = (new Date).getTime()
-var recharge = 1 * 1000
+var recharge = 5 * 1000
 
-// create the matrix
-for (var i = 0; i < yCount; i++) {
+// create matrices
+var matrix = []
+for (var i = 0; i < gameYNum; i++) {
 	matrix.push([])
 	
-	for (var j = 0; j < xCount ; j++) {
+	for (var j = 0; j < gameXNum; j++) {
 		matrix[i].push(0)
 	}
 }
 
-// make a grid from the matrix
+// make grids from the matrices
 var grid = new PF.Grid(matrix)
 
 var finder = new PF.AStarFinder({
@@ -72,8 +76,8 @@ var finder = new PF.AStarFinder({
 	dontCrossCorners: true
 })
 
-var horizontal = matrix[0].length - 1
-var vertical = matrix.length + 1
+var horizontal = uiXNum - 1
+var vertical = uiYNum + 1
 var iw = window.innerWidth
 var ih = window.innerHeight
 var w = iw > ih ? iw : ih
@@ -93,7 +97,7 @@ for (var i = -2; i < horizontal + 4; i++) {
 	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 }
 
-for (var i = 0; i < vertical + 1; i++) {
+for (var i = -1; i < vertical + 2; i++) {
 	line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
 }
 
@@ -106,6 +110,7 @@ for (var i = 0; i < horizontal; i++) {
 	for (var j = 0; j < vertical; j++) {
 		var x1 = blockWidth * i
 		var y1 = blockHeight * j
+		
 		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
 		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
@@ -120,30 +125,30 @@ function createElement(event) {
 	
 	var x = event.clientX
 	var y = event.clientY
-	var xBlock = Math.floor(x / blockWidth)
-	var yBlock = Math.floor(y / blockHeight) - 1
+	var uiXBlock = Math.floor(x / blockWidth)
+	var uiYBlock = Math.floor(y / blockHeight) - 1
+	var left = uiXBlock < horizontal / 2
 	
-	if (xBlock < horizontal / 2) {
+	if (left) {
 		if (!creatingElement) {
-			creatingElement = [xBlock, yBlock]
+			creatingElement = [uiXBlock, uiYBlock]
 			
 			for (var i = 0; i < types.length; i++) {
-				rect(canvas.menu, shapes.active, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				rect(canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 				
-				borderedCircle(canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 		else if (
-			(creatingElement[0] - 0 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 1 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 2 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] + 3 == xBlock && creatingElement[1] == yBlock)
-			
+			(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
 		) {
-			var type = xBlock - creatingElement[0]
+			var type = uiXBlock - creatingElement[0]
 			var id = elements.length
-			var start = [creatingElement[0], creatingElement[1]]
-			var end = [horizontal, start[1]]
+			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
+			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]
 			
 			// create a building
 			var building = {
@@ -168,24 +173,24 @@ function createElement(event) {
 	
 	else {
 		if (!creatingElement) {
-			creatingElement = [xBlock, yBlock]
+			creatingElement = [uiXBlock, uiYBlock]
 			
 			for (var i = 0; i < types.length; i++) {
-				rect(canvas.menu, shapes.active, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				rect(canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 				
-				borderedCircle(canvas.menu, shapes[types[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 		else if (
-			(creatingElement[0] - 3 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] - 2 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] - 1 == xBlock && creatingElement[1] == yBlock) ||
-			(creatingElement[0] == xBlock && creatingElement[1] == yBlock)
+			(creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+			(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
 		) {	
-			var type = xBlock - creatingElement[0] + types.length - 1
+			var type = uiXBlock - creatingElement[0] + types.length - 1
 			var id = elements.length
-			var start = [creatingElement[0], creatingElement[1]]
-			var end = [0, start[1]]
+			var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
+			var end = [0, creatingElement[1] * gridMultiplier]
 			
 			// create a building
 			var building = {
@@ -221,14 +226,28 @@ socket.on('message', function(message) {
 			break
 			
 		case 'building':
-			grid.setWalkableAt(data.start[0], data.start[1], false)
+			setWalkableAt(data.position, data.start[0], data.start[1])
 			buildings.push(data)
 			break
 	}
 })
 
+function setWalkableAt(position, x, y) {
+	if (position == 'right') {
+		for (var p = -gridMultiplier / 2 - 1; p < gridMultiplier; p++) {
+			for (var r = -gridMultiplier / 2 - 1; r < gridMultiplier; r++) {
+				var left = x + p
+				var top = y + r
+				if (top < 0) top = 0
+				if (top > uiYNum * gridMultiplier - 1) top = uiYNum * gridMultiplier - 1
+				grid.setWalkableAt(left, top, false)
+			}
+		}
+	}
+}
+
 setInterval(function() {
-	walk = true
+	walkable = true
 	time = (new Date).getTime()
 }, step)
 
@@ -237,8 +256,8 @@ function animate() {
 	
 	canvas.movement.clearRect(0, 0, w, h)
 	
-	if (walk) {
-		walk = false
+	if (walkable) {
+		walkable = false
 		reset()
 		health()
 		projectiles = []
@@ -248,8 +267,8 @@ function animate() {
 	}
 	
 	charge(buildings, 'movement')
-	move(elements, 'movement')
-	move(projectiles, 'movement')
+	move(elements, 'movement', step, 1)
+	move(projectiles, 'movement', step, gridMultiplier)
 }
 requestAnimationFrame(animate)
 
@@ -274,7 +293,7 @@ function hit() {
 			!element.path ||
 			!element.path[1] ||
 			!element.path[1].length
-		) continue	
+		) continue
 			
 		var x2 = element.path[1][0]
 		var y2 = element.path[1][1]
@@ -310,16 +329,19 @@ function charge(objects, layer) {
 					shape: object.shape,
 					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
 					dynamics: {
-						health: 3,
+						health: 10,
 						splash: false
 					}
 				}
 				
 				elements.push(element)
 			}
+			else {
+				objects[p].built = true	
+			}
 		}
 		
-		borderedCircle(canvas[layer], shapes[object.type], (object.start[0]) * blockWidth, object.start[1] * blockHeight, blockWidth, blockHeight, object.charge)
+		borderedCircle(canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gridMultiplier), object.start[1] * (blockHeight / gridMultiplier), blockWidth, blockHeight, object.charge)
 	}
 }
 
@@ -337,31 +359,10 @@ function path() {
 	}
 }
 
-// move the elements according to their positions in space and time
-function move(objects, layer) {
-	for (var p = 0; p < objects.length; p++) {
-		var object = objects[p]
-		
-		if (
-			!object.path[1] ||
-			!object.path[1].length
-		) continue
-
-		var x1 = object.path[0][0] * blockWidth
-		var y1 = object.path[0][1] * blockHeight
-		var x2 = object.path[1][0] * blockWidth
-		var y2 = object.path[1][1] * blockHeight
-		var dt = (new Date).getTime() - time
-		var dx = x1 - (x1 - x2) * dt / step
-		var dy = y1 - (y1 - y2) * dt / step
-
-		circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)	
-	}
-}
-
 function attack() {
 	for (var p = 0; p < buildings.length; p++) {
 		if (buildings[p].position != 'right') continue
+		if (!buildings[p].built) continue
 		
 		var positionA = buildings[p].start
 		for (var r = 0; r < elements.length; r++) {
@@ -389,11 +390,33 @@ function attack() {
 	}
 }
 
+// move the elements according to their positions in space and time
+function move(objects, layer, step, multiplier) {
+	for (var p = 0; p < objects.length; p++) {
+		var object = objects[p]
+		
+		if (
+			!object.path[1] ||
+			!object.path[1].length
+		) continue
+
+		var x1 = object.path[0][0] * (blockWidth / gridMultiplier)
+		var y1 = object.path[0][1] * (blockHeight / gridMultiplier)
+		var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
+		var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
+		var dt = (new Date).getTime() - time
+		var dx = x1 - (x1 - x2) * dt / step
+		var dy = y1 - (y1 - y2) * dt / step
+
+		circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)	
+	}
+}
+
 function isNear(positionA, positionB) {
-	for (var q = 0; q < 3; q++) {
-		if (positionA[0] + q - 1 == positionB[0]) {
-			for (var o = 0; o < 3; o++) {
-				if (positionA[1] + o - 1 == positionB[1]) return true
+	for (var q = 0; q < 3 * gridMultiplier; q++) {
+		if (positionA[0] + q - gridMultiplier == positionB[0]) {
+			for (var o = 0; o < 3 * gridMultiplier; o++) {
+				if (positionA[1] + o - gridMultiplier == positionB[1]) return true
 			}
 		}
 	}
