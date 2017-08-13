@@ -1,7 +1,7 @@
 var socket = io.connect()
 
 var defaultScore = 100
-var defaultHealth = 10
+var defaultHealth = 30
 var players = {
 	left: {
 		score: defaultScore
@@ -99,8 +99,8 @@ var PIXEL_RATIO = (function () {
 })()
 var canvas = {
 	background: createCanvas(w, h, 1, blockHeight),
-	movement: createCanvas(w, h, 3, blockHeight),
-	menu: createCanvas(w, h, 4, blockHeight)
+	movement: createCanvas(w, h, 2, blockHeight),
+	menu: createCanvas(w, h, 3, blockHeight)
 }
 
 // create a visual UI grid
@@ -185,10 +185,11 @@ function createElement(event) {
 			}
 		}
 		else {
+			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			for (var i = 0; i < types.length; i++) {
 				rect(canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 				
-				borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 	}
@@ -228,15 +229,16 @@ function createElement(event) {
 		var id = elements.length
 		var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
 		var end = [0, creatingElement[1] * gridMultiplier]
+		var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 		
 		// create a building
 		var building = {
 			id: id,
 			position: 'right',
-			type: types[type],
+			type: reversedTypes[type],
 			start: start,
 			end: end,
-			shape: shapes[types[type]],
+			shape: shapes[reversedTypes[type]],
 			charge: 0,
 			dynamics: {
 				fired: 0
@@ -268,7 +270,6 @@ socket.on('message', function(message) {
 			setWalkableAt(data.position, data.start[0], data.start[1])
 			buildings.push(data)
 			createPaths()
-			break
 	}
 })
 
