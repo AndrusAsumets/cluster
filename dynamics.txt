@@ -24,8 +24,18 @@ slowy
  x
  x x x x
  
+attack towers:
+water (blue): speed
+earth (green): strength
+fire (red): demolish
+wind (white): air
 
-water (blue): slow/speed, wind (white): range/air, fire (red): splash/damage, earth (blue): damage/strength
+defend towers:
+water (blue): slow
+earth (green): damage
+fire (red): splash
+wind (white): range
+
 
 
 

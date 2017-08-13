@@ -18,7 +18,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	earth: {
-		fillStyle: '#00ff1d',
+		fillStyle: '#3aff50',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
 	water: {
@@ -128,90 +128,83 @@ function createElement(event) {
 	var uiYBlock = Math.floor(y / blockHeight) - 1
 	var left = uiXBlock < horizontal / 2
 	
-	if (left) {
-		if (!creatingElement) {
-			creatingElement = [uiXBlock, uiYBlock]
-			
+	if (!creatingElement) {
+		creatingElement = [uiXBlock, uiYBlock, left]
+		
+		if (left) {
 			for (var i = 0; i < types.length; i++) {
 				rect(canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 				
 				borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
-		else if (
-			(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
-		) {
-			var type = uiXBlock - creatingElement[0]
-			var id = elements.length
-			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
-			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]
-			
-			// create a building
-			var building = {
-				id: id,
-				position: 'left',
-				type: types[type],
-				start: start,
-				end: end,
-				shape: shapes[types[type]],
-				charge: 0,
-				dynamics: {}
-			}
-			
-			socket.emit('message', { action: 'building', data: building })
-			
-			creatingElement = false
-		}
 		else {
-			creatingElement = false
-		}
-	}
-	
-	else {
-		if (!creatingElement) {
-			creatingElement = [uiXBlock, uiYBlock]
-			
 			for (var i = 0; i < types.length; i++) {
 				rect(canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 				
 				borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
-		else if (
-			(creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
-		) {	
-			var type = uiXBlock - creatingElement[0] + types.length - 1
-			var id = elements.length
-			var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
-			var end = [0, creatingElement[1] * gridMultiplier]
-			
-			// create a building
-			var building = {
-				id: id,
-				position: 'right',
-				type: types[type],
-				start: start,
-				end: end,
-				shape: shapes[types[type]],
-				charge: 0,
-				dynamics: {
-					fired: 0
-				}
+	}
+	else if (
+		(creatingElement[2] == true) &&
+		(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
+	) {
+		var type = uiXBlock - creatingElement[0]
+		var id = elements.length
+		var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
+		var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]
+		
+		// create a building
+		var building = {
+			id: id,
+			position: 'left',
+			type: types[type],
+			start: start,
+			end: end,
+			shape: shapes[types[type]],
+			charge: 0,
+			dynamics: {}
+		}
+		
+		socket.emit('message', { action: 'building', data: building })
+		creatingElement = false
+	}
+	else if (
+		(creatingElement[2] == false) &&
+		(creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
+	) {	
+		var type = uiXBlock - creatingElement[0] + types.length - 1
+		var id = elements.length
+		var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
+		var end = [0, creatingElement[1] * gridMultiplier]
+		
+		// create a building
+		var building = {
+			id: id,
+			position: 'right',
+			type: types[type],
+			start: start,
+			end: end,
+			shape: shapes[types[type]],
+			charge: 0,
+			dynamics: {
+				fired: 0
 			}
-			
-			socket.emit('message', { action: 'building', data: building })
-			
-			creatingElement = false
 		}
-		else {
-			creatingElement = false
-		}
+		
+		socket.emit('message', { action: 'building', data: building })
+		creatingElement = false
+	}
+
+	else {
+		creatingElement = false
 	}
 }
 
