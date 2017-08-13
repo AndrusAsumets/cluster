@@ -60,8 +60,7 @@ for (var i = 0; i < gameYNum; i++) {
 var grid = new PF.Grid(matrix)
 
 var finder = new PF.AStarFinder({
-    allowDiagonal: true,
-	dontCrossCorners: true
+    allowDiagonal: true
 })
 
 var horizontal = uiXNum - 1
@@ -73,8 +72,6 @@ var h = ih < iw ? ih : iw
 var blockWidth = w / horizontal
 var blockHeight = h / vertical
 h = h - blockHeight * 1
-
-
 
 var PIXEL_RATIO = (function () {
     var ctx = document.createElement('canvas').getContext('2d'),
@@ -335,8 +332,8 @@ function charge(objects, layer) {
 					shape: object.shape,
 					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
 					dynamics: {
-						totalHealth: 16,
-						health: 16,
+						totalHealth: 20,
+						health: 20,
 						splash: false
 					}
 				}
