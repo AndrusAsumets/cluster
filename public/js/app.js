@@ -1,8 +1,5 @@
 var socket = io.connect()
 
-document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
-document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
-
 var defaultScore = 100
 var defaultHealth = 10
 var players = {
@@ -45,38 +42,6 @@ var shapes = {
 		fillStyle: 'white',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	}
-}
-
-var gameInterval = setInterval(function() {
-	if (gameOver) return clearInterval(gameInterval)
-	
-	gameLength = gameLength - 1000
-	var ms = gameLength
-	ms = 1000 * Math.round(ms / 1000)
-	var d = new Date(ms)
-	document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
-	
-	score()
-}, 1000)
-
-function score() {
-	document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
-	document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
-	
-	if (gameLength < 0) {
-		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
-		return false
-	}
-	
-	if (gameLength < 0 || players.left.score < 0) {
-		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
-		return false
-	}
-	else if (players.right.score < 0) {
-		document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
-		return false
-	}
-	return true
 }
 
 var uiXNum = 20
@@ -139,7 +104,7 @@ var canvas = {
 }
 
 // create a visual UI grid
-for (var i = 1; i < horizontal - 1; i++) { 
+for (var i = 1; i < horizontal; i++) { 
 	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 }
 
@@ -160,6 +125,39 @@ for (var i = 0; i < horizontal; i++) {
 		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
 }
+
+function score() {
+	document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
+	document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
+	
+	if (gameLength < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+		return false
+	}
+	
+	if (gameLength < 0 || players.left.score < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+		return false
+	}
+	else if (players.right.score < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
+		return false
+	}
+	return true
+}
+
+var gameInterval = setInterval(function() {
+	gameLength = gameLength - 1000
+	var ms = gameLength
+	ms = 1000 * Math.round(ms / 1000)
+	var d = new Date(ms)
+	document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
+	
+	if (!score()) return clearInterval(gameInterval)
+}, 1000)
+
+document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
+document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
 
 var creatingElement = false
 function createElement(event) {
