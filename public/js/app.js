@@ -49,14 +49,14 @@ var shapes = {
 
 var gridMultiplier = 4
 var uiXNum = 20
-var uiYNum = 8
+var uiYNum = 9
 var gameXNum = uiXNum * gridMultiplier
 var gameYNum = uiYNum * gridMultiplier
-var step = 1000 / gridMultiplier
+var step = 1500 / gridMultiplier
 var walkable = true
 var attackable = true
 var time = (new Date).getTime()
-var recharge = 5 * 1000
+var recharge = 1 * 1000
 
 // create matrices
 var matrix = []
@@ -228,6 +228,7 @@ socket.on('message', function(message) {
 		case 'building':
 			setWalkableAt(data.position, data.start[0], data.start[1])
 			buildings.push(data)
+			createPaths()
 			break
 	}
 })
@@ -258,10 +259,10 @@ function animate() {
 	
 	if (walkable) {
 		walkable = false
-		reset()
-		health()
 		projectiles = []
-		path()
+		reset()
+		updatePaths()
+		health()
 		attack()
 		hit()
 	}
@@ -285,27 +286,31 @@ function health() {
 	}
 }
 
-function hit() {
-	for (var r = 0; r < elements.length; r++) {
-		var element = elements[r]
+function updatePaths() {
+	for (var p = 0; p < elements.length; p++) {
+		var element = elements[p]
 		
 		if (
 			!element.path ||
 			!element.path[1] ||
 			!element.path[1].length
 		) continue
-			
-		var x2 = element.path[1][0]
-		var y2 = element.path[1][1]
 		
-		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = projectiles[p].path[1][0]
-			var y1 = projectiles[p].path[1][1]
-			if (x1 == x2 && y1 == y2) {
-				elements[r].dynamics.health = elements[r].dynamics.health - 1
-				break
-			}
-		}
+		elements[p].path.splice(0, 1)
+	}
+}
+
+function createPaths() {
+	for (var p = 0; p < elements.length; p++) {
+		var element = elements[p]
+		
+		if (
+			!element.path ||
+			!element.path[1] ||
+			!element.path[1].length
+		) continue
+		
+		elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
 	}
 }
 
@@ -345,20 +350,6 @@ function charge(objects, layer) {
 	}
 }
 
-function path() {
-	for (var p = 0; p < elements.length; p++) {
-		var element = elements[p]
-		
-		if (
-			!element.path ||
-			!element.path[1] ||
-			!element.path[1].length
-		) continue
-		
-		elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
-	}
-}
-
 function attack() {
 	for (var p = 0; p < buildings.length; p++) {
 		if (buildings[p].position != 'right') continue
@@ -386,6 +377,30 @@ function attack() {
 			projectiles.push(projectile)
 			buildings[p].dynamics.fired++
 			break
+		}
+	}
+}
+
+function hit() {
+	for (var r = 0; r < elements.length; r++) {
+		var element = elements[r]
+		
+		if (
+			!element.path ||
+			!element.path[1] ||
+			!element.path[1].length
+		) continue
+			
+		var x2 = element.path[1][0]
+		var y2 = element.path[1][1]
+		
+		for (var p = 0; p < projectiles.length; p++) {
+			var x1 = projectiles[p].path[1][0]
+			var y1 = projectiles[p].path[1][1]
+			if (x1 == x2 && y1 == y2) {
+				elements[r].dynamics.health = elements[r].dynamics.health - 1
+				break
+			}
 		}
 	}
 }

@@ -28,12 +28,18 @@ water: slow/speed, wind: range/air, fire: splash/armour, earth: damage/strength
 
 
 
-element |  strength  |  power     |  range    |  speed     |  armour   |  slow     |  height    |
---------|------------|------------|-----------|------------|-----------|-----------|------------|
-earth   |  8         |  8         |  1        |  1         |  8        |  1        |  1         |
-water   |  4         |  4         |  2        |  2         |  4        |  2        |  2         |
-fire    |  2         |  2         |  4        |  4         |  2        |  4        |  4         |
-wind    |  1         |  1         |  8        |  8         |  1        |  8        |  8         |
+element |  slow     |  speed    |  range   |  air      |  splash  |  armour  |  damage   |  strength |
+--------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
+earth   |  0        |  1        |  1       |  0        |  1       |  1       |  2        |  2        | 10
+water   |  1        |  2        |  1       |  1        |  1       |  1       |  1        |  1        | 8
+fire    |  0        |  1        |  1       |  0        |  2       |  2       |  1        |  1        | 10
+wind    |  0        |  1        |  2       |  0        |  1       |  1       |  1        |  1        | 7
+
+
+
+
+
+
 
 
 upgrade: damage + splash, cost: n squared
@@ -44,6 +50,9 @@ earth   |  4         |  4         |  1        |  1         |  1        |  1     
 water   |  3         |  3         |  2        |  2         |  2        |  2         |
 fire    |  2         |  2         |  3        |  3         |  3        |  3         |
 wind    |  1         |  1         |  4        |  4         |  4        |  4         |
+
+
+
 
 
 
