@@ -307,8 +307,8 @@ function animate() {
 	}
 	
 	charge(buildings, 'movement')
-	move(elements, 'movement', step, 1)
-	move(projectiles, 'movement', step, gridMultiplier)
+	move(elements, 'movement')
+	move(projectiles, 'movement')
 }
 requestAnimationFrame(animate)
 
@@ -451,7 +451,7 @@ function hit() {
 }
 
 // move the elements according to their positions in space and time
-function move(objects, layer, step, multiplier) {
+function move(objects, layer) {
 	for (var p = 0; p < objects.length; p++) {
 		var object = objects[p]
 		
