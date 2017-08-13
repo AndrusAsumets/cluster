@@ -18,7 +18,7 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	earth: {
-		fillStyle: '#00ff65',
+		fillStyle: '#00ff1d',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
 	water: {
@@ -91,12 +91,14 @@ var canvas = {
 }
 
 // create a visual UI grid
-for (var i = -2; i < horizontal + 4; i++) { 
-	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
+for (var i = -1; i < horizontal + 1; i++) { 
+	if (i == horizontal) line(canvas.background, shapes.border, blockWidth * i - 1, 0, blockWidth * i - 1, h)
+	else line(canvas.background, shapes.border, blockWidth * i + 1, 0, blockWidth * i + 1, h)
 }
 
-for (var i = -1; i < vertical + 2; i++) {
-	line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
+for (var i = -1; i < vertical; i++) {
+	if (i == vertical - 1) line(canvas.background, shapes.border, 0, blockHeight * i - 1, w, blockHeight * i - 1)
+	else line(canvas.background, shapes.border, 0, blockHeight * i + 1, w, blockHeight * i + 1)
 }
 
 // separate left from right
