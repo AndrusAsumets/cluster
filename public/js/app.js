@@ -3,18 +3,6 @@ var socket = io.connect()
 document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
 document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
 
-var PIXEL_RATIO = (function () {
-    var ctx = document.createElement('canvas').getContext('2d'),
-        dpr = window.devicePixelRatio || 1,
-        bsr = ctx.webkitBackingStorePixelRatio ||
-              ctx.mozBackingStorePixelRatio ||
-              ctx.msBackingStorePixelRatio ||
-              ctx.oBackingStorePixelRatio ||
-              ctx.backingStorePixelRatio || 1
-
-    return dpr / bsr
-})()
-
 var types = ['earth', 'water', 'fire', 'wind']
 var buildings = []
 var elements = []
@@ -86,6 +74,19 @@ var blockWidth = w / horizontal
 var blockHeight = h / vertical
 h = h - blockHeight * 1
 
+
+
+var PIXEL_RATIO = (function () {
+    var ctx = document.createElement('canvas').getContext('2d'),
+        dpr = window.devicePixelRatio || 1,
+        bsr = ctx.webkitBackingStorePixelRatio ||
+              ctx.mozBackingStorePixelRatio ||
+              ctx.msBackingStorePixelRatio ||
+              ctx.oBackingStorePixelRatio ||
+              ctx.backingStorePixelRatio || 1
+
+    return dpr / bsr
+})()
 var canvas = {
 	background: createCanvas(w, h, 1, blockHeight),
 	movement: createCanvas(w, h, 3, blockHeight),
@@ -334,7 +335,8 @@ function charge(objects, layer) {
 					shape: object.shape,
 					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
 					dynamics: {
-						health: 10,
+						totalHealth: 16,
+						health: 16,
 						splash: false
 					}
 				}
@@ -399,7 +401,6 @@ function hit() {
 			var y1 = projectiles[p].path[1][1]
 			if (x1 == x2 && y1 == y2) {
 				elements[r].dynamics.health = elements[r].dynamics.health - 1
-				break
 			}
 		}
 	}
@@ -421,9 +422,16 @@ function move(objects, layer, step, multiplier) {
 		var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
 		var dt = (new Date).getTime() - time
 		var dx = x1 - (x1 - x2) * dt / step
-		var dy = y1 - (y1 - y2) * dt / step
-
-		circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)	
+		var dy = y1 - (y1 - y2) * dt / step	
+		
+		if (object.type) {
+			var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
+			var percentage = convertRange(health, [0, object.dynamics.totalHealth], [1, 100])
+			borderedCircle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight, percentage)
+		}
+		else {
+			circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)
+		}
 	}
 }
 
