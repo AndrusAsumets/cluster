@@ -1,5 +1,6 @@
 sf88r.com
 
+* basic auth
 * end path when outside of screen from right
 * check for open path
 * time counter
@@ -24,7 +25,7 @@ slowy
  x x x x
  
 
-water: slow/speed, wind: range/air, fire: splash/armour, earth: damage/strength
+water (blue): slow/speed, wind (white): range/air, fire (red): splash/damage, earth (blue): damage/strength
 
 
 

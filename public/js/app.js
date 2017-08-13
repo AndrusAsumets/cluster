@@ -18,15 +18,15 @@ var shapes = {
 		fillStyle: 'rgba(0, 0, 0, 1)'
 	},
 	earth: {
-		fillStyle: 'green',
+		fillStyle: '#00ff65',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
 	water: {
-		fillStyle: 'blue',
+		fillStyle: '#00BEE5',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
 	fire: {
-		fillStyle: 'red',
+		fillStyle: '#FF4A3D',
 		strokeStyle: 'rgba(0, 0, 0, 0)'
 	},
 	wind: {
@@ -100,7 +100,6 @@ for (var i = -1; i < vertical + 2; i++) {
 }
 
 // separate left from right
-line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
 
 //diagonals
@@ -381,23 +380,24 @@ function attack() {
 }
 
 function hit() {
-	for (var r = 0; r < elements.length; r++) {
-		var element = elements[r]
-		
-		if (
-			!element.path ||
-			!element.path[1] ||
-			!element.path[1].length
-		) continue
+	for (var p = 0; p < projectiles.length; p++) {
+		var x1 = projectiles[p].path[1][0]
+		var y1 = projectiles[p].path[1][1]
 			
-		var x2 = element.path[1][0]
-		var y2 = element.path[1][1]
-		
-		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = projectiles[p].path[1][0]
-			var y1 = projectiles[p].path[1][1]
+		for (var r = 0; r < elements.length; r++) {
+			var element = elements[r]
+			
+			if (
+				!element.path ||
+				!element.path[1] ||
+				!element.path[1].length
+			) continue
+				
+			var x2 = element.path[1][0]
+			var y2 = element.path[1][1]
 			if (x1 == x2 && y1 == y2) {
 				elements[r].dynamics.health = elements[r].dynamics.health - 1
+				break
 			}
 		}
 	}
