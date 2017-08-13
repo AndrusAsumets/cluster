@@ -50,11 +50,10 @@ var shapes = {
 
 var xCount = 20
 var yCount = 8
-var step = 1000
+var step = 1000	
 var walk = true
 var time = (new Date).getTime()
-var added = false
-var recharge = 5 * 1000
+var recharge = 1 * 1000
 
 // create the matrix
 for (var i = 0; i < yCount; i++) {
@@ -84,16 +83,11 @@ var blockHeight = h / vertical
 h = h - blockHeight * 1
 
 var canvas = {
-	background: createHiDPICanvas(w, h, 1),
-	movement: createHiDPICanvas(w, h, 3),
-	menu: createHiDPICanvas(w, h, 4)
+	background: createCanvas(w, h, 1, blockHeight),
+	movement: createCanvas(w, h, 3, blockHeight),
+	menu: createCanvas(w, h, 4, blockHeight)
 }
 
-var layers = document.getElementsByClassName('layer')
-for (var i = 0;i < layers.length; i++) {
-    layers[i].style.top = blockHeight + 'px'
-}
-	
 // create a visual UI grid
 for (var i = -2; i < horizontal + 4; i++) { 
 	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
@@ -159,7 +153,8 @@ function createElement(event) {
 				start: start,
 				end: end,
 				shape: shapes[types[type]],
-				charge: 0
+				charge: 0,
+				dynamics: {}
 			}
 			
 			socket.emit('message', { action: 'building', data: building })
@@ -200,7 +195,10 @@ function createElement(event) {
 				start: start,
 				end: end,
 				shape: shapes[types[type]],
-				charge: 0
+				charge: 0,
+				dynamics: {
+					fired: 0
+				}
 			}
 			
 			socket.emit('message', { action: 'building', data: building })
@@ -232,7 +230,6 @@ socket.on('message', function(message) {
 setInterval(function() {
 	walk = true
 	time = (new Date).getTime()
-	added = false
 }, step)
 
 function animate() {
@@ -242,6 +239,7 @@ function animate() {
 	
 	if (walk) {
 		walk = false
+		reset()
 		health()
 		projectiles = []
 		path()
@@ -255,24 +253,40 @@ function animate() {
 }
 requestAnimationFrame(animate)
 
+function reset() {
+	for (var r = 0; r < buildings.length; r++) {
+		if (!'fired' in buildings[r].dynamics) continue
+		buildings[r].dynamics.fired = 0
+	}
+}
+
 function health() {
 	for (var r = 0; r < elements.length; r++) {
-		if (elements[r].health <= 0) elements.splice(r, 1)
+		if (elements[r].dynamics.health <= 0) elements.splice(r, 1)
 	}
 }
 
 function hit() {
 	for (var r = 0; r < elements.length; r++) {
-		var x2 = elements[r].path[1][0]
-		var y2 = elements[r].path[1][1]
+		var element = elements[r]
+		
+		if (
+			!element.path ||
+			!element.path[1] ||
+			!element.path[1].length
+		) continue	
+			
+		var x2 = element.path[1][0]
+		var y2 = element.path[1][1]
 		
 		for (var p = 0; p < projectiles.length; p++) {
 			var x1 = projectiles[p].path[1][0]
 			var y1 = projectiles[p].path[1][1]
-			
-			if (x1 == x2 && y1 == y2) elements[r].health = elements[r].health - 1
+			if (x1 == x2 && y1 == y2) {
+				elements[r].dynamics.health = elements[r].dynamics.health - 1
+				break
+			}
 		}
-
 	}
 }
 
@@ -295,7 +309,10 @@ function charge(objects, layer) {
 					end: object.end,
 					shape: object.shape,
 					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
-					health: 2
+					dynamics: {
+						health: 3,
+						splash: false
+					}
 				}
 				
 				elements.push(element)
@@ -311,12 +328,12 @@ function path() {
 		var element = elements[p]
 		
 		if (
-			element.path &&
-			element.path[1] &&
-			element.path[1].length
-		) {
-			elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
-		}
+			!element.path ||
+			!element.path[1] ||
+			!element.path[1].length
+		) continue
+		
+		elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
 	}
 }
 
@@ -326,30 +343,25 @@ function move(objects, layer) {
 		var object = objects[p]
 		
 		if (
-			object.path[1] &&
-			object.path[1].length
-		) {
-			var x1 = object.path[0][0] * blockWidth
-			var y1 = object.path[0][1] * blockHeight
-			var x2 = object.path[1][0] * blockWidth
-			var y2 = object.path[1][1] * blockHeight
-			var dt = (new Date).getTime() - time
-			var dx = x1 - (x1 - x2) * dt / step
-			var dy = y1 - (y1 - y2) * dt / step
-			
-			circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)
-		}	
+			!object.path[1] ||
+			!object.path[1].length
+		) continue
+
+		var x1 = object.path[0][0] * blockWidth
+		var y1 = object.path[0][1] * blockHeight
+		var x2 = object.path[1][0] * blockWidth
+		var y2 = object.path[1][1] * blockHeight
+		var dt = (new Date).getTime() - time
+		var dx = x1 - (x1 - x2) * dt / step
+		var dy = y1 - (y1 - y2) * dt / step
+
+		circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)	
 	}
 }
 
 function attack() {
 	for (var p = 0; p < buildings.length; p++) {
 		if (buildings[p].position != 'right') continue
-		
-		if (
-			!buildings[p].start ||
-			!buildings[p].start.length
-		) continue
 		
 		var positionA = buildings[p].start
 		for (var r = 0; r < elements.length; r++) {
@@ -371,6 +383,8 @@ function attack() {
 			}
 			
 			projectiles.push(projectile)
+			buildings[p].dynamics.fired++
+			break
 		}
 	}
 }
@@ -442,16 +456,16 @@ function convertRange(value, r1, r2) {
     return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
 }
 
-function createHiDPICanvas (w, h, z) {
+function createCanvas (w, h, z, top) {
     ratio = PIXEL_RATIO
     var can = document.createElement('canvas')
-    can.className = 'layer'
     can.width = w * ratio
     can.height = h * ratio
     can.style.width = w + 'px'
     can.style.height = h + 'px'
     can.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
 	can.style.position = 'absolute'
+	can.style.top = top + 'px'
 	can.style.zIndex = z
 	document.getElementsByClassName('game')[0].appendChild(can)
 	return can.getContext('2d')
