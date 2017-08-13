@@ -195,11 +195,10 @@ function createElement(event) {
 		}
 	}
 	else if (
-		(creatingElement[2] == true) &&
-		(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
+		(creatingElement[2] && creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[2] && creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[2] && creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(creatingElement[2] && creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
 	) {
 		var type = uiXBlock - creatingElement[0]
 		var id = elements.length
@@ -222,11 +221,10 @@ function createElement(event) {
 		creatingElement = false
 	}
 	else if (
-		(creatingElement[2] == false) &&
-		(creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-		(creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
+		(!creatingElement[2] && creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(!creatingElement[2] && creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(!creatingElement[2] && creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
+		(!creatingElement[2] && creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
 	) {	
 		var type = uiXBlock - creatingElement[0] + types.length - 1
 		var id = elements.length
