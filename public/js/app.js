@@ -3,19 +3,31 @@ var socket = io.connect()
 document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
 document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
 
+var defaultScore = 100
+var defaultHealth = 10
+var players = {
+	left: {
+		score: defaultScore
+	},
+	right: {
+		score: defaultScore
+	}
+}
+var gameLength = 10 * 60 * 1000
+var gameOver = false
 var types = ['earth', 'water', 'fire', 'wind']
 var buildings = []
 var elements = []
 var projectiles = []
 var shapes = {
 	background: {
-		fillStyle: 'rgba(0, 0, 0, 1)'
+		fillStyle: '#191D31'
 	},
 	border: {
 		strokeStyle: 'rgba(255, 255, 255, 0.30)'
 	},
 	active: {
-		fillStyle: 'rgba(0, 0, 0, 1)'
+		fillStyle: '#191D31'
 	},
 	earth: {
 		fillStyle: '#3aff50',
@@ -35,16 +47,48 @@ var shapes = {
 	}
 }
 
-var gridMultiplier = 4
+var gameInterval = setInterval(function() {
+	if (gameOver) return clearInterval(gameInterval)
+	
+	gameLength = gameLength - 1000
+	var ms = gameLength
+	ms = 1000 * Math.round(ms / 1000)
+	var d = new Date(ms)
+	document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
+	
+	score()
+}, 1000)
+
+function score() {
+	document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
+	document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
+	
+	if (gameLength < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+		return false
+	}
+	
+	if (gameLength < 0 || players.left.score < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+		return false
+	}
+	else if (players.right.score < 0) {
+		document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
+		return false
+	}
+	return true
+}
+
 var uiXNum = 20
-var uiYNum = 9
-var gameXNum = uiXNum * gridMultiplier
+var uiYNum = 10
+var gridMultiplier = 4
+var gameXNum = (uiXNum + 1) * gridMultiplier
 var gameYNum = uiYNum * gridMultiplier
-var step = 1500 / gridMultiplier
+var step = 500
 var walkable = true
 var attackable = true
 var time = (new Date).getTime()
-var recharge = 1 * 1000
+var recharge = 10 * 1000
 
 // create matrices
 var matrix = []
@@ -63,7 +107,7 @@ var finder = new PF.AStarFinder({
     allowDiagonal: true
 })
 
-var horizontal = uiXNum - 1
+var horizontal = uiXNum
 var vertical = uiYNum + 1
 var iw = window.innerWidth
 var ih = window.innerHeight
@@ -73,6 +117,10 @@ var blockWidth = w / horizontal
 var blockHeight = h / vertical
 h = h - blockHeight * 1
 
+//menu
+document.getElementsByClassName('menu')[0].style.height = blockHeight + 'px'
+
+// canvas
 var PIXEL_RATIO = (function () {
     var ctx = document.createElement('canvas').getContext('2d'),
         dpr = window.devicePixelRatio || 1,
@@ -91,18 +139,16 @@ var canvas = {
 }
 
 // create a visual UI grid
-for (var i = -1; i < horizontal + 1; i++) { 
-	if (i == horizontal) line(canvas.background, shapes.border, blockWidth * i - 1, 0, blockWidth * i - 1, h)
-	else line(canvas.background, shapes.border, blockWidth * i + 1, 0, blockWidth * i + 1, h)
+for (var i = 1; i < horizontal - 1; i++) { 
+	line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
 }
 
-for (var i = -1; i < vertical; i++) {
-	if (i == vertical - 1) line(canvas.background, shapes.border, 0, blockHeight * i - 1, w, blockHeight * i - 1)
-	else line(canvas.background, shapes.border, 0, blockHeight * i + 1, w, blockHeight * i + 1)
+for (var i = 1; i < vertical - 1; i++) {
+	line(canvas.background, shapes.border, 0, blockHeight * i, w, blockHeight * i)
 }
 
 // separate left from right
-line(canvas.background, shapes.border, blockWidth * (horizontal + 1) / 2, 0, blockWidth * (horizontal + 1) / 2, h)
+line(canvas.background, shapes.border, blockWidth * horizontal / 2, 0, blockWidth * horizontal / 2, h)
 
 //diagonals
 for (var i = 0; i < horizontal; i++) {
@@ -110,13 +156,15 @@ for (var i = 0; i < horizontal; i++) {
 		var x1 = blockWidth * i
 		var y1 = blockHeight * j
 		
-		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.1)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+		line(canvas.background, { strokeStyle: 'rgba(255, 255, 255, 0.05)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 	}
 }
 
 var creatingElement = false
 function createElement(event) {
+	if (!score()) return
+	
 	event.preventDefault()
 	if ('touches' in event) event = event.touches[0]
 	
@@ -218,6 +266,9 @@ socket.on('message', function(message) {
 			break
 			
 		case 'building':
+			document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
+			players[data.position].score = players[data.position].score - 1
+			if (!score()) return
 			setWalkableAt(data.position, data.start[0], data.start[1])
 			buildings.push(data)
 			createPaths()
@@ -289,6 +340,11 @@ function updatePaths() {
 		) continue
 		
 		elements[p].path.splice(0, 1)
+		
+		if (element.path[0][0] >= horizontal * gridMultiplier - 2) {
+			element.path = null
+			players.right.score = players.right.score - 1
+		}
 	}
 }
 
@@ -297,6 +353,7 @@ function createPaths() {
 		var element = elements[p]
 		
 		if (
+			!element.path == 'left' ||
 			!element.path ||
 			!element.path[1] ||
 			!element.path[1].length
@@ -326,9 +383,8 @@ function charge(objects, layer) {
 					shape: object.shape,
 					path: finder.findPath(object.start[0], object.start[1], object.end[0], object.end[1], grid.clone()),
 					dynamics: {
-						totalHealth: 20,
-						health: 20,
-						splash: false
+						totalHealth: defaultHealth,
+						health: defaultHealth
 					}
 				}
 				
@@ -404,6 +460,7 @@ function move(objects, layer, step, multiplier) {
 		var object = objects[p]
 		
 		if (
+			!object.path ||
 			!object.path[1] ||
 			!object.path[1].length
 		) continue
