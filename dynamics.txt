@@ -1,6 +1,5 @@
 sf88r.com
 
-* forbid making two spheres at the same place, instead ask to upgrade or remove
 * slide menu
 * sync time
 

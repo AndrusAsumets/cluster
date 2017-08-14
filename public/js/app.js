@@ -172,6 +172,13 @@ function createElement(event) {
 	var uiYBlock = Math.floor(y / blockHeight) - 1
 	var left = uiXBlock < horizontal / 2
 	
+	if (
+		uiXBlock < 0 ||
+		uiYBlock < 0 ||
+		uiXBlock > uiXNum - 1 ||
+		uiYBlock > uiYNum - 1
+	) return
+	
 	if (!creatingElement) {
 		creatingElement = [uiXBlock, uiYBlock, left]
 		
