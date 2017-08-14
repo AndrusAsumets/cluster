@@ -164,13 +164,14 @@ function createElement(event) {
 	event.preventDefault()
 	if ('touches' in event) event = event.touches[0]
 	
-	canvas.menu.clearRect(0, 0, w, h)
-	
+	// disallow building outside of stage
 	var x = event.clientX
 	var y = event.clientY
 	var uiXBlock = Math.floor(x / blockWidth)
 	var uiYBlock = Math.floor(y / blockHeight) - 1
 	var left = uiXBlock < horizontal / 2
+	
+	canvas.menu.clearRect(0, 0, w, h)
 	
 	if (
 		uiXBlock < 0 ||
