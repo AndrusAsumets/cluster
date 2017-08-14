@@ -1,4 +1,64 @@
-var socket = io.connect()
+var WebSocketServer = {
+	isConnected: false,
+	socket: null,
+	interval: null,
+	connect() {
+		if (this.socket) {
+			this.socket.destroy()
+			delete this.socket
+			this.socket = null
+		}
+		
+		this.socket = io.connect('/', {
+			reconnection: false
+		})
+		
+		this.socket.on('message', (message) => {
+			var action = message.action
+			var data = message.data
+			
+			switch(action) {
+				case 'connect':
+					console.log('connected to ws')
+					this.isConnected = true
+					var room = window.location.hash ? '/' + window.location.hash : '/'
+					this.socket.emit('join', { room: room })
+					break
+					
+				case 'building':
+					if (!score()) return
+					
+					// check if exists on that location already
+					if (exists(data)) return
+					
+					// check for open paths
+					setWalkableAt(data.position, data.start[0], data.start[1], false)
+					if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.position, data.start[0], data.start[1], true)
+					
+					document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
+					players[data.position].score = players[data.position].score - 1
+					buildings.push(data)
+					if (data.position == 'right') createPaths()
+			}
+		})
+
+		this.socket.on('disconnect', () => {
+			this.isConnected = false;
+			this.interval = window.setInterval(() => {
+				if (this.isConnected) {
+					clearInterval(this.interval)
+					this.interval = null
+					return
+				}
+				WebSocketServer.connect()
+			}, 5000)
+		})
+
+		return this.socket
+	}
+}
+
+var socket = WebSocketServer.connect()
 
 var defaultScore = 100
 var defaultHealth = 25
@@ -259,32 +319,6 @@ function createElement(event) {
 		creatingElement = false
 	}
 }
-
-socket.on('message', function(message) {
-	var action = message.action
-	var data = message.data
-	
-	switch(action) {
-		case 'connected':
-			console.log('connected to ws')
-			break
-			
-		case 'building':
-			if (!score()) return
-			
-			// check if exists on that location already
-			if (exists(data)) return
-			
-			// check for open paths
-			setWalkableAt(data.position, data.start[0], data.start[1], false)
-			if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.position, data.start[0], data.start[1], true)
-			
-			document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
-			players[data.position].score = players[data.position].score - 1
-			buildings.push(data)
-			if (data.position == 'right') createPaths()
-	}
-})
 
 function exists(building) {
 	for (var p = 0; p < buildings.length; p++) {

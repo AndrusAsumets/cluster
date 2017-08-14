@@ -17,13 +17,11 @@ io.attach(app)
 
 io.on('connection', context => {
 	console.log('new connection')
-	
-	context.socket.emit('message',  { action: 'connected' })
+	context.socket.emit('message',  { action: 'connect' })
 })
 
 io.on('message', (context, data) => {
 	io.broadcast('message', data)
-	//context.socket.emit('message',  data)
 })
 
 app.listen(PORT)

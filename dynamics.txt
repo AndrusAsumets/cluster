@@ -5,13 +5,13 @@ sf88r.com
  
 
  
-attacking creeps:
+creeps:
 water (blue): speed
 earth (green): strength
 fire (red): demolish
 wind (white): air
 
-defending towers:
+towers:
 water (blue): slow
 earth (green): damage
 fire (red): splash
@@ -20,7 +20,7 @@ wind (white): range
 
 
 
-element | slow      | speed     | range    | air       |   splash | demolish | damage    | strength  |
+element | slow      | speed     | range    | air       | splash   | demolish | damage    | strength  |
 --------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
 earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
 water   |  1        |  2        |  1       |  1        |  1       |  0       |  1        |  1        | 6
@@ -130,7 +130,7 @@ sudo nano /etc/nginx/sites-enabled/default
 nginx config: 
         auth_basic "Restricted Content";
         auth_basic_user_file /etc/nginx/.htpasswd;
-        location ~ ^/ {
+        location / {
                 proxy_pass http://localhost:1337;
                 proxy_http_version 1.1;
                 proxy_set_header Upgrade $http_upgrade;
@@ -138,6 +138,42 @@ nginx config:
                 proxy_set_header Host $host;
                 proxy_cache_bypass $http_upgrade;
         }
+        location dev/ {
+                proxy_pass http://localhost:3000;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+
+
+# another virtual host using mix of IP-, name-, and port-based configuration
+
+server {
+    listen 80;
+
+    auth_basic "Restricted Content";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+    location / {
+        proxy_pass http://localhost:1337;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+    location /dev {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+
 restart nginx: 
 sudo service nginx restart 
 
