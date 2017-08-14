@@ -1,12 +1,8 @@
 sf88r.com
 
 * basic auth
-* end path when outside of screen from right
 * check for open path
-* time counter
-* life counter
 * forbid making two spheres at the same place, instead ask to upgrade or remove
-* recharging status for spheres
 * slide menu
 * sync time
 
@@ -141,3 +137,26 @@ x1    11    1x
 xx    11    xx
 
 
+
+password auth: 
+https://www.digitalocean.com/community/tutorials/how-to-set-up-password-authentication-with-nginx-on-ubuntu-14-04 
+nginx config edit: 
+sudo nano /etc/nginx/sites-enabled/default 
+nginx config: 
+        auth_basic "Restricted Content";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        location ~ ^/ {
+                proxy_pass http://localhost:1337;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+restart nginx: 
+sudo service nginx restart 
+
+close ports: 
+iptables -A INPUT -p tcp --dport 1337 -s 192.168.0.0/24 -j ACCEPT
+iptables -A INPUT -p tcp --dport 1337 -s 127.0.0.0/8 -j ACCEPT
+iptables -A INPUT -p tcp --dport 1337 -j DROP
