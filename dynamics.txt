@@ -2,28 +2,16 @@ sf88r.com
 
 * slide menu
 * sync time
-
-
-
-nodemon --ignore 'public/' server/server.js 
-
-
-
-
-slowy
-
- x
- x
- x
- x x x x
  
-attack towers:
+
+ 
+attacking creeps:
 water (blue): speed
 earth (green): strength
 fire (red): demolish
 wind (white): air
 
-defend towers:
+defending towers:
 water (blue): slow
 earth (green): damage
 fire (red): splash
@@ -32,12 +20,12 @@ wind (white): range
 
 
 
-element |  slow     |  speed    |  range   |  air      |  splash  |  armour  |  damage   |  strength |
+element | slow      | speed     | range    | air       |   splash | demolish | damage    | strength  |
 --------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
-earth   |  0        |  1        |  1       |  0        |  1       |  1       |  2        |  2        | 10
-water   |  1        |  2        |  1       |  1        |  1       |  1       |  1        |  1        | 8
-fire    |  0        |  1        |  1       |  0        |  2       |  2       |  1        |  1        | 10
-wind    |  0        |  1        |  2       |  0        |  1       |  1       |  1        |  1        | 7
+earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
+water   |  1        |  2        |  1       |  1        |  1       |  0       |  1        |  1        | 6
+fire    |  0        |  1        |  1       |  0        |  2       |  1       |  1        |  1        | 5
+wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
 
 
@@ -157,3 +145,6 @@ close ports:
 iptables -A INPUT -p tcp --dport 1337 -s 192.168.0.0/24 -j ACCEPT
 iptables -A INPUT -p tcp --dport 1337 -s 127.0.0.0/8 -j ACCEPT
 iptables -A INPUT -p tcp --dport 1337 -j DROP
+
+start server:
+nodemon --ignore 'public/' server/server.js

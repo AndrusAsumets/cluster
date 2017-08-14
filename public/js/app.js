@@ -10,7 +10,7 @@ var players = {
 		score: defaultScore
 	}
 }
-var gameLength = 10 * 60 * 1000
+var gameLength = 5 * 60 * 1000
 var types = ['earth', 'water', 'fire', 'wind']
 var buildings = []
 var elements = []
@@ -282,7 +282,7 @@ socket.on('message', function(message) {
 			document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
 			players[data.position].score = players[data.position].score - 1
 			buildings.push(data)
-			createPaths()
+			if (data.position == 'right') createPaths()
 	}
 })
 
