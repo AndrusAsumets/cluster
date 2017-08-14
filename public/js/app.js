@@ -1,7 +1,7 @@
 var socket = io.connect()
 
 var defaultScore = 100
-var defaultHealth = 30
+var defaultHealth = 25
 var players = {
 	left: {
 		score: defaultScore
@@ -11,7 +11,6 @@ var players = {
 	}
 }
 var gameLength = 10 * 60 * 1000
-var gameOver = false
 var types = ['earth', 'water', 'fire', 'wind']
 var buildings = []
 var elements = []
@@ -21,7 +20,7 @@ var shapes = {
 		fillStyle: '#191D31'
 	},
 	border: {
-		strokeStyle: 'rgba(255, 255, 255, 0.30)'
+		strokeStyle: 'rgba(255, 255, 255, 0.4)'
 	},
 	active: {
 		fillStyle: '#191D31'
@@ -44,8 +43,8 @@ var shapes = {
 	}
 }
 
-var uiXNum = 20
-var uiYNum = 10
+var uiXNum = 18
+var uiYNum = 9
 var gridMultiplier = 4
 var gameXNum = (uiXNum + 1) * gridMultiplier
 var gameYNum = uiYNum * gridMultiplier
@@ -134,8 +133,7 @@ function score() {
 		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
 		return false
 	}
-	
-	if (gameLength < 0 || players.left.score < 0) {
+	else if (players.left.score < 0) {
 		document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
 		return false
 	}
@@ -153,7 +151,7 @@ var gameInterval = setInterval(function() {
 	var d = new Date(ms)
 	document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
 	
-	if (!score()) return clearInterval(gameInterval)
+	if (!score()) clearInterval(gameInterval)
 }, 1000)
 
 document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
@@ -264,27 +262,31 @@ socket.on('message', function(message) {
 			break
 			
 		case 'building':
+			if (!score()) return
+			
+			// check if exists on that location already
+			if (exists(data)) return
+			
+			// check for open paths
+			setWalkableAt(data.position, data.start[0], data.start[1], false)
+			if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.position, data.start[0], data.start[1], true)
+			
 			document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
 			players[data.position].score = players[data.position].score - 1
-			if (!score()) return
-			setWalkableAt(data.position, data.start[0], data.start[1])
 			buildings.push(data)
 			createPaths()
 	}
 })
 
-function setWalkableAt(position, x, y) {
-	if (position == 'right') {
-		for (var p = -gridMultiplier / 2 - 1; p < gridMultiplier; p++) {
-			for (var r = -gridMultiplier / 2 - 1; r < gridMultiplier; r++) {
-				var left = x + p
-				var top = y + r
-				if (top < 0) top = 0
-				if (top > uiYNum * gridMultiplier - 1) top = uiYNum * gridMultiplier - 1
-				grid.setWalkableAt(left, top, false)
-			}
-		}
+function exists(building) {
+	for (var p = 0; p < buildings.length; p++) {
+		if (
+			buildings[p].start[0] == building.start[0] &&
+			buildings[p].start[1] == building.start[1]
+		) return true
 	}
+	
+	return false
 }
 
 setInterval(function() {
@@ -490,6 +492,20 @@ function isNear(positionA, positionB) {
 		}
 	}
 	return false
+}
+
+function setWalkableAt(position, x, y, walkable) {
+	if (position == 'right') {
+		for (var p = -gridMultiplier / 2 - 1; p < gridMultiplier; p++) {
+			for (var r = -gridMultiplier / 2 - 1; r < gridMultiplier; r++) {
+				var left = x + p
+				var top = y + r
+				if (top < 0) top = 0
+				if (top > uiYNum * gridMultiplier - 1) top = uiYNum * gridMultiplier - 1
+				grid.setWalkableAt(left, top, walkable)
+			}
+		}
+	}
 }
 
 function line(ctx, shape, x1, y1, x2, y2) {

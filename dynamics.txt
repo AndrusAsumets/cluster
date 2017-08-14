@@ -1,7 +1,5 @@
 sf88r.com
 
-* basic auth
-* check for open path
 * forbid making two spheres at the same place, instead ask to upgrade or remove
 * slide menu
 * sync time
