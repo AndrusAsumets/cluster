@@ -1,4 +1,9 @@
 export function game(io, PF, room) {
+	var buildings = []
+	var elements = []
+	var projectiles = []
+	var pingpong = 0 
+	
 	var WebSocketServer = {
 		isConnected: false,
 		socket: null,
@@ -25,6 +30,18 @@ export function game(io, PF, room) {
 						this.isConnected = true
 						var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
 						this.socket.emit('join', { room: room })
+						
+						if (window) socket.emit('message', { action: 'get_state' })
+						
+						
+						setInterval(function() {
+							if (window) socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
+						}, 1000)
+						break
+					
+					case 'pingpong':
+						if (window) pingpong = Math.abs(((new Date).getTime() - data) / 2)
+						console.log(pingpong)
 						break
 						
 					case 'building':
@@ -41,6 +58,24 @@ export function game(io, PF, room) {
 						players[data.position].score = players[data.position].score - 1
 						buildings.push(data)
 						if (data.position == 'right') createPaths()
+						break
+						
+					case 'get_state':
+						if (!window) socket.emit('message', { action: 'set_state', data: { buildings: buildings, elements: elements } })
+						break
+						
+					case 'set_state':
+						if (window) {
+							buildings = data.buildings
+							elements = data.elements
+						}
+						break
+						
+					case 'elements':
+						if (window) {
+							elements = data.elements
+						}
+						break
 				}
 			})
 	
@@ -64,6 +99,7 @@ export function game(io, PF, room) {
 	
 	var defaultScore = 100
 	var defaultHealth = 25
+	var defaultDamage = 5
 	var players = {
 		left: {
 			score: defaultScore
@@ -74,9 +110,6 @@ export function game(io, PF, room) {
 	}
 	var gameLength = 5 * 60 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
-	var buildings = []
-	var elements = []
-	var projectiles = []
 	var shapes = {
 		background: {
 			fillStyle: '#191D31'
@@ -106,8 +139,7 @@ export function game(io, PF, room) {
 	var gridMultiplier = 4
 	var gameXNum = (uiXNum + 1) * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
-	var step = 500
-	var walkable = true
+	var step = 1000
 	var attackable = true
 	var time = (new Date).getTime()
 	var recharge = 5 * 1000
@@ -131,8 +163,8 @@ export function game(io, PF, room) {
 	
 	var horizontal = uiXNum
 	var vertical = uiYNum + 1
-	var iw = window ? window.innerWidth : gameXNum
-	var ih = window ? window.innerHeight : gameYNum
+	var iw = window ? screen.width : gameXNum * 4
+	var ih = window ? screen.height : gameYNum * 4
 	var w = iw > ih ? iw : ih
 	var h = ih < iw ? ih : iw
 	var blockWidth = w / horizontal
@@ -336,35 +368,32 @@ export function game(io, PF, room) {
 	}
 	
 	setInterval(function() {
-		walkable = true
 		time = (new Date).getTime()
+		
+		projectiles = []
+		reset()
+		updatePaths()
+		if (!window) health()
+		attack()	
+		
+		if (!window) {
+			hit()
+			socket.emit('message', { action: 'elements', data: { elements: elements } })
+			projectiles = []
+		}
 	}, step)
 	
-	if (!window) {
-		setInterval(function() {
-			animate()
-		}, 1000 / 60)
-	}
+	setInterval(function() {
+		animate()
+	}, 1000 / 60)
 	
 	function animate() {
-		if (window) requestAnimationFrame(animate)
 		if (window) canvas.movement.clearRect(0, 0, w, h)
 		
-		if (walkable) {
-			walkable = false
-			projectiles = []
-			reset()
-			updatePaths()
-			health()
-			attack()
-			hit()
-		}
-		
-		charge(buildings, 'movement')
-		move(elements, 'movement')
-		move(projectiles, 'movement')
+		charge(buildings, 'movement', 0)
+		move(elements, 'movement', 0)
+		move(projectiles, 'movement', pingpong)
 	}
-	if (window) requestAnimationFrame(animate)
 	
 	function reset() {
 		for (var r = 0; r < buildings.length; r++) {
@@ -392,7 +421,7 @@ export function game(io, PF, room) {
 			elements[p].path.splice(0, 1)
 			
 			if (element.path[0][0] >= horizontal * gridMultiplier - 2) {
-				element.path = null
+				elements.splice(p, 1)
 				players.right.score = players.right.score - 1
 			}
 		}
@@ -438,7 +467,7 @@ export function game(io, PF, room) {
 						}
 					}
 					
-					elements.push(element)
+					if (!window) elements.push(element)
 				}
 				else {
 					objects[p].built = true	
@@ -450,6 +479,7 @@ export function game(io, PF, room) {
 	}
 	
 	function attack() {
+		var x = window ? 1 : 0
 		for (var p = 0; p < buildings.length; p++) {
 			if (buildings[p].position != 'right') continue
 			if (!buildings[p].built) continue
@@ -458,17 +488,18 @@ export function game(io, PF, room) {
 			for (var r = 0; r < elements.length; r++) {
 				if (
 					!elements[r].path ||
-					!elements[r].path[1] ||
-					!elements[r].path[1].length
+					!elements[r].path[x] ||
+					!elements[r].path[x].length
 				) continue
 	
-				var positionB = elements[r].path[1]
+				var positionB = elements[r].path[x]
 				if (!isNear(positionA, positionB)) continue
 				
 				var projectile = {
 					path: [
 						buildings[p].start,
-						elements[r].path[1]
+						elements[r].path[1],
+						elements[r].path[2]
 					],
 					shape: buildings[p].shape
 				}
@@ -481,23 +512,24 @@ export function game(io, PF, room) {
 	}
 	
 	function hit() {
+		var x = window ? 2 : 1
 		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = projectiles[p].path[1][0]
-			var y1 = projectiles[p].path[1][1]
+			var x1 = !window ? projectiles[p].path[1][0] : projectiles[p].path[2][0]
+			var y1 = !window ? projectiles[p].path[1][1] : projectiles[p].path[2][1]
 				
 			for (var r = 0; r < elements.length; r++) {
 				var element = elements[r]
 				
 				if (
 					!element.path ||
-					!element.path[1] ||
-					!element.path[1].length
+					!element.path[x] ||
+					!element.path[x].length
 				) continue
 					
 				var x2 = element.path[1][0]
 				var y2 = element.path[1][1]
 				if (x1 == x2 && y1 == y2) {
-					elements[r].dynamics.health = elements[r].dynamics.health - 1
+					elements[r].dynamics.health = elements[r].dynamics.health - defaultDamage
 					break
 				}
 			}
@@ -505,7 +537,7 @@ export function game(io, PF, room) {
 	}
 	
 	// move the elements according to their positions in space and time
-	function move(objects, layer) {
+	function move(objects, layer, delay) {
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			
@@ -519,7 +551,7 @@ export function game(io, PF, room) {
 			var y1 = object.path[0][1] * (blockHeight / gridMultiplier)
 			var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
 			var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
-			var dt = (new Date).getTime() - time
+			var dt = (new Date).getTime() - (!window ? time : time - delay)
 			var dx = x1 - (x1 - x2) * dt / step
 			var dy = y1 - (y1 - y2) * dt / step	
 			
