@@ -53,8 +53,13 @@ export function game(io, room) {
 						if (window) socket.emit('message', { action: 'get_state' })
 						
 						setInterval(function() {
+							ping()
+						}, 10000)
+						
+						function ping() {
 							if (window) socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
-						}, 5000)
+						}
+						ping()
 						break
 					
 					case 'pingpong':
