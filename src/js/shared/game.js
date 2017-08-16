@@ -1,8 +1,27 @@
-export function game(io, PF, room) {
+export function game(io, room) {
+	var PF = require('pathfinding')
+	var pingpong = null
+	/*
+	var lastDelay = 0
+	var delay = 0
+	var delayed = 0
+	if (window) {
+		var timesync = require('timesync')
+		var ts = timesync.create({
+			server: '/timesync',
+			interval: 10000
+		})
+		
+		// get notified on changes in the offset 
+		ts.on('change', function (offset) {
+			delay = offset % 1000 - delayed
+		})
+	}
+	*/
+	
 	var buildings = []
 	var elements = []
 	var projectiles = []
-	var pingpong = 0 
 	
 	var WebSocketServer = {
 		isConnected: false,
@@ -28,20 +47,18 @@ export function game(io, PF, room) {
 					case 'connect':
 						console.log('connected to ws')
 						this.isConnected = true
-						var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
-						this.socket.emit('join', { room: room })
+						//var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
+						//this.socket.emit('join', { room: room })
 						
 						if (window) socket.emit('message', { action: 'get_state' })
 						
-						
 						setInterval(function() {
 							if (window) socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
-						}, 1000)
+						}, 5000)
 						break
 					
 					case 'pingpong':
-						if (window) pingpong = Math.abs(((new Date).getTime() - data) / 2)
-						console.log(pingpong)
+						if (window) pingpong = ((new Date).getTime() - data) / 2
 						break
 						
 					case 'building':
@@ -117,7 +134,7 @@ export function game(io, PF, room) {
 		border: {
 			strokeStyle: 'rgba(255, 255, 255, 0.4)'
 		},
-		active: {
+		active: {		
 			fillStyle: '#191D31'
 		},
 		earth: {
@@ -374,12 +391,11 @@ export function game(io, PF, room) {
 		reset()
 		updatePaths()
 		if (!window) health()
-		attack()	
+		attack()
 		
 		if (!window) {
 			hit()
 			socket.emit('message', { action: 'elements', data: { elements: elements } })
-			projectiles = []
 		}
 	}, step)
 	
@@ -392,7 +408,21 @@ export function game(io, PF, room) {
 		
 		charge(buildings, 'movement', 0)
 		move(elements, 'movement', 0)
-		move(projectiles, 'movement', pingpong)
+		move(projectiles, 'movement', pingpong)	
+		
+		/*
+		if (delay) {
+			setTimeout(function() {
+				delayed = delay
+				move(projectiles, 'movement')
+				console.log('delayed', delayed)
+				play()
+			}, delay)			
+		}
+		else {
+			move(projectiles, 'movement')	
+		}
+		*/
 	}
 	
 	function reset() {
@@ -551,7 +581,7 @@ export function game(io, PF, room) {
 			var y1 = object.path[0][1] * (blockHeight / gridMultiplier)
 			var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
 			var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
-			var dt = (new Date).getTime() - (!window ? time : time - delay)
+			var dt = (new Date).getTime() - time + delay
 			var dx = x1 - (x1 - x2) * dt / step
 			var dy = y1 - (y1 - y2) * dt / step	
 			
@@ -662,4 +692,3 @@ export function game(io, PF, room) {
 		return can.getContext('2d')
 	}
 }
-

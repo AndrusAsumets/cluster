@@ -4,4 +4,4 @@ require('./src/css/app.css')
 
 import { game } from './src/js/shared/game'
 
-game(io, PF)
+game(io)

@@ -4,12 +4,13 @@ const serve = require('koa-static')
 let router = require('koa-router')()
 var bodyParser = require('koa-bodyparser')
 var cors = require('kcors')
-var PF = require('pathfinding')
+var timesyncServer = require('timesync/server')
 const IO = require('koa-socket')
 const io = new IO()
 const client = require('socket.io-client')
-const PORT = process.env.PORT || 1337
+const PORT = 1337
 import { game } from './src/js/shared/game'
+
 
 app.use(bodyParser())
 app.use(cors())
@@ -20,17 +21,24 @@ io.attach(app)
 
 io.on('connection', context => {
 	console.log('new connection')
-	context.socket.emit('message',  { action: 'connect' })
+	context.socket.emit('message', { action: 'connect' })
 })
 
 io.on('message', (context, data) => {
 	console.log(data)
-	io.broadcast('message', data)
+	io.broadcast('message', data)	
 })
 
 app.listen(PORT)
 
-console.log('Server is listening on', PORT + '.')
+/*
+var express = require('express')
+var server = express()
+
+server.use(express.static('public'))
+server.use('/timesync', timesyncServer.requestHandler)
+server.listen(8081)
+*/
 
 global.window = null
-game(client, PF, '/')
+game(client, '/')
