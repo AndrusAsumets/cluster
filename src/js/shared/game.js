@@ -1,6 +1,7 @@
 export function game(io, room) {
 	var PF = require('pathfinding')
 	var pingpong = null
+	var speedMultiplier = 0.5
 	/*
 	var lastDelay = 0
 	var delay = 0
@@ -56,14 +57,17 @@ export function game(io, room) {
 							ping()
 						}, 10000)
 						
+						setTimeout(function() {
+							ping()
+						}, 1000)						
+						
 						function ping() {
 							if (window) socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
 						}
-						ping()
 						break
 					
 					case 'pingpong':
-						if (window) pingpong = ((new Date).getTime() - data) / 2
+						if (window) pingpong = ((new Date).getTime() - data) / 2 * speedMultiplier
 						break
 						
 					case 'building':
@@ -161,7 +165,7 @@ export function game(io, room) {
 	var gridMultiplier = 4
 	var gameXNum = (uiXNum + 1) * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
-	var step = 1000
+	var step = 1000 * speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
 	var recharge = 5 * 1000
