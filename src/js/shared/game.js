@@ -1,7 +1,15 @@
-export function game(io, room) {
+export function game(room) {
+	var client = window ? true : false
+	var server = !window ? true : false
+	var io = require('socket.io-client')
 	var PF = require('pathfinding')
 	var pingpong = null
-	var speedMultiplier = 0.5
+	var speedMultiplier = 2
+	var host = client ? 'ws://188.166.0.158:1337' : 'ws://localhost:1337'
+	
+	var buildings = []
+	var elements = []
+	var projectiles = []
 	/*
 	var lastDelay = 0
 	var delay = 0
@@ -20,17 +28,14 @@ export function game(io, room) {
 	}
 	*/
 	
-	var buildings = []
-	var elements = []
-	var projectiles = []
-	
+	/*
 	var WebSocketServer = {
 		isConnected: false,
 		socket: null,
 		interval: null,
-		connect() {
-			var host = window ? ':80/' : 'http://localhost:1337'
-			if (this.socket) {
+		connect: function() {
+			//if (window) document.getElementsByClassName('menu')[0].innerHTML = socket
+			if (this.socket != null) {
 				this.socket.destroy()
 				delete this.socket
 				this.socket = null
@@ -40,7 +45,7 @@ export function game(io, room) {
 				reconnection: false
 			})
 			
-			this.socket.on('message', (message) => {
+			this.socket.on('message', function (message) {
 				var action = message.action
 				var data = message.data
 				
@@ -105,7 +110,7 @@ export function game(io, room) {
 				}
 			})
 	
-			this.socket.on('disconnect', () => {
+			this.socket.on('disconnect', function () {
 				this.isConnected = false;
 				this.interval = window.setInterval(() => {
 					if (this.isConnected) {
@@ -122,9 +127,76 @@ export function game(io, room) {
 	}
 	
 	var socket = WebSocketServer.connect()
+	*/
 	
-	var defaultScore = 100
-	var defaultHealth = 25
+	var socket = io.connect(host)
+	
+	socket.on('message', function (message) {
+		var action = message.action
+		var data = message.data
+		
+		switch(action) {	
+			case 'connect':
+				console.log('connected to ws')
+				//var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
+				//this.socket.emit('join', { room: room })
+				
+				if (client) socket.emit('message', { action: 'get_state' })
+				
+				setInterval(function() {
+					ping()
+				}, 10000)
+				
+				setTimeout(function() {
+					ping()
+				}, 1000)						
+				
+				function ping() {
+					if (client) socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
+				}
+				break
+			
+			case 'pingpong':
+				if (client) pingpong = ((new Date).getTime() - data) / 2 / speedMultiplier
+				break
+				
+			case 'building':
+				if (!score()) return
+				
+				// check if exists on that location already
+				if (exists(data)) return
+				
+				// check for open paths
+				setWalkableAt(data.position, data.start[0], data.start[1], false)
+				if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.position, data.start[0], data.start[1], true)
+				
+				if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
+				players[data.position].score = players[data.position].score - 1
+				buildings.push(data)
+				if (data.position == 'right' && server) createPaths()
+				break
+				
+			case 'get_state':
+				if (server) socket.emit('message', { action: 'set_state', data: { buildings: buildings, elements: elements } })
+				break
+				
+			case 'set_state':
+				if (client) {
+					buildings = data.buildings
+					elements = data.elements
+				}
+				break
+				
+			case 'elements':
+				if (client) {
+					elements = data
+				}
+				break
+		}
+	})
+	
+	var defaultScore = 10000
+	var defaultHealth = 50
 	var defaultDamage = 5
 	var players = {
 		left: {
@@ -134,7 +206,7 @@ export function game(io, room) {
 			score: defaultScore
 		}
 	}
-	var gameLength = 5 * 60 * 1000
+	var gameLength = 10 * 60 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var shapes = {
 		background: {
@@ -160,15 +232,15 @@ export function game(io, room) {
 		}
 	}
 	
-	var uiXNum = 18
-	var uiYNum = 9
+	var uiXNum = 20
+	var uiYNum = 10
 	var gridMultiplier = 4
 	var gameXNum = (uiXNum + 1) * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
-	var step = 1000 * speedMultiplier
+	var step = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
-	var recharge = 5 * 1000
+	var recharge = 1 * 1000
 	
 	// create matrices
 	var matrix = []
@@ -198,10 +270,10 @@ export function game(io, room) {
 	h = h - blockHeight * 1
 	
 	//menu
-	window ? document.getElementsByClassName('menu')[0].style.height = blockHeight + 'px' : null
+	client ? document.getElementsByClassName('menu')[0].style.height = blockHeight + 'px' : null
 	
 	// canvas
-	var PIXEL_RATIO = window ? (function () {
+	var PIXEL_RATIO = client ? (function () {
 	    var ctx = document.createElement('canvas').getContext('2d'),
 	        dpr = window.devicePixelRatio || 1,
 	        bsr = ctx.webkitBackingStorePixelRatio ||
@@ -212,13 +284,13 @@ export function game(io, room) {
 	
 	    return dpr / bsr
 	})() : null
-	var canvas = window ? {
+	var canvas = client ? {
 		background: createCanvas(w, h, 1, blockHeight),
 		movement: createCanvas(w, h, 2, blockHeight),
 		menu: createCanvas(w, h, 3, blockHeight)
 	} : null
 	
-	if (window) {
+	if (client) {
 		// create a visual UI grid
 		for (var i = 1; i < horizontal; i++) { 
 			line(canvas.background, shapes.border, blockWidth * i, 0, blockWidth * i, h)
@@ -245,23 +317,21 @@ export function game(io, room) {
 	
 	function score() {
 		var playing = true
-		if (window) document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
-		if (window) document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
+		if (client) document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
+		if (client) document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
 		
 		if (gameLength < 0) {
-			if (window) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
 			playing = false
 		}
 		else if (players.left.score < 0) {
-			if (window) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
 			playing = false
 		}
 		else if (players.right.score < 0) {
-			if (window) document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
+			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
 			playing = false
 		}
-		
-		if (!playing && !window) socket.emit('message', 'game_over')
 		
 		return playing
 	}
@@ -271,13 +341,13 @@ export function game(io, room) {
 		var ms = gameLength
 		ms = 1000 * Math.round(ms / 1000)
 		var d = new Date(ms)
-		if (window) document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
+		if (client) document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
 		
 		if (!score()) clearInterval(gameInterval)
 	}, 1000)
 	
-	if (window) document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
-	if (window) document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
+	if (client) document.getElementsByClassName('game')[0].addEventListener('touchstart', function(event) { createElement(event) })
+	if (client) document.getElementsByClassName('game')[0].addEventListener('mousedown', function(event) { createElement(event) })
 	
 	var creatingElement = false
 	function createElement(event) {
@@ -285,6 +355,8 @@ export function game(io, room) {
 		
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
+		
+		//document.getElementsByClassName('game')[0].innerHTML = JSON.stringify(creatingE)
 		
 		// disallow building outside of stage
 		var x = event.clientX
@@ -307,17 +379,17 @@ export function game(io, room) {
 			
 			if (left) {
 				for (var i = 0; i < types.length; i++) {
-					rect(canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+					rect(canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockWidth)
 					
-					borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+					borderedCircle(canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockWidth)
 				}
 			}
 			else {
 				var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 				for (var i = 0; i < types.length; i++) {
-					rect(canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+					rect(canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockWidth)
 					
-					borderedCircle(canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+					borderedCircle(canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockWidth)
 				}
 			}
 		}
@@ -399,12 +471,12 @@ export function game(io, room) {
 		projectiles = []
 		reset()
 		updatePaths()
-		if (!window) health()
+		if (server) health()
 		attack()
 		
-		if (!window) {
+		if (server) {
 			hit()
-			socket.emit('message', { action: 'elements', data: { elements: elements } })
+			socket.emit('message', { action: 'elements', data: elements })
 		}
 	}, step)
 	
@@ -413,7 +485,7 @@ export function game(io, room) {
 	}, 1000 / 60)
 	
 	function animate() {
-		if (window) canvas.movement.clearRect(0, 0, w, h)
+		if (client) canvas.movement.clearRect(0, 0, w, h)
 		
 		charge(buildings, 'movement', 0)
 		move(elements, 'movement', 0)
@@ -477,7 +549,8 @@ export function game(io, room) {
 				!element.path[1].length
 			) continue
 			
-			elements[p].path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+			var path = finder.findPath(elements[p].path[1][0], elements[p].path[1][1], elements[p].end[0], elements[p].end[1], grid.clone())
+			elements[p].path = path.slice(0, 3 * gridMultiplier * speedMultiplier)
 		}
 	}
 	
@@ -506,19 +579,19 @@ export function game(io, room) {
 						}
 					}
 					
-					if (!window) elements.push(element)
+					if (server) elements.push(element)
 				}
 				else {
 					objects[p].built = true	
 				}
 			}
 			
-			if (window) borderedCircle(canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gridMultiplier), object.start[1] * (blockHeight / gridMultiplier), blockWidth, blockHeight, object.charge)
+			if (client) borderedCircle(canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gridMultiplier), object.start[1] * (blockHeight / gridMultiplier), blockWidth, blockWidth, object.charge)
 		}
 	}
 	
 	function attack() {
-		var x = window ? 1 : 0
+		var x = client ? 1 : 0
 		for (var p = 0; p < buildings.length; p++) {
 			if (buildings[p].position != 'right') continue
 			if (!buildings[p].built) continue
@@ -551,10 +624,10 @@ export function game(io, room) {
 	}
 	
 	function hit() {
-		var x = window ? 2 : 1
+		var x = client ? 2 : 1
 		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = !window ? projectiles[p].path[1][0] : projectiles[p].path[2][0]
-			var y1 = !window ? projectiles[p].path[1][1] : projectiles[p].path[2][1]
+			var x1 = server ? projectiles[p].path[1][0] : projectiles[p].path[2][0]
+			var y1 = server ? projectiles[p].path[1][1] : projectiles[p].path[2][1]
 				
 			for (var r = 0; r < elements.length; r++) {
 				var element = elements[r]
@@ -597,10 +670,10 @@ export function game(io, room) {
 			if (object.type) {
 				var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 				var percentage = convertRange(health, [0, object.dynamics.totalHealth], [1, 100])
-				if (window) borderedCircle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight, percentage)
+				if (client) borderedCircle(canvas[layer], object.shape, dx, dy, blockWidth, blockWidth, percentage)
 			}
 			else {
-				if (window) circle(canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)
+				if (client) circle(canvas[layer], object.shape, dx, dy, blockWidth, blockWidth)
 			}
 		}
 	}

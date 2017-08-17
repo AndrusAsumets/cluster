@@ -7,7 +7,6 @@ var cors = require('kcors')
 var timesyncServer = require('timesync/server')
 const IO = require('koa-socket')
 const io = new IO()
-const client = require('socket.io-client')
 const PORT = 1337
 import { game } from './src/js/shared/game'
 
@@ -41,4 +40,4 @@ server.listen(8081)
 */
 
 global.window = null
-game(client, '/')
+game('/')
