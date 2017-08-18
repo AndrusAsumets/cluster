@@ -1,13 +1,13 @@
 export function game() {	
-	const CREATE_PLAYER = 'CREATE_PLAYER'
-	const STATE = 'STATE'
+	const GET_STATE = 'GET_STATE'
+	const SET_STATE = 'SET_STATE'
 	
 	var client = window ? true : false
 	var host = !window ? true : false
 	var io = require('socket.io-client')
 	var PF = require('pathfinding')
 	var pingpong = null
-	var speedMultiplier = 1 / 1.5
+	var speedMultiplier = 1
 	var uiXNum = 20
 	var uiYNum = 10
 	var gridMultiplier = 2
@@ -16,7 +16,7 @@ export function game() {
 	var step = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
-	var recharge = 30 * 1000
+	var recharge = 15 * 1000
 	var players = {}
 	
 	var PIXEL_RATIO = client ? (function () {
@@ -38,7 +38,7 @@ export function game() {
 	var h = client ? size().y : gameYNum
 	var blockWidth = w / horizontal
 	var blockHeight = h / vertical
-	w = w
+	w = w// / splitScreen
 	h = h / splitScreen
 	
 	function Player (options) {
@@ -162,12 +162,7 @@ export function game() {
 					
 					players[me] = new Player({ id: me })
 					
-					socket.emit('message', { action: CREATE_PLAYER, data: me})
-					
-					for (var p = 0; p < players.length; p++) {
-						//playerId = players[p]
-						//socket.emit('message', { action: 'create_player', data: playerId })
-					}
+					socket.emit('message', { action: GET_STATE, data: me })
 
 					function ping() {
 						//socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
@@ -179,18 +174,20 @@ export function game() {
 				}
 				break
 				
-			case CREATE_PLAYER:
+			case GET_STATE:
 				if (host) {
 					if (!players[data]) players[data] = new Player({ id: data })
-					socket.emit('message', { to: data, action: STATE, data: players })
+					
+					socket.emit('message', { action: SET_STATE, data: players })
 				}
 				break
 				
-			case STATE:
-				if (client && to == me) {
+			case SET_STATE:
+				if (client) {
 					for (var key in data) {
 						if (!players[key]) players[key] = new Player({ id: key })
-
+						console.log(players)
+						
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
 					}
@@ -218,10 +215,6 @@ export function game() {
 				//players[data.position].score = players[data.position].score - 1
 				player.buildings.push(data)
 				if (host) createPaths(player) // host
-				break
-				
-			case 'elements':
-				//if (client) for (var p = 0; p < data.length; p++) players[data[p][0]] = data[p][1]
 				break
 		}
 	})	
