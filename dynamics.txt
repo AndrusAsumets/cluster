@@ -1,27 +1,53 @@
+>> THE BUBBLE FACTORY
+
+* close first and last rows
+* create/emit elements & score by host
+* varying recharge count for bubbles
+* when to calculate paths?
+
 bubblefactory.games
 bubblefactory.game
 sf88r.com
 
+NOW:
 * fix attacking
 * fix walkables
 * fix crash when clicking to sides
+
+PHASE1:
 * unify canvases
 * sync time
-* menu
-* game rooms
+* menu & player switching for mobile
 * game modes (2 player, 4 player)
-* store game data to file/server
-* replay
-* player switching for mobile
-* game balance
-* menu for remove / upgrade
-* upgrades
-* different sizes that correspond to strength/power
+* store game data to file/database & playback
+* game balance & upgrades
+* dropdown for removing / upgrading
+* different sizes for the bubbles that correspond to strength/power
 * click on a bubble, then press on a factory to release the power
+* cant build here warning
 * enemy picker
-* ranking
+* game rooms
 * lobby
-* landing
+* ranking
+* deployment
+* ionic
+* testing
+
+PHASE2:
+* pricing model
+* release strategy
+* IP
+* app store / play store
+* operations
+
+PEOPLE:
+* story > who?
+* moneying model > bootstrappig/funding
+* help for development > Kristjan? Arco?
+* sounds > Markku?
+* landing -> Kaarel? & Okeiko?
+* scaling -> Kristo?
+
  
 creeps:
 water (blue): speed

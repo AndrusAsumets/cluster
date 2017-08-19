@@ -1,12 +1,21 @@
-export function game() {	
+export function game() {
+	var io = require('socket.io-client')
+	var PF = require('pathfinding')
+	
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
 	
+	//network
 	var client = window ? true : false
 	var host = !window ? true : false
-	var io = require('socket.io-client')
-	var PF = require('pathfinding')
 	var pingpong = null
+	
+	// gameplay
+	var defaultScore = 10000
+	var defaultHealth = 25
+	var defaultDamage = 1
+	var gameLength = 1 * 60 * 1000
+	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
 	var uiXNum = 9
 	var uiYNum = 12
@@ -16,9 +25,10 @@ export function game() {
 	var step = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
-	var recharge = 30 * 1000
+	var recharge = 5 * 1000
 	var players = {}
 	
+	//window
 	var PIXEL_RATIO = client ? (function () {
 	    var ctx = document.createElement('canvas').getContext('2d'),
 	        dpr = window.devicePixelRatio || 1,
@@ -30,7 +40,6 @@ export function game() {
 	
 	    return dpr / bsr
 	})() : null
-	
 	var splitScreen = 2
 	var horizontal = uiXNum
 	var vertical = uiYNum
@@ -41,6 +50,7 @@ export function game() {
 	var blockWidth = w / horizontal
 	var blockHeight = h / vertical
 	
+	//ui
 	var shapes = {
 		background: {
 			fillStyle: function (alpha) { return 'rgba(25, 29, 49, ' + alpha + ')' }
@@ -48,7 +58,7 @@ export function game() {
 		dark: {
 			strokeStyle: function (alpha) { return 'rgba(0, 0, 0, ' + alpha + ')' }
 		},
-		border: {
+		light: {
 			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
 		},
 		active: {		
@@ -88,11 +98,11 @@ export function game() {
 			
 			// create a visual UI grid
 			for (var i = 0; i < horizontal; i++) { 
-				line(this.canvas.background, shapes.dark, blockWidth * i, 0, blockWidth * i, h, 0.5)
+				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.5)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(this.canvas.background, shapes.dark, 0, blockHeight * i, w, blockHeight * i, 0.5)
+				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.5)
 			}
 			
 			// separate sides
@@ -113,12 +123,6 @@ export function game() {
 			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createElement(event) })
 		}
 	}
-	
-	var defaultScore = 10000
-	var defaultHealth = 50
-	var defaultDamage = 5
-	var gameLength = 10 * 60 * 1000
-	var types = ['earth', 'water', 'fire', 'wind']
 	
 	// create matrices
 	var matrix = []
@@ -190,7 +194,6 @@ export function game() {
 				if (client) {
 					for (var key in data) {
 						if (!players[key]) players[key] = new Player({ id: key })
-						console.log(players)
 						
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
@@ -212,16 +215,17 @@ export function game() {
 				
 				// check for open paths
 				setWalkableAt(data.start[0], data.start[1], false)
-				if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.start[0], data.start[1], true)
+				//if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.start[0], data.start[1], true)
 				
-				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
+				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1 
 				
 				//players[data.position].score = players[data.position].score - 1
-				player.buildings.push(data)
+				//console.log(data.type, shapes)
+				players[data.playerId].buildings.push(data)
 				if (host) createPaths(player) // host
 				break
 		}
-	})	
+	})
 	
 	function score() {
 		return true
@@ -319,7 +323,6 @@ export function game() {
 				type: types[type],
 				start: start,
 				end: end,
-				shape: shapes[types[type]],
 				charge: 0,
 				dynamics: {}
 			}
@@ -393,12 +396,10 @@ export function game() {
 		}
 		
 		//if (host) socket.emit('message', { action: 'elements', data: elements })
-		}, step)
+	}, step)
 	
 	setInterval(function() {
-		for (var key in players) {
-			if (key != 'undefined') animate(key)
-		}
+		for (var key in players) animate(key)
 	}, 1000 / 60)
 	
 	function animate(key) {
@@ -527,7 +528,7 @@ export function game() {
 	
 	function attack(player) {
 		var buildings = player.buildings ? player.buildings : []
-		var x = 0
+		var x = 1
 		for (var p = 0; p < buildings.length; p++) {
 			if (!player.buildings[p].built) continue
 			
@@ -548,7 +549,7 @@ export function game() {
 						player.elements[r].path[1],
 						player.elements[r].path[2]
 					],
-					shape: player.buildings[p].shape
+					shape: shapes[player.buildings[p].type]
 				}
 				
 				players[player.id].projectiles.push(projectile)
@@ -675,27 +676,27 @@ export function game() {
 					borderedCircle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight, percentage, 0.55)
 				}
 				else {
-					circle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight)
+					circle(players[key].canvas[layer], object.shape, dx, dy, blockWidth, blockHeight, 1)
 				}
 			}
 		}
 	}
 	
 	function setWalkableAt(x, y, walkable) {
-		for (var p = 1; p < gridMultiplier + 1; p++) {
-			for (var r = 1; r < gridMultiplier + 1; r++) {
+		for (var p = 0; p < gridMultiplier; p++) {
+			for (var r = 0; r < gridMultiplier ; r++) {
 				var left = x + p
 				var top = y + r
-				if (left && top) grid.setWalkableAt(left, top, walkable)
+				grid.setWalkableAt(left, top, walkable)
 			}
 		}
 	}
 	
 	function isNear(positionA, positionB) {
-		for (var q = 0; q < gridMultiplier; q++) {
-			if ((positionA[0] + q) * gridMultiplier == positionB[0]) {
-				for (var o = 0; o < 3 * gridMultiplier; o++) {
-					if ((positionA[1] + o) * gridMultiplier == positionB[1]) return true
+		for (var q = -gridMultiplier; q < gridMultiplier * 2; q++) {
+			if (positionA[0] + q == positionB[0]) {
+				for (var o = -gridMultiplier; o < gridMultiplier * 2; o++) {
+					if (positionA[1] + o == positionB[1]) return true
 				}
 			}
 		}
