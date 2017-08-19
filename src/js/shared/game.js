@@ -78,6 +78,16 @@ export function game() {
 		}
 	}
 	
+	// create matrices
+	var matrix = []
+	for (var i = 0; i < gameYNum; i++) {
+		matrix.push([])
+		
+		for (var j = 0; j < gameXNum; j++) {
+			matrix[i].push(0)
+		}
+	}
+	
 	function Player (options) {
 		this.id = options.id
 		this.buildings = []
@@ -85,6 +95,9 @@ export function game() {
 		this.projectiles = []
 		
 		var self = this
+		
+		// make grids from the matrices
+		this.grid = new PF.Grid(matrix)
 		
 		if (client) {
 			this.container = document.createElement('div')
@@ -123,19 +136,6 @@ export function game() {
 			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createElement(event) })
 		}
 	}
-	
-	// create matrices
-	var matrix = []
-	for (var i = 0; i < gameYNum; i++) {
-		matrix.push([])
-		
-		for (var j = 0; j < gameXNum; j++) {
-			matrix[i].push(0)
-		}
-	}
-	
-	// make grids from the matrices
-	var grid = new PF.Grid(matrix)
 	
 	var finder = new PF.AStarFinder({
 	    allowDiagonal: true
@@ -213,14 +213,9 @@ export function game() {
 				// check if exists on that location already
 				if (exists(player.buildings, data)) return
 				
-				// check for open paths
-				setWalkableAt(data.start[0], data.start[1], false)
-				//if (!finder.findPath(0, 0, gameXNum - 1, 0, grid.clone()).length) return setWalkableAt(data.start[0], data.start[1], true)
-				
 				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1 
 				
 				//players[data.position].score = players[data.position].score - 1
-				//console.log(data.type, shapes)
 				players[data.playerId].buildings.push(data)
 				if (host) createPaths(player) // host
 				break
@@ -317,6 +312,11 @@ export function game() {
 			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
 			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]
 			
+			// check for open paths
+			setWalkableAt(players[me], start[0], start[1], false)
+			var path = finder.findPath(0, 0, 0, gameYNum - 1, players[me].grid.clone())
+			if (!path.length) return setWalkableAt(players[me], start[0], start[1], true)	
+			
 			// create a building
 			var building = {
 				playerId: player.id,
@@ -342,6 +342,11 @@ export function game() {
 			var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
 			var end = [0, creatingElement[1] * gridMultiplier]
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
+			
+			// check for open paths
+			setWalkableAt(players[me], start[0], start[1], false)
+			var path = finder.findPath(0, 0, 0, gameYNum - 1, players[me].grid.clone())
+			if (!path.length) return setWalkableAt(players[me], start[0], start[1], true)
 			
 			// create a building
 			var building = {
@@ -472,7 +477,7 @@ export function game() {
 				!element.path[1].length
 			) continue
 			
-			var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
+			var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
 			
 			players[player.id].elements[p].path = path
 		}
@@ -505,22 +510,23 @@ export function game() {
 				players[key].buildings[p].charge = 0
 				players[key].buildings[p].built = true
 				
-				var direction = getDirection(key)
-				var start = [objects[p].start[0], direction[0][1]]
-				var end = [objects[p].start[0], direction[1][1]]
-				var element = {
-					id: players[key].elements.length,
-					type: object.type,
-					start: start,
-					end: end,
-					path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
-					dynamics: {
-						totalHealth: defaultHealth,
-						health: defaultHealth
+				for (var r in players) if (r != key) {
+					var direction = getDirection(key)
+					var start = [objects[p].start[0], direction[0][1]]
+					var end = [objects[p].start[0], direction[1][1]]
+					var element = {
+						id: players[key].elements.length,
+						type: object.type,
+						start: start,
+						end: end,
+						path: finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()),
+						dynamics: {
+							totalHealth: defaultHealth,
+							health: defaultHealth
+						}
 					}
+					players[r].elements.push(element)
 				}
-				
-				for (var p in players) if (p != key) players[p].elements.push(element)
 			}
 			
 			if (client) borderedCircle(players[key].canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gridMultiplier), object.start[1] * (blockHeight / gridMultiplier), blockWidth, blockHeight, object.charge)
@@ -683,14 +689,17 @@ export function game() {
 		}
 	}
 	
-	function setWalkableAt(x, y, walkable) {
+	function setWalkableAt(player, x, y, walkable) {
+		var grid = players[player.id].grid
 		for (var p = 0; p < gridMultiplier; p++) {
 			for (var r = 0; r < gridMultiplier ; r++) {
 				var left = x + p
 				var top = y + r
+				
 				grid.setWalkableAt(left, top, walkable)
 			}
 		}
+		players[player.id].grid = grid
 	}
 	
 	function isNear(positionA, positionB) {

@@ -10,12 +10,10 @@ bubblefactory.game
 sf88r.com
 
 NOW:
-* fix attacking
-* fix walkables
-* fix crash when clicking to sides
+* unify canvases
+
 
 PHASE1:
-* unify canvases
 * sync time
 * menu & player switching for mobile
 * game modes (2 player, 4 player)
@@ -128,3 +126,6 @@ nodemon --ignore 'public/' .js
 
 kill process by port:
 fuser -n tcp -k 1337
+
+* fix crash when clicking to sides
+* fix attacking
