@@ -15,6 +15,7 @@ export function game() {
 	var defaultHealth = 25
 	var defaultDamage = 1
 	var gameLength = 1 * 60 * 1000
+	var recharge = 5 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
 	var uiXNum = 9
@@ -25,7 +26,6 @@ export function game() {
 	var step = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
-	var recharge = 5 * 1000
 	var players = {}
 	
 	//window
@@ -94,10 +94,10 @@ export function game() {
 		this.elements = []
 		this.projectiles = []
 		
-		var self = this
-		
 		// make grids from the matrices
 		this.grid = new PF.Grid(matrix)
+		
+		var self = this
 		
 		if (client) {
 			this.container = document.createElement('div')
@@ -197,6 +197,11 @@ export function game() {
 						
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
+					
+						var buildings = data[key].buildings
+						for (var i = 0; i < buildings.length; i++) {
+							setWalkableAt(players[key], buildings[i].start[0], buildings[i].start[1], false)
+						}
 					}
 				}
 				break
@@ -212,6 +217,11 @@ export function game() {
 				
 				// check if exists on that location already
 				if (exists(player.buildings, data)) return
+				
+				// check for open paths
+				setWalkableAt(player, data.start[0], data.start[1], false)
+				var path = finder.findPath(0, 0, 0, gameYNum - 1, player.grid.clone())
+				if (!path.length) return setWalkableAt(player, data.start[0], data.start[1], true)
 				
 				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1 
 				
@@ -310,12 +320,7 @@ export function game() {
 			var type = uiXBlock - creatingElement[0]
 			var id = player.elements.length
 			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
-			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]
-			
-			// check for open paths
-			setWalkableAt(players[me], start[0], start[1], false)
-			var path = finder.findPath(0, 0, 0, gameYNum - 1, players[me].grid.clone())
-			if (!path.length) return setWalkableAt(players[me], start[0], start[1], true)	
+			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]	
 			
 			// create a building
 			var building = {
@@ -342,11 +347,6 @@ export function game() {
 			var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
 			var end = [0, creatingElement[1] * gridMultiplier]
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
-			
-			// check for open paths
-			setWalkableAt(players[me], start[0], start[1], false)
-			var path = finder.findPath(0, 0, 0, gameYNum - 1, players[me].grid.clone())
-			if (!path.length) return setWalkableAt(players[me], start[0], start[1], true)
 			
 			// create a building
 			var building = {
@@ -510,22 +510,24 @@ export function game() {
 				players[key].buildings[p].charge = 0
 				players[key].buildings[p].built = true
 				
-				for (var r in players) if (r != key) {
-					var direction = getDirection(key)
-					var start = [objects[p].start[0], direction[0][1]]
-					var end = [objects[p].start[0], direction[1][1]]
-					var element = {
-						id: players[key].elements.length,
-						type: object.type,
-						start: start,
-						end: end,
-						path: finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()),
-						dynamics: {
-							totalHealth: defaultHealth,
-							health: defaultHealth
+				for (var r in players) {
+					if (key != r) {
+						var direction = getDirection(r)
+						var start = [objects[p].start[0], direction[0][1]]
+						var end = [objects[p].start[0], direction[1][1]]
+						var element = {
+							id: players[r].elements.length,
+							type: object.type,
+							start: start,
+							end: end,
+							path: finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()),
+							dynamics: {
+								totalHealth: defaultHealth,
+								health: defaultHealth
+							}
 						}
+						players[r].elements.push(element)
 					}
-					players[r].elements.push(element)
 				}
 			}
 			
