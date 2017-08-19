@@ -279,11 +279,12 @@ export function game() {
 		
 		player.canvas.menu.clearRect(0, 0, w, h)
 		
+		// make sure we dont act when user tries to click outside of stage. also disable first and last rows
 		if (
 			uiXBlock < 0 ||
-			uiYBlock < 0 ||
-			uiXBlock > uiXNum - 1 ||
-			uiYBlock > uiYNum - 1
+			uiYBlock <= 0 ||
+			uiXBlock >= uiXNum ||
+			uiYBlock >= uiYNum - 1
 		) return
 		
 		if (!creatingElement) {
@@ -310,7 +311,7 @@ export function game() {
 			(creatingElement[2] && creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
 			(creatingElement[2] && creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
 			(creatingElement[2] && creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
-		) {
+		) {	
 			var type = uiXBlock - creatingElement[0]
 			var id = player.elements.length
 			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
