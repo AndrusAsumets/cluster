@@ -16,7 +16,7 @@ export function game() {
 	var step = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
-	var recharge = 15 * 1000
+	var recharge = 30 * 1000
 	var players = {}
 	
 	var PIXEL_RATIO = client ? (function () {

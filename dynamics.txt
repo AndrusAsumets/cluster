@@ -1,8 +1,27 @@
+bubblefactory.games
+bubblefactory.game
 sf88r.com
 
-* slide menu
+* fix attacking
+* fix walkables
+* fix crash when clicking to sides
+* unify canvases
 * sync time
+* menu
+* game rooms
+* game modes (2 player, 4 player)
+* store game data to file/server
+* replay
+* player switching for mobile
+* game balance
 * menu for remove / upgrade
+* upgrades
+* different sizes that correspond to strength/power
+* click on a bubble, then press on a factory to release the power
+* enemy picker
+* ranking
+* lobby
+* landing
  
 creeps:
 water (blue): speed
@@ -16,7 +35,7 @@ earth (green): damage
 fire (red): splash
 wind (white): range
 
-element | slow      | speed     | range    | air       | splash   | demolish | damage    | strength  |
+element | slow      | speed     | range    | air       | splash   | horde    | damage    | strength  |
 --------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
 earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
 water   |  1        |  2        |  1       |  1        |  1       |  0       |  1        |  1        | 6
