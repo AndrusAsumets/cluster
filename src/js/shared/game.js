@@ -41,6 +41,33 @@ export function game() {
 	var blockWidth = w / horizontal
 	var blockHeight = h / vertical
 	
+	var shapes = {
+		background: {
+			fillStyle: function (alpha) { return 'rgba(25, 29, 49, ' + alpha + ')' }
+		},
+		dark: {
+			strokeStyle: function (alpha) { return 'rgba(0, 0, 0, ' + alpha + ')' }
+		},
+		border: {
+			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
+		},
+		active: {		
+			fillStyle: function (alpha) { return 'rgba(14, 10, 46, ' + alpha + ')' }
+		},
+		earth: {
+			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
+		},
+		water: {
+			fillStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' }
+		},
+		fire: {
+			fillStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' }
+		},
+		wind: {
+			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
+		}
+	}
+	
 	function Player (options) {
 		this.id = options.id
 		this.buildings = []
@@ -61,15 +88,15 @@ export function game() {
 			
 			// create a visual UI grid
 			for (var i = 0; i < horizontal; i++) { 
-				line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.5)' }, blockWidth * i, 0, blockWidth * i, h)
+				line(this.canvas.background, shapes.dark, blockWidth * i, 0, blockWidth * i, h, 0.5)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.5)' }, 0, blockHeight * i, w, blockHeight * i)
+				line(this.canvas.background, shapes.dark, 0, blockHeight * i, w, blockHeight * i, 0.5)
 			}
 			
 			// separate sides
-			//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.5)' }, blockWidth * horizontal / 2, 0, blockWidth * horizontal / 2, h)
+			//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.5)' }, blockWidth * horizontal / 2 - 1, 0, blockWidth * horizontal / 2, h)
 			
 			//diagonals
 			for (var i = 0; i < horizontal; i++) {
@@ -92,29 +119,6 @@ export function game() {
 	var defaultDamage = 5
 	var gameLength = 10 * 60 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
-	var shapes = {
-		background: {
-			fillStyle: '#191D31'
-		},
-		border: {
-			strokeStyle: 'rgba(255, 255, 255, 0.4)'
-		},
-		active: {		
-			fillStyle: 'rgba(14, 10, 46, 0.75)'
-		},
-		earth: {
-			fillStyle: '#9e57a5'
-		},
-		water: {
-			fillStyle: '#00BEE5'
-		},
-		fire: {
-			fillStyle: '#FF4A3D'
-		},
-		wind: {
-			fillStyle: 'white'
-		}
-	}
 	
 	// create matrices
 	var matrix = []
@@ -342,7 +346,6 @@ export function game() {
 				type: reversedTypes[type],
 				start: start,
 				end: end,
-				shape: shapes[reversedTypes[type]],
 				charge: 0,
 				dynamics: {
 					fired: 0
@@ -508,7 +511,6 @@ export function game() {
 					type: object.type,
 					start: start,
 					end: end,
-					shape: object.shape,
 					path: finder.findPath(start[0], start[1], end[0], end[1], grid.clone()),
 					dynamics: {
 						totalHealth: defaultHealth,
@@ -670,10 +672,10 @@ export function game() {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [1, 100])
-					borderedCircle(players[key].canvas[layer], object.shape, dx, dy, blockWidth, blockHeight, percentage)
+					borderedCircle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight, percentage, 0.55)
 				}
 				else {
-					circle(players[key].canvas[layer], object.shape, dx, dy, blockWidth, blockHeight)
+					circle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight)
 				}
 			}
 		}
@@ -684,7 +686,7 @@ export function game() {
 			for (var r = 1; r < gridMultiplier + 1; r++) {
 				var left = x + p
 				var top = y + r
-				grid.setWalkableAt(left, top, walkable)
+				if (left && top) grid.setWalkableAt(left, top, walkable)
 			}
 		}
 	}
@@ -700,25 +702,25 @@ export function game() {
 		return false
 	}
 	
-	function line(ctx, shape, x1, y1, x2, y2) {
+	function line(ctx, shape, x1, y1, x2, y2, alpha = 1) {
 		ctx.beginPath()
 		ctx.moveTo(x1, y1)
 		ctx.lineTo(x2, y2)
 		ctx.lineWidth = 1;
-		ctx.strokeStyle = shape.strokeStyle
+		ctx.strokeStyle = shape.strokeStyle(alpha)
 		ctx.stroke()
 		ctx.closePath()
 	}
 	
-	function rect(ctx, shape, x1, y1, x2, y2) {
+	function rect(ctx, shape, x1, y1, x2, y2, alpha = 1) {
 		ctx.beginPath()
 		ctx.rect(x1, y1, x2, y2)
-		ctx.fillStyle = shape.fillStyle
+		ctx.fillStyle = shape.fillStyle(alpha)
 		ctx.fill()	
 		ctx.closePath()
 	}
 	
-	function circle(ctx, shape, x1, y1, x2, y2, percent) {
+	function circle(ctx, shape, x1, y1, x2, y2, percent, alpha = 1) {
 		var centerX = x1 + (x2 / 2)
 		var centerY = y1 + (y2 / 2)
 		var radius = Math.sqrt(x2 + y2)
@@ -727,12 +729,12 @@ export function game() {
 		ctx.beginPath()
 		ctx.moveTo(centerX, centerY)
 		ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), false)
-		ctx.fillStyle = shape.fillStyle
+		ctx.fillStyle = shape.fillStyle(alpha)
 		ctx.fill()
 		ctx.closePath()
 	}
 	
-	function borderedCircle(ctx, shape, x1, y1, x2, y2, percent) {
+	function borderedCircle(ctx, shape, x1, y1, x2, y2, percent, alpha = 1) {
 		var centerX = x1 + (x2 / 2)
 		var centerY = y1 + (y2 / 2)
 		var radius = Math.sqrt(x2 + y2)
@@ -743,7 +745,7 @@ export function game() {
 		ctx.arc(centerX, centerY, radius * 1.25, 0, 2 * Math.PI, false)
 		ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, true)
 		ctx.arc(centerX, centerY, radius / 1.1, 0, degreesToRadians(-degrees), true)
-		ctx.fillStyle = shape.fillStyle
+		ctx.fillStyle = shape.fillStyle(alpha)
 		ctx.fill()
 		ctx.closePath()
 	}

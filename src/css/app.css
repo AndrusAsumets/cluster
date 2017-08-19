@@ -41,6 +41,14 @@ html, body {
 	font-size: 1.5em;
 }
 
+.player:nth-child(1) {
+	border-right: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.player:nth-child(2) {
+	border-left: 1px solid rgba(0, 0, 0, 0.4);
+}
+
 .elements {
 	width: 100%;
 	height: 100vh;
