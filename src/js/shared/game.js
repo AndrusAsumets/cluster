@@ -8,8 +8,8 @@ export function game() {
 	var PF = require('pathfinding')
 	var pingpong = null
 	var speedMultiplier = 1
-	var uiXNum = 20
-	var uiYNum = 10
+	var uiXNum = 9
+	var uiYNum = 12
 	var gridMultiplier = 2
 	var gameXNum = uiXNum * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
@@ -36,10 +36,10 @@ export function game() {
 	var vertical = uiYNum
 	var w = client ? size().x : gameXNum
 	var h = client ? size().y : gameYNum
+	w = w / splitScreen
+	h = h// / splitScreen
 	var blockWidth = w / horizontal
 	var blockHeight = h / vertical
-	w = w// / splitScreen
-	h = h / splitScreen
 	
 	function Player (options) {
 		this.id = options.id
@@ -77,8 +77,8 @@ export function game() {
 					var x1 = blockWidth * i
 					var y1 = blockHeight * j
 					
-					line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-					line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
+					//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
+					//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
 				}
 			}
 			
@@ -475,14 +475,15 @@ export function game() {
 	
 	function getDirection(index) {
 		index = parseInt(index) - 1
-		index = 4
+		index = 5
 		
 		return [
 			[[gameXNum / splitScreen, gameYNum / splitScreen], [0, 0]], // for the top left player
 			[[0, gameYNum / splitScreen], [gameXNum / splitScreen, 0]], // top right
 			[[gameXNum / splitScreen, 0], [0, gameYNum / splitScreen]], // bottom left
 			[[0, 0 ], [gameXNum / splitScreen, gameYNum / splitScreen]], // bottom right
-			[[0, gameYNum / 2 / splitScreen], [gameXNum / splitScreen, gameYNum / 2 / splitScreen]]
+			[[0, gameYNum / 2 / splitScreen], [gameXNum / splitScreen, gameYNum / 2 / splitScreen]], // coming from left
+			[[gameXNum / splitScreen, gameYNum - 1], [gameXNum / splitScreen, 0]]
 		][index]
 	}
 	
@@ -500,8 +501,8 @@ export function game() {
 				players[key].buildings[p].built = true
 				
 				var direction = getDirection(key)
-				var start = direction[0]
-				var end = direction[1]
+				var start = [objects[p].start[0], direction[0][1]]
+				var end = [objects[p].start[0], direction[1][1]]
 				var element = {
 					id: players[key].elements.length,
 					type: object.type,

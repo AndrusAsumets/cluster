@@ -36,8 +36,8 @@ html, body {
 
 .player {
 	position: relative;
-	height: 50vh;
-	width: calc(100vw);
+	height: 100vh;
+	width: 50vw;
 	font-size: 1.5em;
 }
 
