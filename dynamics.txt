@@ -1,11 +1,11 @@
 >> THE BUBBLE FACTORY
 
 
-global variables:
+global game variables for a player:
 energy, materials
 
 if (energy)
-	- factory (train buildings, components using energy)
+	- factory (research buildings, components using energy)
 
 	if (researched)
 		buildings:
@@ -23,7 +23,7 @@ if (energy)
 						- water > recharge speed
 						- wind  > move speed
 						- fire  > damage
-			- turret
+			- dart
 				(if material)
 					components:
 						- earth > strength
@@ -39,6 +39,17 @@ if (energy)
 * bubble inner size radius: strength
 * bubble size: damage
 * leveling: base 2
+* building another factory will decrease building and research times
+
+UI:
+- round:
+	barracks
+- round w/ wings:
+	airport
+- triangular
+	dart
+- rectangular w/ an initial:
+	all the other buildings
 
 
 bubble:
@@ -90,7 +101,8 @@ PHASE1:
 * ranking
 * deployment
 * ionic
-* testing
+* automated testing
+* human testing
 
 PHASE2:
 * pricing model
