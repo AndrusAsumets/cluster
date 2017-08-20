@@ -1,9 +1,70 @@
 >> THE BUBBLE FACTORY
 
-* close first and last rows
+
+global variables:
+energy, materials
+
+if (energy)
+	- factory (train buildings, components using energy)
+
+	if (researched)
+		buildings:
+			- power plant (recharge energy)
+			- mine
+				materials:
+					- earth
+					- water
+					- wind
+					- fire
+			- airport, barracks
+				(if material)
+					components:
+						- earth > strength
+						- water > recharge speed
+						- wind  > move speed
+						- fire  > damage
+			- turret
+				(if material)
+					components:
+						- earth > strength
+						- water > slow
+						- wind  > attack speed
+						- fire  > damage
+			- radar (extends towers range)
+			- repair shop
+
+
+* airport, barracks > if (energy) > grid of components > if (materials) > choose components
+* repairing: click on repair shop > repair > click on building > (if path) create path
+* bubble inner size radius: strength
+* bubble size: damage
+* leveling: base 2
+
+
+bubble:
+water (blue): speed
+earth (green): strength
+fire (red): demolish
+wind (white): air
+
+darts:
+water (blue): slow
+earth (green): damage
+fire (red): splash
+wind (white): range
+
+element | slow      | speed     | range    | air       | splash   | horde    | damage    | strength  |
+--------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
+earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
+water   |  1        |  2        |  1       |  1        |  1       |  0       |  1        |  1        | 6
+fire    |  0        |  1        |  1       |  0        |  2       |  1       |  1        |  1        | 5
+wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
+
+
+* 
 * create/emit elements & score by host
 * varying recharge count for bubbles
-* when to calculate paths?
+* recalculate paths on build, diff and update just the elements for which diffs dont match
 
 bubblefactory.games
 bubblefactory.game
@@ -45,26 +106,6 @@ PEOPLE:
 * sounds > Markku?
 * landing -> Kaarel? & Okeiko?
 * scaling -> Kristo?
-
- 
-creeps:
-water (blue): speed
-earth (green): strength
-fire (red): demolish
-wind (white): air
-
-towers:
-water (blue): slow
-earth (green): damage
-fire (red): splash
-wind (white): range
-
-element | slow      | speed     | range    | air       | splash   | horde    | damage    | strength  |
---------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
-earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
-water   |  1        |  2        |  1       |  1        |  1       |  0       |  1        |  1        | 6
-fire    |  0        |  1        |  1       |  0        |  2       |  1       |  1        |  1        | 5
-wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
 npm run server
 npm run client
@@ -129,3 +170,5 @@ fuser -n tcp -k 1337
 
 * fix crash when clicking to sides
 * fix attacking
+* fix walkables by creating a grid for each player
+* close first and last rows

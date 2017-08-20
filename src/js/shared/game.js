@@ -12,14 +12,15 @@ export function game() {
 	
 	// gameplay
 	var defaultScore = 10000
-	var defaultHealth = 25
-	var defaultDamage = 1
+	var defaultHealth = 100
+	var defaultDamage = 100
+	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
-	var recharge = 5 * 1000
+	var recharge = 30 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
-	var uiXNum = 9
-	var uiYNum = 12
+	var uiXNum = 9	
+	var uiYNum = 16
 	var gridMultiplier = 2
 	var gameXNum = uiXNum * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
@@ -111,11 +112,11 @@ export function game() {
 			
 			// create a visual UI grid
 			for (var i = 0; i < horizontal; i++) { 
-				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.5)
+				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.2)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.5)
+				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.2)
 			}
 			
 			// separate sides
@@ -681,7 +682,7 @@ export function game() {
 			if (client) {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
-					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [1, 100])
+					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
 					borderedCircle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight, percentage, 0.55)
 				}
 				else {
@@ -705,9 +706,9 @@ export function game() {
 	}
 	
 	function isNear(positionA, positionB) {
-		for (var q = -gridMultiplier; q < gridMultiplier * 2; q++) {
+		for (var q = -gridMultiplier * defaultRange; q < gridMultiplier * 2 * defaultRange; q++) {
 			if (positionA[0] + q == positionB[0]) {
-				for (var o = -gridMultiplier; o < gridMultiplier * 2; o++) {
+				for (var o = -gridMultiplier * defaultRange; o < gridMultiplier * 2 * defaultRange; o++) {
 					if (positionA[1] + o == positionB[1]) return true
 				}
 			}
