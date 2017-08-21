@@ -65,8 +65,8 @@ UI:
 	airport
 - triangular
 	tower
-- rectangular w/ an initial:
-	all the other buildings
+- rectangular w/ an icon:
+	factory, power plant, laboratory, airport, barracks, radar
 
 
 bubble:
@@ -89,7 +89,7 @@ fire    |  0        |  1        |  1       |  0        |  2       |  1       |  
 wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
 
-* 
+* layout for mobile and 4 player setup
 * create/emit elements & score by host
 * varying recharge count for bubbles
 * recalculate paths on build, diff and update just the elements for which diffs dont match
@@ -99,7 +99,7 @@ bubblefactory.game
 sf88r.com
 
 NOW:
-* step > cycle
+* linking between the buildings
 * sync time
 
 PHASE1:
@@ -132,7 +132,7 @@ PEOPLE:
 * moneying model > bootstrappig/funding
 * help for development > Kristjan? Arco?
 * sounds > Markku?
-* landing -> Kaarel? & Okeiko?
+* UI & landing -> Kaarel? & Okeiko?
 * scaling -> Kristo?
 
 npm run server

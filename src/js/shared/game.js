@@ -19,8 +19,8 @@ export function game() {
 	var recharge = 30 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
-	var uiXNum = 8	
-	var uiYNum = 9
+	var uiXNum = 9 // mobile: 8
+	var uiYNum = 16 // mobile: 18
 	var gridMultiplier = 2
 	var gameXNum = uiXNum * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
