@@ -19,12 +19,12 @@ export function game() {
 	var recharge = 30 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
-	var uiXNum = 9	
-	var uiYNum = 16
+	var uiXNum = 8	
+	var uiYNum = 9
 	var gridMultiplier = 2
 	var gameXNum = uiXNum * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
-	var step = 1000 / speedMultiplier
+	var cycle = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
 	var players = {}
@@ -112,11 +112,11 @@ export function game() {
 			
 			// create a visual UI grid
 			for (var i = 0; i < horizontal; i++) { 
-				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.2)
+				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.1)
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.2)
+				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.1)
 			}
 			
 			// separate sides
@@ -403,7 +403,7 @@ export function game() {
 		}
 		
 		//if (host) socket.emit('message', { action: 'elements', data: elements })
-	}, step)
+	}, cycle)
 	
 	setInterval(function() {
 		for (var key in players) animate(key)
@@ -676,8 +676,8 @@ export function game() {
 			var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
 			var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
 			var dt = (new Date).getTime() - time + delay
-			var dx = x1 - (x1 - x2) * dt / step
-			var dy = y1 - (y1 - y2) * dt / step	
+			var dx = x1 - (x1 - x2) * dt / cycle
+			var dy = y1 - (y1 - y2) * dt / cycle	
 			
 			if (client) {
 				if (object.type) {
