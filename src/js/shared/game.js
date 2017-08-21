@@ -276,14 +276,13 @@ export function game() {
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
 		
-		// disallow building outside of stage
+		player.canvas.menu.clearRect(0, 0, w, h)
+		
 		var x = event.clientX
 		var y = event.clientY
 		var uiXBlock = Math.floor(x / blockWidth)
 		var uiYBlock = Math.floor(y / blockHeight)
 		var left = uiXBlock < horizontal / splitScreen
-		
-		player.canvas.menu.clearRect(0, 0, w, h)
 		
 		// make sure we dont act when user tries to click outside of stage. also disable first and last rows
 		if (
@@ -293,24 +292,13 @@ export function game() {
 			uiYBlock >= uiYNum - 1
 		) return
 		
-		if (!gameMenu.length) {
+		if (exists(player.buildings, { start: [uiXBlock * gridMultiplier, uiYBlock * gridMultiplier] })) {
+			console.log('exists')
+		}
+		
+		else if (!gameMenu.length) {
+			buildPopup(player, uiXBlock, uiYBlock, left)
 			gameMenu = [uiXBlock, uiYBlock, left]
-			
-			if (left) {
-				for (var i = 0; i < types.length; i++) {
-					rect(player.canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
-					
-					borderedCircle(player.canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
-				}
-			}
-			else {
-				var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
-				for (var i = 0; i < types.length; i++) {
-					rect(player.canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
-					
-					borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
-				}
-			}
 		}
 		else if (
 			(gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock) ||
@@ -318,9 +306,58 @@ export function game() {
 			(gameMenu[2] && gameMenu[0] + 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
 			(gameMenu[2] && gameMenu[0] + 3 == uiXBlock && gameMenu[1] == uiYBlock)
 		) {	
+			selectFromPopup(player, true, gameMenu, uiXBlock)
+			gameMenu = []
+		}
+		else if (
+			(!gameMenu[2] && gameMenu[0] - 3 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] - 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] - 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock)
+		) {
+			selectFromPopup(player, false, gameMenu, uiXBlock)
+			gameMenu = []
+		}
+	
+		else {
+			gameMenu = []
+		}
+	}
+	
+	function exists(buildings, building) {
+		for (var p = 0; p < buildings.length; p++) {
+			if (
+				buildings[p].start[0] == building.start[0] &&
+				buildings[p].start[1] == building.start[1]
+			) return true
+		}
+		
+		return false
+	}
+	
+	function buildPopup(player, uiXBlock, uiYBlock, left) {
+		if (left) {
+			for (var i = 0; i < types.length; i++) {
+				rect(player.canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				
+				borderedCircle(player.canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+			}
+		}
+		else {
+			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
+			for (var i = 0; i < types.length; i++) {
+				rect(player.canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				
+				borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+			}
+		}
+	}
+
+	function selectFromPopup(player, left, gameMenu, uiXBlock) {
+		if (left) {
 			var type = uiXBlock - gameMenu[0]
 			var id = player.elements.length
-			var start = [gameMenu[0] * gridMultiplier, (gameMenu[1]) * gridMultiplier]
+			var start = [gameMenu[0] * gridMultiplier, gameMenu[1] * gridMultiplier]
 			var end = [horizontal * gridMultiplier, gameMenu[1] * gridMultiplier]	
 			
 			// create a building
@@ -335,14 +372,8 @@ export function game() {
 			}
 			
 			socket.emit('message', { action: 'building', data: building, playerId: me })
-			gameMenu = []
 		}
-		else if (
-			(!gameMenu[2] && gameMenu[0] - 3 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] - 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] - 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock)
-		) {	
+		else {
 			var type = uiXBlock - gameMenu[0] + types.length - 1
 			var id = player.elements.length
 			var start = [gameMenu[0] * gridMultiplier, gameMenu[1] * gridMultiplier]
@@ -363,23 +394,7 @@ export function game() {
 			}
 			
 			socket.emit('message', { action: 'building', data: building, playerId: me })
-			gameMenu = []
 		}
-	
-		else {
-			gameMenu = []
-		}
-	}
-	
-	function exists(buildings, building) {
-		for (var p = 0; p < buildings.length; p++) {
-			if (
-				buildings[p].start[0] == building.start[0] &&
-				buildings[p].start[1] == building.start[1]
-			) return true
-		}
-		
-		return false
 	}
 	
 	setInterval(function() {
