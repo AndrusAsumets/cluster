@@ -244,11 +244,10 @@ export function game() {
 	function createElement(event) {
 		if (!score()) return
 		
-		var player = players[me]
-		
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
 		
+		var player = players[me]
 		player.canvas.menu.clearRect(0, 0, w, h)
 		
 		var x = event.clientX
@@ -257,8 +256,6 @@ export function game() {
 		var yBlock = Math.floor(y / blockHeight)
 		var left = xBlock < horizontal / splitScreen
 		var building = findObject(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
-		
-		console.log(gameMenu)
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
@@ -276,7 +273,6 @@ export function game() {
 			Object.keys(gameMenu.fromBuilding).length > 0 &&
 			Object.keys(building).length > 0
 		) {
-			
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 			
@@ -451,9 +447,9 @@ export function game() {
 	function animate(key) {
 		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
 		
-		charge('movement', 'buildings', key, 0)
-		move('movement', 'elements', key, 0)
-		move('movement', 'projectiles', key, pingpong)	
+		charge('movement', 'buildings', key)
+		move('movement', 'elements', key)
+		move('movement', 'projectiles', key)	
 		
 		/*
 		if (delay) {
@@ -698,7 +694,7 @@ export function game() {
 	*/
 	
 	// move the elements according to their positions in space and time
-	function move(layer, type, key, delay) {
+	function move(layer, type, key) {
 		var objects = players[key] && players[key][type] ? players[key][type] : []
 
 		for (var p = 0; p < objects.length; p++) {
@@ -714,7 +710,7 @@ export function game() {
 			var y1 = object.path[0][1] * (blockHeight / gridMultiplier)
 			var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
 			var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
-			var dt = (new Date).getTime() - time + delay
+			var dt = (new Date).getTime() - time
 			var dx = x1 - (x1 - x2) * dt / cycle
 			var dy = y1 - (y1 - y2) * dt / cycle	
 			
