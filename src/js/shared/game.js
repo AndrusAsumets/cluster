@@ -34,10 +34,10 @@ export function game() {
 	    var ctx = document.createElement('canvas').getContext('2d'),
 	        dpr = window.devicePixelRatio || 1,
 	        bsr = ctx.webkitBackingStorePixelRatio ||
-		              ctx.mozBackingStorePixelRatio ||
-	              ctx.msBackingStorePixelRatio ||
-	              ctx.oBackingStorePixelRatio ||
-	              ctx.backingStorePixelRatio || 1
+				ctx.mozBackingStorePixelRatio ||
+				ctx.msBackingStorePixelRatio ||
+				ctx.oBackingStorePixelRatio ||
+				ctx.backingStorePixelRatio || 1
 	
 	    return dpr / bsr
 	})() : null
@@ -267,7 +267,7 @@ export function game() {
 	}, 1000)
 	*/
 	
-	var creatingElement = false
+	var gameMenu = []
 	function createElement(event) {
 		if (!score()) return
 		
@@ -293,8 +293,8 @@ export function game() {
 			uiYBlock >= uiYNum - 1
 		) return
 		
-		if (!creatingElement) {
-			creatingElement = [uiXBlock, uiYBlock, left]
+		if (!gameMenu.length) {
+			gameMenu = [uiXBlock, uiYBlock, left]
 			
 			if (left) {
 				for (var i = 0; i < types.length; i++) {
@@ -313,15 +313,15 @@ export function game() {
 			}
 		}
 		else if (
-			(creatingElement[2] && creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[2] && creatingElement[0] + 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[2] && creatingElement[0] + 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(creatingElement[2] && creatingElement[0] + 3 == uiXBlock && creatingElement[1] == uiYBlock)
+			(gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(gameMenu[2] && gameMenu[0] + 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(gameMenu[2] && gameMenu[0] + 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(gameMenu[2] && gameMenu[0] + 3 == uiXBlock && gameMenu[1] == uiYBlock)
 		) {	
-			var type = uiXBlock - creatingElement[0]
+			var type = uiXBlock - gameMenu[0]
 			var id = player.elements.length
-			var start = [creatingElement[0] * gridMultiplier, (creatingElement[1]) * gridMultiplier]
-			var end = [horizontal * gridMultiplier, creatingElement[1] * gridMultiplier]	
+			var start = [gameMenu[0] * gridMultiplier, (gameMenu[1]) * gridMultiplier]
+			var end = [horizontal * gridMultiplier, gameMenu[1] * gridMultiplier]	
 			
 			// create a building
 			var building = {
@@ -335,18 +335,18 @@ export function game() {
 			}
 			
 			socket.emit('message', { action: 'building', data: building, playerId: me })
-			creatingElement = false
+			gameMenu = []
 		}
 		else if (
-			(!creatingElement[2] && creatingElement[0] - 3 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(!creatingElement[2] && creatingElement[0] - 2 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(!creatingElement[2] && creatingElement[0] - 1 == uiXBlock && creatingElement[1] == uiYBlock) ||
-			(!creatingElement[2] && creatingElement[0] == uiXBlock && creatingElement[1] == uiYBlock)
+			(!gameMenu[2] && gameMenu[0] - 3 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] - 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] - 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
+			(!gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock)
 		) {	
-			var type = uiXBlock - creatingElement[0] + types.length - 1
+			var type = uiXBlock - gameMenu[0] + types.length - 1
 			var id = player.elements.length
-			var start = [creatingElement[0] * gridMultiplier, creatingElement[1] * gridMultiplier]
-			var end = [0, creatingElement[1] * gridMultiplier]
+			var start = [gameMenu[0] * gridMultiplier, gameMenu[1] * gridMultiplier]
+			var end = [0, gameMenu[1] * gridMultiplier]
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			
 			// create a building
@@ -363,11 +363,11 @@ export function game() {
 			}
 			
 			socket.emit('message', { action: 'building', data: building, playerId: me })
-			creatingElement = false
+			gameMenu = []
 		}
 	
 		else {
-			creatingElement = false
+			gameMenu = []
 		}
 	}
 	
