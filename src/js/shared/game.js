@@ -57,13 +57,12 @@ export function game() {
 			fillStyle: function (alpha) { return 'rgba(25, 29, 49, ' + alpha + ')' }
 		},
 		dark: {
+			fillStyle: function (alpha) { return 'rgba(11, 7, 35, ' + alpha + ')' },
 			strokeStyle: function (alpha) { return 'rgba(0, 0, 0, ' + alpha + ')' }
 		},
 		light: {
+			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
 			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
-		},
-		active: {		
-			fillStyle: function (alpha) { return 'rgba(14, 10, 46, ' + alpha + ')' }
 		},
 		earth: {
 			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
@@ -119,20 +118,6 @@ export function game() {
 				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.1)
 			}
 			
-			// separate sides
-			//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.5)' }, blockWidth * horizontal / 2 - 1, 0, blockWidth * horizontal / 2, h)
-			
-			//diagonals
-			for (var i = 0; i < horizontal; i++) {
-				for (var j = 0; j < vertical; j++) {
-					var x1 = blockWidth * i
-					var y1 = blockHeight * j
-					
-					//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1, y1, x1 + blockWidth, y1 + blockHeight)
-					//line(this.canvas.background, { strokeStyle: 'rgba(0, 0, 0, 0.25)' }, x1 + blockWidth, y1, x1, y1 + blockHeight)
-				}
-			}
-			
 			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createElement(event) })
 			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createElement(event) })
 		}
@@ -172,14 +157,6 @@ export function game() {
 					players[me] = new Player({ id: me })
 					
 					socket.emit('message', { action: GET_STATE, data: me })
-
-					function ping() {
-						//socket.emit('message', { action: 'pingpong', data: (new Date).getTime() })
-					}
-					setInterval(function() {
-						ping()
-					}, 10000)
-					ping()
 				}
 				break
 				
@@ -207,17 +184,13 @@ export function game() {
 				}
 				break
 				
-			case 'pingpong':
-				if (client) pingpong = ((new Date).getTime() - data) / 2 / speedMultiplier
-				break
-				
 			case 'building':
 				if (!score()) return
 				
 				var player = players[data.playerId]
 				
-				// check if exists on that location already
-				if (exists(player.buildings, data)) return
+				// check if findObject on that location already
+				if (Object.keys(findObject(player.buildings, data)).length > 0) return
 				
 				// check for open paths
 				setWalkableAt(player, data.start[0], data.start[1], false)
@@ -267,7 +240,7 @@ export function game() {
 	}, 1000)
 	*/
 	
-	var gameMenu = []
+	var gameMenu = {}
 	function createElement(event) {
 		if (!score()) return
 		
@@ -280,85 +253,136 @@ export function game() {
 		
 		var x = event.clientX
 		var y = event.clientY
-		var uiXBlock = Math.floor(x / blockWidth)
-		var uiYBlock = Math.floor(y / blockHeight)
-		var left = uiXBlock < horizontal / splitScreen
+		var xBlock = Math.floor(x / blockWidth)
+		var yBlock = Math.floor(y / blockHeight)
+		var left = xBlock < horizontal / splitScreen
+		var building = findObject(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
 		
-		// make sure we dont act when user tries to click outside of stage. also disable first and last rows
+		console.log(gameMenu)
+		
+		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
-			uiXBlock < 0 ||
-			uiYBlock <= 0 ||
-			uiXBlock >= uiXNum ||
-			uiYBlock >= uiYNum - 1
-		) return
-		
-		if (exists(player.buildings, { start: [uiXBlock * gridMultiplier, uiYBlock * gridMultiplier] })) {
-			console.log('exists')
-		}
-		
-		else if (!gameMenu.length) {
-			buildPopup(player, uiXBlock, uiYBlock, left)
-			gameMenu = [uiXBlock, uiYBlock, left]
-		}
-		else if (
-			(gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(gameMenu[2] && gameMenu[0] + 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(gameMenu[2] && gameMenu[0] + 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(gameMenu[2] && gameMenu[0] + 3 == uiXBlock && gameMenu[1] == uiYBlock)
-		) {	
-			selectFromPopup(player, true, gameMenu, uiXBlock)
-			gameMenu = []
-		}
-		else if (
-			(!gameMenu[2] && gameMenu[0] - 3 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] - 2 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] - 1 == uiXBlock && gameMenu[1] == uiYBlock) ||
-			(!gameMenu[2] && gameMenu[0] == uiXBlock && gameMenu[1] == uiYBlock)
+			xBlock < 0 ||
+			yBlock <= 0 ||
+			xBlock >= uiXNum ||
+			yBlock >= uiYNum - 1
 		) {
-			selectFromPopup(player, false, gameMenu, uiXBlock)
-			gameMenu = []
+			return console.log('1')	
 		}
-	
+		
+		// if from and to buildings were found
+		else if (
+			gameMenu.fromBuilding &&
+			Object.keys(gameMenu.fromBuilding).length > 0 &&
+			Object.keys(building).length > 0
+		) {
+			
+			var from = gameMenu.fromBuilding.start
+			var to = building.start
+			
+			// make positions temporarily walkable
+			setWalkableAt(player, from[0], from[1], true)
+			setWalkableAt(player, to[0], to[1], true)
+			
+			// find a path between the buildings
+			var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
+			
+			// make positions unwalkable again
+			setWalkableAt(player, from[0], from[1], false)
+			setWalkableAt(player, to[0], to[1], false)
+			
+			console.log(path)
+			
+			gameMenu = {}
+		}
+		
+		// if a building was found on that block
+		else if (
+			Object.keys(building).length > 0
+		) {
+			gameMenu.fromBuilding = building
+			
+			rect(player.canvas.menu, shapes.dark, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+		}
+		
+		//build a menu if no options can't be found
+		else if (!gameMenu.x || !gameMenu.y) {
+			buildPopup(player, xBlock, yBlock, left)
+			gameMenu = { x: xBlock, y: yBlock, left: left }
+			
+			console.log('3')
+		}
+		
+		// build options popup that goes to right
+		else if (
+			(gameMenu.left && gameMenu.x == xBlock && gameMenu.y == yBlock) ||
+			(gameMenu.left && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
+			(gameMenu.left && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
+			(gameMenu.left && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
+		) {	
+			selectFromPopup(player, gameMenu, xBlock)
+			gameMenu = {}
+			
+			console.log('4')
+		}
+		
+		// build options popup that goes to left
+		else if (
+			(!gameMenu.left && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
+			(!gameMenu.left && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
+			(!gameMenu.left && gameMenu.x - 1 == xBlock && gameMenu.y == yBlock) ||
+			(!gameMenu.left && gameMenu.x == xBlock && gameMenu.y == yBlock)
+		) {
+			selectFromPopup(player, gameMenu, xBlock)
+			gameMenu = {}
+			
+			console.log('5')
+		}
+		
+		// otherwise just clear the menu
 		else {
-			gameMenu = []
+			gameMenu = {}
+			
+			console.log('6')
 		}
 	}
 	
-	function exists(buildings, building) {
+	function findObject(buildings, building) {
 		for (var p = 0; p < buildings.length; p++) {
 			if (
 				buildings[p].start[0] == building.start[0] &&
 				buildings[p].start[1] == building.start[1]
-			) return true
+			) return buildings[p]
 		}
 		
-		return false
+		return {}
 	}
 	
-	function buildPopup(player, uiXBlock, uiYBlock, left) {
+	function buildPopup(player, xBlock, yBlock, left) {
 		if (left) {
 			for (var i = 0; i < types.length; i++) {
-				rect(player.canvas.menu, shapes.active, (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				rect(player.canvas.menu, shapes.dark, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 				
-				borderedCircle(player.canvas.menu, shapes[types[i]], (uiXBlock + i) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(player.canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 		else {
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			for (var i = 0; i < types.length; i++) {
-				rect(player.canvas.menu, shapes.active, (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				rect(player.canvas.menu, shapes.dark, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 				
-				borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (uiXBlock + i - types.length + 1) * blockWidth, uiYBlock * blockHeight, blockWidth, blockHeight)
+				borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
 	}
 
-	function selectFromPopup(player, left, gameMenu, uiXBlock) {
-		if (left) {
-			var type = uiXBlock - gameMenu[0]
+	function selectFromPopup(player, gameMenu, xBlock) {
+		if (gameMenu.left) {
+			var type = xBlock - gameMenu.x
 			var id = player.elements.length
-			var start = [gameMenu[0] * gridMultiplier, gameMenu[1] * gridMultiplier]
-			var end = [horizontal * gridMultiplier, gameMenu[1] * gridMultiplier]	
+			var start = [gameMenu.x * gridMultiplier, gameMenu.y * gridMultiplier]
+			var end = [horizontal * gridMultiplier, gameMenu.y * gridMultiplier]	
 			
 			// create a building
 			var building = {
@@ -374,10 +398,10 @@ export function game() {
 			socket.emit('message', { action: 'building', data: building, playerId: me })
 		}
 		else {
-			var type = uiXBlock - gameMenu[0] + types.length - 1
+			var type = xBlock - gameMenu.x + types.length - 1
 			var id = player.elements.length
-			var start = [gameMenu[0] * gridMultiplier, gameMenu[1] * gridMultiplier]
-			var end = [0, gameMenu[1] * gridMultiplier]
+			var start = [gameMenu.x * gridMultiplier, gameMenu.y * gridMultiplier]
+			var end = [0, gameMenu.y * gridMultiplier]
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			
 			// create a building
