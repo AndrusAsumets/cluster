@@ -100,6 +100,7 @@ sf88r.com
 
 NOW:
 * redraw links when building new buildings
+* avoid duplicate links
 * save links to host
 * linking between the buildings
 * sync time

@@ -12,7 +12,7 @@ export function game() {
 	
 	// gameplay
 	var defaultScore = 10000
-	var defaultHealth = 100
+	var defaultHealth = 1000
 	var defaultDamage = 100
 	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
@@ -21,7 +21,7 @@ export function game() {
 	var speedMultiplier = 1
 	var uiXNum = 9 // mobile: 8
 	var uiYNum = 16 // mobile: 18
-	var gridMultiplier = 2
+	var gridMultiplier = 3
 	var gameXNum = uiXNum * gridMultiplier
 	var gameYNum = uiYNum * gridMultiplier
 	var cycle = 1000 / speedMultiplier
@@ -219,11 +219,12 @@ export function game() {
 				var path = finder.findPath(0, 0, 0, gameYNum - 1, player.grid.clone())
 				if (!path.length) return setWalkableAt(player, data.start[0], data.start[1], true)
 				
-				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1 
+				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
 				
 				//players[data.position].score = players[data.position].score - 1
 				players[data.playerId].buildings.push(data)
 				if (host) createPaths(player) // host
+				if (client) link()
 				break
 		}
 	})
@@ -279,6 +280,9 @@ export function game() {
 		var left = xBlock < horizontal / splitScreen
 		var building = findBuilding(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
 		
+		
+		console.log(gameMenu.x, gameMenu.y, xBlock, yBlock, gameMenu.left)
+		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
 			xBlock < 0 ||
@@ -298,11 +302,13 @@ export function game() {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 			
-			if (alreadyLinked(from, to)) return
+			if (alreadyLinked(from, to)) {
+				gameMenu = {}
+				return
+			}
+			
 			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
 			link()
-			
-			gameMenu = {}
 		}
 		
 		// if a building was found on that block
@@ -315,19 +321,14 @@ export function game() {
 			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 		}
 		
-		//build a menu if no options can't be found
-		else if (!gameMenu.x || !gameMenu.y) {
-			buildPopup(player, xBlock, yBlock, left)
-			gameMenu = { x: xBlock, y: yBlock, left: left }
-		}
-		
 		// build options popup that goes to right
 		else if (
-			(gameMenu.left && gameMenu.x == xBlock && gameMenu.y == yBlock) ||
+			(gameMenu.left && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
 			(gameMenu.left && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
 			(gameMenu.left && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.left && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
+			(gameMenu.left && gameMenu.x + 0 == xBlock && gameMenu.y == yBlock)
 		) {	
+			console.log('select left')
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
@@ -337,10 +338,16 @@ export function game() {
 			(!gameMenu.left && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
 			(!gameMenu.left && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
 			(!gameMenu.left && gameMenu.x - 1 == xBlock && gameMenu.y == yBlock) ||
-			(!gameMenu.left && gameMenu.x == xBlock && gameMenu.y == yBlock)
+			(!gameMenu.left && gameMenu.x     == xBlock && gameMenu.y == yBlock)
 		) {
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
+		}
+		
+		//build a menu if no options can't be found
+		else if (!gameMenu.x || !gameMenu.y) {
+			buildPopup(player, xBlock, yBlock, left)
+			gameMenu = { x: xBlock, y: yBlock, left: left }
 		}
 		
 		// otherwise just clear the menu
@@ -385,16 +392,19 @@ export function game() {
 				
 				if (!path.length) continue
 				
+				var width = blockWidth / gridMultiplier
+				var height = blockHeight / gridMultiplier
+				
 				var last = [
-					path[0][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier),
-					path[0][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+					path[0][0] * (width) + (width * 1.5),
+					path[0][1] * (height) + (height * 1.5)
 				]
 				
 				for (var i = 0; i < path.length ; i++) {
 					var x1 = last[0]
 					var y1 = last[1]
-					var x2 = path[i][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier)
-					var y2 = path[i][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+					var x2 = path[i][0] * (width) + (width * 1.5)
+					var y2 = path[i][1] * (height) + (height * 1.5)
 					
 					line({
 						ctx: canvas,
@@ -404,7 +414,7 @@ export function game() {
 						x2: x2,
 						y2: y2,
 						lineWidth: 2,
-						lineDash: [8, 16],
+						lineDash: [12, 4],
 						alpha: 0.5
 					})
 					last = [x2, y2]
@@ -588,7 +598,7 @@ export function game() {
 	
 	function getDirection(index) {
 		index = parseInt(index) - 1
-		index = 5
+		index = 6
 		
 		return [
 			[[gameXNum / splitScreen, gameYNum / splitScreen], [0, 0]], // for the top left player
@@ -596,7 +606,8 @@ export function game() {
 			[[gameXNum / splitScreen, 0], [0, gameYNum / splitScreen]], // bottom left
 			[[0, 0 ], [gameXNum / splitScreen, gameYNum / splitScreen]], // bottom right
 			[[0, gameYNum / 2 / splitScreen], [gameXNum / splitScreen, gameYNum / 2 / splitScreen]], // coming from left
-			[[gameXNum / splitScreen, gameYNum - 1], [gameXNum / splitScreen, 0]]
+			[[gameXNum / splitScreen, gameYNum - 1], [gameXNum / splitScreen, 0]], // coming from bottom
+			[[gameXNum / splitScreen, 0], [gameXNum / splitScreen, gameYNum - 1]] //coming from top
 		][index]
 	}
 	
@@ -797,7 +808,7 @@ export function game() {
 	function setWalkableAt(player, x, y, walkable) {
 		var grid = players[player.id].grid
 		for (var p = 0; p < gridMultiplier; p++) {
-			for (var r = 0; r < gridMultiplier ; r++) {
+			for (var r = 0; r < gridMultiplier; r++) {
 				var left = x + p
 				var top = y + r
 				
@@ -818,7 +829,6 @@ export function game() {
 		return false
 	}
 	
-	//function line(ctx, shape, x1, y1, x2, y2, alpha = 1) {
 	function line(o) {
 		o.ctx.setLineDash(o.lineDash ? o.lineDash: [])
 		o.ctx.beginPath()
