@@ -97,6 +97,7 @@ export function game() {
 		this.buildings = []
 		this.elements = []
 		this.projectiles = []
+		this.links = []
 		
 		// make grids from the matrices
 		this.grid = new PF.Grid(matrix)
@@ -297,19 +298,9 @@ export function game() {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 			
-			// make positions temporarily walkable
-			setWalkableAt(player, from[0], from[1], true)
-			setWalkableAt(player, to[0], to[1], true)
-			
-			// find a path between the buildings
-			var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
-			
-			// make positions unwalkable again
-			setWalkableAt(player, from[0], from[1], false)
-			setWalkableAt(player, to[0], to[1], false)
-			
-			if (!path.length) return
-			link(player.canvas.link, gameMenu.fromBuilding.type, path)
+			if (alreadyLinked(from, to)) return
+			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
+			link()
 			
 			gameMenu = {}
 		}
@@ -358,30 +349,67 @@ export function game() {
 		}
 	}
 	
-	function link(canvas, type, path) {
-		var last = [
-			path[0][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier),
-			path[0][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
-		]
+	function alreadyLinked(from, to) {
+		var links = players[me].links
 		
-		for (var i = 0; i < path.length ; i++) {
-			var x1 = last[0]
-			var y1 = last[1]
-			var x2 = path[i][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier)
-			var y2 = path[i][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+		for (var i = 0; i < links.length; i++) {
+			if (links[i].from == from && links[i].to == to) return true
+		}
+		
+		return false
+	}
+	
+	function link() {
+		for (var key in players) {
+			var player = players[key]
+			var canvas = player.canvas.link
+			var links = player.links
 			
-			line({
-				ctx: canvas,
-				shape: shapes[type],
-				x1: x1,
-				y1: y1,
-				x2: x2,
-				y2: y2,
-				lineWidth: 2,
-				lineDash: [8, 16],
-				alpha: 0.5
-			})
-			last = [x2, y2]
+			canvas.clearRect(0, 0, w, h)
+			
+			for (var l = 0; l < links.length; l++) {
+				var from = links[l].from
+				var to = links[l].to
+				var type = links[l].type
+				
+				// make positions temporarily walkable
+				setWalkableAt(player, from[0], from[1], true)
+				setWalkableAt(player, to[0], to[1], true)
+				
+				// find a path between the buildings
+				var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
+				
+				// make positions unwalkable again
+				setWalkableAt(player, from[0], from[1], false)
+				setWalkableAt(player, to[0], to[1], false)
+				
+				if (!path.length) continue
+				
+				var last = [
+					path[0][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier),
+					path[0][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+				]
+				
+				for (var i = 0; i < path.length ; i++) {
+					var x1 = last[0]
+					var y1 = last[1]
+					var x2 = path[i][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier)
+					var y2 = path[i][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+					
+					line({
+						ctx: canvas,
+						shape: shapes[type],
+						x1: x1,
+						y1: y1,
+						x2: x2,
+						y2: y2,
+						lineWidth: 2,
+						lineDash: [8, 16],
+						alpha: 0.5
+					})
+					last = [x2, y2]
+				}
+			}
 		}
 	}
 	

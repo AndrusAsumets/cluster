@@ -99,6 +99,8 @@ bubblefactory.game
 sf88r.com
 
 NOW:
+* redraw links when building new buildings
+* save links to host
 * linking between the buildings
 * sync time
 
