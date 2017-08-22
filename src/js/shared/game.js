@@ -280,9 +280,6 @@ export function game() {
 		var left = xBlock < horizontal / splitScreen
 		var building = findBuilding(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
 		
-		
-		console.log(gameMenu.x, gameMenu.y, xBlock, yBlock, gameMenu.left)
-		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
 			xBlock < 0 ||
@@ -309,6 +306,11 @@ export function game() {
 			
 			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
 			link()
+			
+			rect(player.canvas.menu, shapes.dark, from[0] / gridMultiplier * blockWidth, from[1] * blockHeight / gridMultiplier, blockWidth, blockHeight)
+			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], from[0] / gridMultiplier * blockWidth, from[1] / gridMultiplier * blockHeight, blockWidth, blockHeight)
+			
+			gameMenu.linking = true
 		}
 		
 		// if a building was found on that block
@@ -316,6 +318,7 @@ export function game() {
 			Object.keys(building).length > 0
 		) {
 			gameMenu.fromBuilding = building
+			gameMenu.linking = true
 			
 			rect(player.canvas.menu, shapes.dark, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
@@ -328,7 +331,6 @@ export function game() {
 			(gameMenu.left && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
 			(gameMenu.left && gameMenu.x + 0 == xBlock && gameMenu.y == yBlock)
 		) {	
-			console.log('select left')
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
@@ -345,7 +347,11 @@ export function game() {
 		}
 		
 		//build a menu if no options can't be found
-		else if (!gameMenu.x || !gameMenu.y) {
+		else if (
+			!gameMenu.linking && // if the last action was not about linking, then it would be better to skip it
+			!gameMenu.x &&
+			!gameMenu.y
+		) {
 			buildPopup(player, xBlock, yBlock, left)
 			gameMenu = { x: xBlock, y: yBlock, left: left }
 		}
