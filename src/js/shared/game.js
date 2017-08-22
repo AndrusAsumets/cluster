@@ -13,17 +13,17 @@ export function game() {
 	// gameplay
 	var defaultScore = 10000
 	var defaultHealth = 1000
-	var defaultDamage = 100
+	var defaultDamage = 10
 	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
-	var recharge = 30 * 1000
+	var recharge = 10 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
 	var uiXNum = 9 // mobile: 8
 	var uiYNum = 16 // mobile: 18
-	var gridMultiplier = 3
-	var gameXNum = uiXNum * gridMultiplier
-	var gameYNum = uiYNum * gridMultiplier
+	var gm = 3
+	var gameXNum = uiXNum * gm
+	var gameYNum = uiYNum * gm
 	var cycle = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
@@ -87,7 +87,7 @@ export function game() {
 	for (var i = 0; i < gameYNum; i++) {
 		matrix.push([])
 		
-		for (var j = 0; j < gameXNum; j++) {
+		for (var j = 0; j < gameXNum - 1; j++) {
 			matrix[i].push(0)
 		}
 	}
@@ -278,7 +278,7 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var left = xBlock < horizontal / splitScreen
-		var building = findBuilding(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
+		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
@@ -307,8 +307,8 @@ export function game() {
 			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
 			link()
 			
-			rect(player.canvas.menu, shapes.dark, from[0] / gridMultiplier * blockWidth, from[1] * blockHeight / gridMultiplier, blockWidth, blockHeight)
-			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], from[0] / gridMultiplier * blockWidth, from[1] / gridMultiplier * blockHeight, blockWidth, blockHeight)
+			rect(player.canvas.menu, shapes.dark, from[0] / gm * blockWidth, from[1] * blockHeight / gm, blockWidth, blockHeight)
+			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], from[0] / gm * blockWidth, from[1] / gm * blockHeight, blockWidth, blockHeight)
 			
 			gameMenu.linking = true
 		}
@@ -398,19 +398,19 @@ export function game() {
 				
 				if (!path.length) continue
 				
-				var width = blockWidth / gridMultiplier
-				var height = blockHeight / gridMultiplier
+				var width = blockWidth / gm
+				var height = blockHeight / gm
 				
 				var last = [
-					path[0][0] * (width) + (width * 1.5),
-					path[0][1] * (height) + (height * 1.5)
+					path[0][0] * (width) + (width * gm / 2),
+					path[0][1] * (height) + (height * gm / 2)
 				]
 				
 				for (var i = 0; i < path.length ; i++) {
 					var x1 = last[0]
 					var y1 = last[1]
-					var x2 = path[i][0] * (width) + (width * 1.5)
-					var y2 = path[i][1] * (height) + (height * 1.5)
+					var x2 = path[i][0] * (width) + (width * (gm * 0.5))
+					var y2 = path[i][1] * (height) + (height * (gm * 0.5))
 					
 					line({
 						ctx: canvas,
@@ -420,7 +420,7 @@ export function game() {
 						x2: x2,
 						y2: y2,
 						lineWidth: 2,
-						lineDash: [12, 4],
+						lineDash: [24, 8],
 						alpha: 0.5
 					})
 					last = [x2, y2]
@@ -460,8 +460,8 @@ export function game() {
 		if (gameMenu.left) {
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
-			var start = [gameMenu.x * gridMultiplier, gameMenu.y * gridMultiplier]
-			var end = [horizontal * gridMultiplier, gameMenu.y * gridMultiplier]	
+			var start = [gameMenu.x * gm, gameMenu.y * gm]
+			var end = [horizontal * gm, gameMenu.y * gm]	
 			
 			// create a building
 			var building = {
@@ -479,8 +479,8 @@ export function game() {
 		else {
 			var type = xBlock - gameMenu.x + types.length - 1
 			var id = player.elements.length
-			var start = [gameMenu.x * gridMultiplier, gameMenu.y * gridMultiplier]
-			var end = [0, gameMenu.y * gridMultiplier]
+			var start = [gameMenu.x * gm, gameMenu.y * gm]
+			var end = [0, gameMenu.y * gm]
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			
 			// create a building
@@ -578,7 +578,7 @@ export function game() {
 			players[player.id].elements[p].path.shift()
 			
 			/*
-			if (element.path[0][0] >= horizontal * gridMultiplier - 2) {
+			if (element.path[0][0] >= horizontal * gm - 2) {
 				players[player.id].elements.splice(p, 1)
 				//players.right.score = players.right.score - 1
 			}
@@ -651,7 +651,7 @@ export function game() {
 				}
 			}
 			
-			if (client) borderedCircle(players[key].canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gridMultiplier), object.start[1] * (blockHeight / gridMultiplier), blockWidth, blockHeight, object.charge)
+			if (client) borderedCircle(players[key].canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gm), object.start[1] * (blockHeight / gm), blockWidth, blockHeight, object.charge)
 		}
 	}
 	
@@ -790,10 +790,10 @@ export function game() {
 				!object.path[1].length
 			) continue
 
-			var x1 = object.path[0][0] * (blockWidth / gridMultiplier)
-			var y1 = object.path[0][1] * (blockHeight / gridMultiplier)
-			var x2 = object.path[1][0] * (blockWidth / gridMultiplier)
-			var y2 = object.path[1][1] * (blockHeight / gridMultiplier)
+			var x1 = object.path[0][0] * (blockWidth / gm)
+			var y1 = object.path[0][1] * (blockHeight / gm)
+			var x2 = object.path[1][0] * (blockWidth / gm)
+			var y2 = object.path[1][1] * (blockHeight / gm)
 			var dt = (new Date).getTime() - time
 			var dx = x1 - (x1 - x2) * dt / cycle
 			var dy = y1 - (y1 - y2) * dt / cycle	
@@ -813,11 +813,12 @@ export function game() {
 	
 	function setWalkableAt(player, x, y, walkable) {
 		var grid = players[player.id].grid
-		for (var p = 0; p < gridMultiplier; p++) {
-			for (var r = 0; r < gridMultiplier; r++) {
+		for (var p = -1; p < gm - 1; p++) {
+			for (var r = -1; r < gm -1; r++) {
 				var left = x + p
 				var top = y + r
 				
+				left = left < 0 ? 0 : left
 				grid.setWalkableAt(left, top, walkable)
 			}
 		}
@@ -825,9 +826,9 @@ export function game() {
 	}
 	
 	function isNear(positionA, positionB) {
-		for (var q = -gridMultiplier * defaultRange; q < gridMultiplier * 2 * defaultRange; q++) {
+		for (var q = -gm * defaultRange; q < gm * 2 * defaultRange; q++) {
 			if (positionA[0] + q == positionB[0]) {
-				for (var o = -gridMultiplier * defaultRange; o < gridMultiplier * 2 * defaultRange; o++) {
+				for (var o = -gm * defaultRange; o < gm * 2 * defaultRange; o++) {
 					if (positionA[1] + o == positionB[1]) return true
 				}
 			}
