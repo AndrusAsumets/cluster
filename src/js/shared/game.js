@@ -65,16 +65,20 @@ export function game() {
 			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
 		},
 		earth: {
-			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
+			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' },
+			strokeStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
 		},
 		water: {
-			fillStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' }
+			fillStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' },
+			strokeStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' }
 		},
 		fire: {
-			fillStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' }
+			fillStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' },
+			strokeStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' }
 		},
 		wind: {
-			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
+			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
+			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
 		}
 	}
 	
@@ -105,17 +109,34 @@ export function game() {
 			document.getElementsByClassName('game')[0].appendChild(this.container)
 			this.canvas = client ? {
 				background: createCanvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
-				movement: createCanvas(this.container, 'movement_' + this.id, w, h, 2, blockHeight),
-				menu: createCanvas(this.container, 'menu_' + this.id, w, h, 3, blockHeight)
+				link: createCanvas(this.container, 'movement_' + this.id, w, h, 2, blockHeight),
+				movement: createCanvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
+				menu: createCanvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
 			} : null
 			
 			// create a visual UI grid
-			for (var i = 0; i < horizontal; i++) { 
-				line(this.canvas.background, shapes.light, blockWidth * i, 0, blockWidth * i, h, 0.1)
+			for (var i = 0; i < horizontal; i++) {
+				line({
+					ctx: this.canvas.background,
+					shape: shapes.light,
+					x1: blockWidth * i,
+					y1: 0,
+					x2: blockWidth * i,
+					y2: h, 
+					alpha: 0.1
+				})
 			}
 			
 			for (var i = 0; i < vertical; i++) {
-				line(this.canvas.background, shapes.light, 0, blockHeight * i, w, blockHeight * i, 0.1)
+				line({
+					ctx: this.canvas.background,
+					shape: shapes.light,
+					x1: 0,
+					y1: blockHeight * i,
+					x2: w,
+					y2: blockHeight * i,
+					alpha: 0.1
+				})
 			}
 			
 			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createElement(event) })
@@ -189,8 +210,8 @@ export function game() {
 				
 				var player = players[data.playerId]
 				
-				// check if findObject on that location already
-				if (Object.keys(findObject(player.buildings, data)).length > 0) return
+				// check if findBuilding on that location already
+				if (Object.keys(findBuilding(player.buildings, data)).length > 0) return
 				
 				// check for open paths
 				setWalkableAt(player, data.start[0], data.start[1], false)
@@ -255,7 +276,7 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var left = xBlock < horizontal / splitScreen
-		var building = findObject(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
+		var building = findBuilding(player.buildings, { start: [xBlock * gridMultiplier, yBlock * gridMultiplier] })
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
@@ -264,7 +285,7 @@ export function game() {
 			xBlock >= uiXNum ||
 			yBlock >= uiYNum - 1
 		) {
-			return console.log('1')	
+			return
 		}
 		
 		// if from and to buildings were found
@@ -287,7 +308,8 @@ export function game() {
 			setWalkableAt(player, from[0], from[1], false)
 			setWalkableAt(player, to[0], to[1], false)
 			
-			console.log(path)
+			if (!path.length) return
+			link(player.canvas.link, gameMenu.fromBuilding.type, path)
 			
 			gameMenu = {}
 		}
@@ -306,8 +328,6 @@ export function game() {
 		else if (!gameMenu.x || !gameMenu.y) {
 			buildPopup(player, xBlock, yBlock, left)
 			gameMenu = { x: xBlock, y: yBlock, left: left }
-			
-			console.log('3')
 		}
 		
 		// build options popup that goes to right
@@ -319,8 +339,6 @@ export function game() {
 		) {	
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
-			
-			console.log('4')
 		}
 		
 		// build options popup that goes to left
@@ -332,19 +350,42 @@ export function game() {
 		) {
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
-			
-			console.log('5')
 		}
 		
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
-			
-			console.log('6')
 		}
 	}
 	
-	function findObject(buildings, building) {
+	function link(canvas, type, path) {
+		var last = [
+			path[0][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier),
+			path[0][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+		]
+		
+		for (var i = 0; i < path.length ; i++) {
+			var x1 = last[0]
+			var y1 = last[1]
+			var x2 = path[i][0] * (blockWidth / gridMultiplier) + (blockWidth / gridMultiplier)
+			var y2 = path[i][1] * (blockHeight / gridMultiplier) + (blockHeight / gridMultiplier)
+			
+			line({
+				ctx: canvas,
+				shape: shapes[type],
+				x1: x1,
+				y1: y1,
+				x2: x2,
+				y2: y2,
+				lineWidth: 2,
+				lineDash: [8, 16],
+				alpha: 0.5
+			})
+			last = [x2, y2]
+		}
+	}
+	
+	function findBuilding(buildings, building) {
 		for (var p = 0; p < buildings.length; p++) {
 			if (
 				buildings[p].start[0] == building.start[0] &&
@@ -359,7 +400,6 @@ export function game() {
 		if (left) {
 			for (var i = 0; i < types.length; i++) {
 				rect(player.canvas.menu, shapes.dark, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-				
 				borderedCircle(player.canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
@@ -367,7 +407,6 @@ export function game() {
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			for (var i = 0; i < types.length; i++) {
 				rect(player.canvas.menu, shapes.dark, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-				
 				borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
 			}
 		}
@@ -751,14 +790,16 @@ export function game() {
 		return false
 	}
 	
-	function line(ctx, shape, x1, y1, x2, y2, alpha = 1) {
-		ctx.beginPath()
-		ctx.moveTo(x1, y1)
-		ctx.lineTo(x2, y2)
-		ctx.lineWidth = 1;
-		ctx.strokeStyle = shape.strokeStyle(alpha)
-		ctx.stroke()
-		ctx.closePath()
+	//function line(ctx, shape, x1, y1, x2, y2, alpha = 1) {
+	function line(o) {
+		o.ctx.setLineDash(o.lineDash ? o.lineDash: [])
+		o.ctx.beginPath()
+		o.ctx.moveTo(o.x1, o.y1)
+		o.ctx.lineTo(o.x2, o.y2)
+		o.ctx.lineWidth = o.lineWidth ? o.lineWidth : 1;
+		o.ctx.strokeStyle = o.shape.strokeStyle(o.alpha)
+		o.ctx.stroke()
+		o.ctx.closePath()
 	}
 	
 	function rect(ctx, shape, x1, y1, x2, y2, alpha = 1) {
