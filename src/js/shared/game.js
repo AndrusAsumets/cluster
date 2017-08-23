@@ -21,11 +21,11 @@ export function game() {
 	var recharge = 15 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 5
-	var uiXNum = 9 // mobile: 8
-	var uiYNum = 16 // mobile: 18
+	var sHorizontal = 9 // mobile: 8
+	var sVertical = 16 // mobile: 18
 	var gm = 3
-	var gameXNum = uiXNum * gm
-	var gameYNum = uiYNum * gm
+	var bHorizontal = sHorizontal * gm
+	var bVertical = sVertical * gm
 	var cycle = 1000 / speedMultiplier
 	var attackable = true
 	var time = (new Date).getTime()
@@ -44,14 +44,12 @@ export function game() {
 	    return dpr / bsr
 	})() : null
 	var splitScreen = 2
-	var horizontal = uiXNum
-	var vertical = uiYNum
-	var w = client ? size().x : gameXNum
-	var h = client ? size().y : gameYNum
+	var w = client ? size().x : bHorizontal
+	var h = client ? size().y : bVertical
 	w = w / splitScreen
 	h = h// / splitScreen
-	var blockWidth = w / horizontal
-	var blockHeight = h / vertical
+	var blockWidth = w / sHorizontal
+	var blockHeight = h / sVertical
 	
 	//ui
 	var shapes = {
@@ -89,10 +87,10 @@ export function game() {
 	
 	// create matrices
 	var matrix = []
-	for (var i = 0; i < gameYNum - 1; i++) {
+	for (var i = 0; i < bVertical - 1; i++) {
 		matrix.push([])
 		
-		for (var j = 0; j < gameXNum - 1; j++) {
+		for (var j = 0; j < bHorizontal - 1; j++) {
 			matrix[i].push(0)
 		}
 	}
@@ -115,13 +113,13 @@ export function game() {
 			document.getElementsByClassName('game')[0].appendChild(this.container)
 			this.canvas = client ? {
 				background: createCanvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
-				link: createCanvas(this.container, 'movement_' + this.id, w, h, 2, blockHeight),
+				link: createCanvas(this.container, 'link_' + this.id, w, h, 2, blockHeight),
 				movement: createCanvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
 				menu: createCanvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
 			} : null
 			
 			// create a visual UI grid
-			for (var i = 0; i < horizontal; i++) {
+			for (var i = 0; i < sHorizontal; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -133,7 +131,7 @@ export function game() {
 				})
 			}
 			
-			for (var i = 0; i < vertical; i++) {
+			for (var i = 0; i < sVertical; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -237,7 +235,6 @@ export function game() {
 			case LINK:
 				if (!score()) return
 				
-				console.log(message)
 				players[data.playerId].links.push(data.link)
 
 				if (client) link()
@@ -246,8 +243,8 @@ export function game() {
 	})
 	
 	function isPathOpen(grid) {
-		for (var i = 0; i < gameXNum - gm; i++) {
-			if (finder.findPath(i, 0, i, gameYNum - gm, grid.clone()).length) return true
+		for (var i = 0; i < bHorizontal - gm; i++) {
+			if (finder.findPath(i, 0, i, bVertical - gm, grid.clone()).length) return true
 		}
 		return false
 	}
@@ -300,15 +297,15 @@ export function game() {
 		var y = event.clientY
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
-		var left = xBlock < horizontal / splitScreen
+		var left = xBlock < sHorizontal / splitScreen
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
 			xBlock < 0 ||
 			yBlock < 0 ||
-			xBlock >= uiXNum ||
-			yBlock >= uiYNum
+			xBlock >= sHorizontal ||
+			yBlock >= sVertical
 		) {
 			return
 		}
@@ -568,7 +565,7 @@ export function game() {
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [horizontal * gm, gameMenu.y * gm]	
+			var end = [sHorizontal * gm, gameMenu.y * gm]	
 			
 			// create a building
 			var building = {
@@ -687,7 +684,7 @@ export function game() {
 			players[player.id].elements[p].path.shift()
 			
 			/*
-			if (element.path[0][0] >= horizontal * gm - 2) {
+			if (element.path[0][0] >= sHorizontal * gm - 2) {
 				players[player.id].elements.splice(p, 1)
 				//players.right.score = players.right.score - 1
 			}
@@ -716,13 +713,13 @@ export function game() {
 		index = 6
 		
 		return [
-			[[gameXNum / splitScreen, gameYNum / splitScreen], [0, 0]], // for the top left player
-			[[0, gameYNum / splitScreen], [gameXNum / splitScreen, 0]], // top right
-			[[gameXNum / splitScreen, 0], [0, gameYNum / splitScreen]], // bottom left
-			[[0, 0 ], [gameXNum / splitScreen, gameYNum / splitScreen]], // bottom right
-			[[0, gameYNum / 2 / splitScreen], [gameXNum / splitScreen, gameYNum / 2 / splitScreen]], // coming from left
-			[[gameXNum / splitScreen, gameYNum - gm], [gameXNum / splitScreen, 0]], // coming from bottom
-			[[gameXNum / splitScreen, 0], [gameXNum / splitScreen, gameYNum - gm]] //coming from top
+			[[bHorizontal / splitScreen, bVertical / splitScreen], [0, 0]], // for the top left player
+			[[0, bVertical / splitScreen], [bHorizontal / splitScreen, 0]], // top right
+			[[bHorizontal / splitScreen, 0], [0, bVertical / splitScreen]], // bottom left
+			[[0, 0 ], [bHorizontal / splitScreen, bVertical / splitScreen]], // bottom right
+			[[0, bVertical / 2 / splitScreen], [bHorizontal / splitScreen, bVertical / 2 / splitScreen]], // coming from left
+			[[bHorizontal / splitScreen, bVertical - gm], [bHorizontal / splitScreen, 0]], // coming from bottom
+			[[bHorizontal / splitScreen, 0], [bHorizontal / splitScreen, bVertical - gm]] //coming from top
 		][index]
 	}
 	
@@ -749,7 +746,7 @@ export function game() {
 							start[0] = findOpenPath(players[r].grid, 0, gm)
 							
 							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
-								end[0] = findOpenPath(players[r].grid, gameYNum - (gm * 2), gameYNum - gm)
+								end[0] = findOpenPath(players[r].grid, bVertical - (gm * 2), bVertical - gm)
 							}
 						}
 						
@@ -782,7 +779,7 @@ export function game() {
 	}
 	
 	function findOpenPath(grid, y1, y2) {
-		for (var i = 0; i < gameXNum - gm; i++) {
+		for (var i = 0; i < bHorizontal - gm; i++) {
 			if (finder.findPath(i, y1, i, y2, grid.clone()).length) return i
 		}
 	}
