@@ -40,4 +40,4 @@ server.listen(8081)
 */
 
 global.window = null
-game(0)
+game()

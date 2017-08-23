@@ -1,3 +1,5 @@
+import { line, rect, circle, donut, image, canvas } from './draw'
+
 export function game() {
 	var io = require('socket.io-client')
 	var PF = require('pathfinding')
@@ -7,10 +9,9 @@ export function game() {
 	const BUILDING = 'BUILDING'
 	const LINK = 'LINK'
 	
-	//network
+	//platform
 	var client = window ? true : false
 	var host = !window ? true : false
-	var pingpong = null
 	
 	// gameplay
 	var defaultScore = 10000
@@ -32,17 +33,6 @@ export function game() {
 	var players = {}
 	
 	//window
-	var PIXEL_RATIO = client ? (function () {
-	    var ctx = document.createElement('canvas').getContext('2d'),
-	        dpr = window.devicePixelRatio || 1,
-	        bsr = ctx.webkitBackingStorePixelRatio ||
-				ctx.mozBackingStorePixelRatio ||
-				ctx.msBackingStorePixelRatio ||
-				ctx.oBackingStorePixelRatio ||
-				ctx.backingStorePixelRatio || 1
-	
-	    return dpr / bsr
-	})() : null
 	var splitScreen = 2
 	var w = client ? size().x : bHorizontal
 	var h = client ? size().y : bVertical
@@ -112,10 +102,10 @@ export function game() {
 			this.container.className = 'player player_' + this.id
 			document.getElementsByClassName('game')[0].appendChild(this.container)
 			this.canvas = client ? {
-				background: createCanvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
-				link: createCanvas(this.container, 'link_' + this.id, w, h, 2, blockHeight),
-				movement: createCanvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
-				menu: createCanvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
+				background: canvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
+				link: canvas(this.container, 'link_' + this.id, w, h, 2, blockHeight),
+				movement: canvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
+				menu: canvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
 			} : null
 			
 			// create a visual UI grid
@@ -436,10 +426,9 @@ export function game() {
 	function link() {
 		for (var key in players) {
 			var player = players[key]
-			var canvas = player.canvas.link
 			var links = player.links
 			
-			canvas.clearRect(0, 0, w, h)
+			player.canvas.link.clearRect(0, 0, w, h)
 			
 			for (var l = 0; l < links.length; l++) {
 				var from = links[l].from
@@ -474,7 +463,7 @@ export function game() {
 					var y2 = path[i][1] * (height) + (height * (gm * 0.5))
 					
 					line({
-						ctx: canvas,
+						ctx: player.canvas.link,
 						shape: shapes[type],
 						x1: x1,
 						y1: y1,
@@ -982,91 +971,8 @@ export function game() {
 		return false
 	}
 	
-	function line(o) {
-		var alpha = o.alpha ? o.alpha : 1
-		
-		o.ctx.setLineDash(o.lineDash ? o.lineDash: [])
-		o.ctx.beginPath()
-		o.ctx.moveTo(o.x1, o.y1)
-		o.ctx.lineTo(o.x2, o.y2)
-		o.ctx.lineWidth = o.lineWidth ? o.lineWidth : 1;
-		o.ctx.strokeStyle = o.shape.strokeStyle(alpha)
-		o.ctx.stroke()
-		o.ctx.closePath()
-	}
-	
-	function rect(o) {
-		var alpha = o.alpha ? o.alpha : 1
-		
-		o.ctx.beginPath()
-		o.ctx.rect(o.x1, o.y1, o.x2, o.y2)
-		o.ctx.fillStyle = o.shape.fillStyle(alpha)
-		o.ctx.fill()	
-		o.ctx.closePath()
-	}
-	
-	function circle(o) {
-		var centerX = o.x1 + (o.x2 / 2)
-		var centerY = o.y1 + (o.y2 / 2)
-		var radius = Math.sqrt(o.x2 + o.y2)
-		var degrees = o.percentage ? o.percentage * 3.6 : 360
-		var alpha = o.alpha ? o.alpha : 1
-		
-		o.ctx.beginPath()
-		o.ctx.moveTo(centerX, centerY)
-		o.ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), false)
-		o.ctx.fillStyle = o.shape.fillStyle(alpha)
-		o.ctx.fill()
-		o.ctx.closePath()
-	}
-
-	function donut(o) {
-		var centerX = o.x1 + (o.x2 / 2)
-		var centerY = o.y1 + (o.y2 / 2)
-		var radius = Math.sqrt(o.x2 + o.y2)
-		var degrees = o.percentage ? o.percentage * 3.6 : 360
-		var alpha = o.alpha ? o.alpha : 1
-	
-		o.ctx.beginPath()
-		o.ctx.moveTo(centerX, centerY)
-		o.ctx.arc(centerX, centerY, radius * 1.25, 0, 2 * Math.PI, false)
-		o.ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, true)
-		o.ctx.arc(centerX, centerY, radius / 1.1, 0, degreesToRadians(-degrees), true)
-		o.ctx.fillStyle = o.shape.fillStyle(alpha)
-		o.ctx.fill()
-		o.ctx.closePath()
-	}
-	
-	function image(o) {
-		var img = new Image()
-		img.onload = function() {
-			o.ctx.drawImage(img, o.x1, o.y1, o.width, o.height)
-		}
-		img.src = 'public/images/' + o.file
-	}
-	
-	function degreesToRadians(degrees) {
-	    return (degrees * Math.PI) / 180
-	}
-	
 	function convertRange(value, r1, r2) { 
 	    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
-	}
-	
-	function createCanvas (container, className, w, h, z, top) {
-		var ratio = PIXEL_RATIO
-		var canvas = document.createElement('canvas')
-		canvas.className = className
-		canvas.width = w * ratio
-		canvas.height = h * ratio
-		canvas.style.position = 'absolute'
-		canvas.style.top = 0
-		canvas.style.width = w + 'px'
-		canvas.style.height = h + 'px'
-		canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
-		canvas.style.zIndex = z
-		container.appendChild(canvas)
-		return canvas.getContext('2d')
 	}
 	
 	function createCookie(name, value, days) {
