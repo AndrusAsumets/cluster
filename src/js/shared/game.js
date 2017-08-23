@@ -304,6 +304,10 @@ export function game() {
 				return
 			}
 			
+			
+			// disallow linking to the same building
+			if (from == to) return 
+			
 			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
 			link()
 			

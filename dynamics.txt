@@ -135,10 +135,8 @@ sf88r.com
 
 NOW:
 * test icon from an image
-* don't link to the same building
 * dropdown for removing / upgrading
 * allow for building on first and last rows
-* redraw links when building new buildings
 * emit only to host option
 * avoid duplicate links
 * save links to host
@@ -242,6 +240,8 @@ fuser -n tcp -k 1337
 * fix attacking
 * fix walkables by creating a grid for each player
 * close first and last rows
+* redraw links when building new buildings
+* disallow linking to the same building
 
 
 // difference
