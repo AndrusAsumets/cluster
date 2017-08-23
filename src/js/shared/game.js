@@ -4,6 +4,8 @@ export function game() {
 	
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
+	const BUILDING = 'BUILDING'
+	const LINK = 'LINK'
 	
 	//network
 	var client = window ? true : false
@@ -200,6 +202,9 @@ export function game() {
 						
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
+						
+						players[key].links = data[key].links
+						link()
 					
 						var buildings = data[key].buildings
 						for (var i = 0; i < buildings.length; i++) {
@@ -209,7 +214,7 @@ export function game() {
 				}
 				break
 				
-			case 'building':
+			case BUILDING:
 				if (!score()) return
 				
 				var player = players[data.playerId]
@@ -226,6 +231,15 @@ export function game() {
 				//players[data.position].score = players[data.position].score - 1
 				players[data.playerId].buildings.push(data)
 				if (host) createPaths(player) // host
+				if (client) link()
+				break
+				
+			case LINK:
+				if (!score()) return
+				
+				console.log(message)
+				players[data.playerId].links.push(data.link)
+
 				if (client) link()
 				break
 		}
@@ -316,9 +330,13 @@ export function game() {
 			// disallow linking to the same building
 			if (from == to) return 
 			
-			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
+			socket.emit('message', { action: LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
 			link()
 			
+			gameMenu = {}
+			
+			/*
+			// keep the selection active
 			rect({
 				ctx: player.canvas.menu,
 				shape: shapes.light,
@@ -339,6 +357,8 @@ export function game() {
 			})
 			
 			gameMenu.linking = true
+			*/
+			
 		}
 		
 		// if a building was found on that block
@@ -392,7 +412,7 @@ export function game() {
 		
 		//build a menu if no options can't be found
 		else if (
-			!gameMenu.linking && // if the last action was not about linking, then it would be better to skip it
+			//!gameMenu.linking && // if the last action was not about linking, then it would be better to skip it
 			!gameMenu.x &&
 			!gameMenu.y
 		) {
@@ -561,7 +581,7 @@ export function game() {
 				dynamics: {}
 			}
 			
-			socket.emit('message', { action: 'building', data: building, playerId: me })
+			socket.emit('message', { action: BUILDING, data: building, playerId: me })
 		}
 		else {
 			var type = xBlock - gameMenu.x + types.length - 1
@@ -583,7 +603,7 @@ export function game() {
 				}
 			}
 			
-			socket.emit('message', { action: 'building', data: building, playerId: me })
+			socket.emit('message', { action: BUILDING, data: building, playerId: me })
 		}
 	}
 	
