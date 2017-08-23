@@ -91,6 +91,7 @@ if (energy)
 * building another factory will decrease building and research times
 * first factory for free
 * split: 1 > 2 > 4 > 8
+* laboratory: recharge time
 
 
 UI:
@@ -124,8 +125,6 @@ fire    |  0        |  1        |  1       |  0        |  2       |  1       |  
 wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
 
-* layout for mobile and 4 player setup
-* create/emit elements & score by host
 * varying recharge count for bubbles
 * recalculate paths on build, diff and update just the elements for which diffs dont match
 
@@ -134,9 +133,10 @@ bubblefactory.game
 sf88r.com
 
 NOW:
+* allow for building on first and last rows
+* emit score by host
 * test icon from an image
 * dropdown for removing / upgrading
-* allow for building on first and last rows
 * emit only to host option
 * avoid duplicate links
 * save links to host

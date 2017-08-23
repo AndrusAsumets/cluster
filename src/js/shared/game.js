@@ -16,9 +16,9 @@ export function game() {
 	var defaultDamage = 10
 	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
-	var recharge = 10 * 1000
+	var recharge = 15 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
-	var speedMultiplier = 1
+	var speedMultiplier = 5
 	var uiXNum = 9 // mobile: 8
 	var uiYNum = 16 // mobile: 18
 	var gm = 3
@@ -79,12 +79,15 @@ export function game() {
 		wind: {
 			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
 			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
+		},
+		factory: {
+			file: 'factory.svg'
 		}
 	}
 	
 	// create matrices
 	var matrix = []
-	for (var i = 0; i < gameYNum; i++) {
+	for (var i = 0; i < gameYNum - 1; i++) {
 		matrix.push([])
 		
 		for (var j = 0; j < gameXNum - 1; j++) {
@@ -211,13 +214,12 @@ export function game() {
 				
 				var player = players[data.playerId]
 				
-				// check if findBuilding on that location already
+				// check if there's an building on that location already
 				if (Object.keys(findBuilding(player.buildings, data)).length > 0) return
 				
 				// check for open paths
 				setWalkableAt(player, data.start[0], data.start[1], false)
-				var path = finder.findPath(0, 0, 0, gameYNum - 1, player.grid.clone())
-				if (!path.length) return setWalkableAt(player, data.start[0], data.start[1], true)
+				if (!isPathOpen(player.grid)) return setWalkableAt(player, data.start[0], data.start[1], true)
 				
 				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
 				
@@ -228,6 +230,13 @@ export function game() {
 				break
 		}
 	})
+	
+	function isPathOpen(grid) {
+		for (var i = 0; i < gameXNum - gm; i++) {
+			if (finder.findPath(i, 0, i, gameYNum - gm, grid.clone()).length) return true
+		}
+		return false
+	}
 	
 	function score() {
 		return true
@@ -283,9 +292,9 @@ export function game() {
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
 			xBlock < 0 ||
-			yBlock <= 0 ||
+			yBlock < 0 ||
 			xBlock >= uiXNum ||
-			yBlock >= uiYNum - 1
+			yBlock >= uiYNum
 		) {
 			return
 		}
@@ -303,7 +312,6 @@ export function game() {
 				gameMenu = {}
 				return
 			}
-			
 			
 			// disallow linking to the same building
 			if (from == to) return 
@@ -488,7 +496,17 @@ export function game() {
 					y2: blockHeight,
 					alpha: 0.1
 				})
-
+				
+				image({
+					ctx: player.canvas.menu,
+					file: shapes.factory.file,
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					width: blockWidth,
+					height: blockHeight
+				})
+				
+				/*
 				donut({
 					ctx: player.canvas.menu,
 					shape: shapes[types[i]],
@@ -497,6 +515,7 @@ export function game() {
 					x2: blockWidth,
 					y2: blockHeight
 				})
+				*/
 			}
 		}
 		else {
@@ -584,7 +603,9 @@ export function game() {
 				if (
 					'elements' in players[p] &&
 					players[p].elements.length
-				) elements.push([players[p].id, players[p].elements])
+				) {
+					elements.push([players[p].id, players[p].elements])
+				}
 			}
 		}
 		
@@ -680,8 +701,8 @@ export function game() {
 			[[gameXNum / splitScreen, 0], [0, gameYNum / splitScreen]], // bottom left
 			[[0, 0 ], [gameXNum / splitScreen, gameYNum / splitScreen]], // bottom right
 			[[0, gameYNum / 2 / splitScreen], [gameXNum / splitScreen, gameYNum / 2 / splitScreen]], // coming from left
-			[[gameXNum / splitScreen, gameYNum - 1], [gameXNum / splitScreen, 0]], // coming from bottom
-			[[gameXNum / splitScreen, 0], [gameXNum / splitScreen, gameYNum - 1]] //coming from top
+			[[gameXNum / splitScreen, gameYNum - gm], [gameXNum / splitScreen, 0]], // coming from bottom
+			[[gameXNum / splitScreen, 0], [gameXNum / splitScreen, gameYNum - gm]] //coming from top
 		][index]
 	}
 	
@@ -703,6 +724,15 @@ export function game() {
 						var direction = getDirection(r)
 						var start = [objects[p].start[0], direction[0][1]]
 						var end = [objects[p].start[0], direction[1][1]]
+						
+						if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
+							start[0] = findOpenPath(players[r].grid, 0, gm)
+							
+							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
+								end[0] = findOpenPath(players[r].grid, gameYNum - (gm * 2), gameYNum - gm)
+							}
+						}
+						
 						var element = {
 							id: players[r].elements.length,
 							type: object.type,
@@ -728,6 +758,12 @@ export function game() {
 				y2: blockHeight,
 				percentage: object.charge
 			})
+		}
+	}
+	
+	function findOpenPath(grid, y1, y2) {
+		for (var i = 0; i < gameXNum - gm; i++) {
+			if (finder.findPath(i, y1, i, y2, grid.clone()).length) return i
 		}
 	}
 	
@@ -911,6 +947,7 @@ export function game() {
 				var top = y + r
 				
 				left = left < 0 ? 0 : left
+				top = top < 0 ? 0 : top
 				grid.setWalkableAt(left, top, walkable)
 			}
 		}
@@ -981,6 +1018,14 @@ export function game() {
 		o.ctx.fillStyle = o.shape.fillStyle(alpha)
 		o.ctx.fill()
 		o.ctx.closePath()
+	}
+	
+	function image(o) {
+		var img = new Image()
+		img.onload = function() {
+			o.ctx.drawImage(img, o.x1, o.y1, o.width, o.height)
+		}
+		img.src = 'public/images/' + o.file
 	}
 	
 	function degreesToRadians(degrees) {
