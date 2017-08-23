@@ -307,8 +307,24 @@ export function game() {
 			players[me].links.push({ from: from, to: to, type: gameMenu.fromBuilding.type })
 			link()
 			
-			rect(player.canvas.menu, shapes.dark, from[0] / gm * blockWidth, from[1] * blockHeight / gm, blockWidth, blockHeight)
-			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], from[0] / gm * blockWidth, from[1] / gm * blockHeight, blockWidth, blockHeight)
+			rect({
+				ctx: player.canvas.menu,
+				shape: shapes.light,
+				x1: from[0] / gm * blockWidth,
+				y1: from[1] * blockHeight / gm,
+				x2: blockWidth,
+				y2: blockHeight,
+				alpha: 0.1
+			})
+			
+			donut({
+				ctx: player.canvas.menu,
+				shape: shapes[gameMenu.fromBuilding.type],
+				x1: from[0] / gm * blockWidth,
+				y1: from[1] / gm * blockHeight,
+				x2: blockWidth,
+				y2: blockHeight
+			})
 			
 			gameMenu.linking = true
 		}
@@ -320,8 +336,24 @@ export function game() {
 			gameMenu.fromBuilding = building
 			gameMenu.linking = true
 			
-			rect(player.canvas.menu, shapes.dark, xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-			borderedCircle(player.canvas.menu, shapes[gameMenu.fromBuilding.type], xBlock * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+			rect({
+				ctx: player.canvas.menu,
+				shape: shapes.light,
+				x1: xBlock * blockWidth,
+				y1: yBlock * blockHeight,
+				x2: blockWidth,
+				y2: blockHeight,
+				alpha: 0.1
+			})
+
+			donut({
+				ctx: player.canvas.menu,
+				shape: shapes[gameMenu.fromBuilding.type],
+				x1: xBlock * blockWidth,
+				y1: yBlock * blockHeight,
+				x2: blockWidth,
+				y2: blockHeight
+			})
 		}
 		
 		// build options popup that goes to right
@@ -329,7 +361,7 @@ export function game() {
 			(gameMenu.left && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
 			(gameMenu.left && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
 			(gameMenu.left && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.left && gameMenu.x + 0 == xBlock && gameMenu.y == yBlock)
+			(gameMenu.left && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
 		) {	
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
@@ -420,7 +452,7 @@ export function game() {
 						x2: x2,
 						y2: y2,
 						lineWidth: 2,
-						lineDash: [24, 8],
+						lineDash: [8, 24],
 						alpha: 0.5
 					})
 					last = [x2, y2]
@@ -443,15 +475,47 @@ export function game() {
 	function buildPopup(player, xBlock, yBlock, left) {
 		if (left) {
 			for (var i = 0; i < types.length; i++) {
-				rect(player.canvas.menu, shapes.dark, (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-				borderedCircle(player.canvas.menu, shapes[types[i]], (xBlock + i) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				rect({
+					ctx: player.canvas.menu,
+					shape: shapes.light,
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					alpha: 0.1
+				})
+
+				donut({
+					ctx: player.canvas.menu,
+					shape: shapes[types[i]],
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight
+				})
 			}
 		}
 		else {
 			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
 			for (var i = 0; i < types.length; i++) {
-				rect(player.canvas.menu, shapes.dark, (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
-				borderedCircle(player.canvas.menu, shapes[reversedTypes[i]], (xBlock + i - types.length + 1) * blockWidth, yBlock * blockHeight, blockWidth, blockHeight)
+				rect({
+					ctx: player.canvas.menu,
+					shape: shapes.light,
+					x1: (xBlock + i - types.length + 1) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					alpha: 0.1
+				})
+
+				donut({
+					ctx: player.canvas.menu,
+					shape: shapes[reversedTypes[i]],
+					x1: (xBlock + i - types.length + 1) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight
+				})
 			}
 		}
 	}
@@ -651,7 +715,15 @@ export function game() {
 				}
 			}
 			
-			if (client) borderedCircle(players[key].canvas[layer], shapes[object.type], (object.start[0]) * (blockWidth / gm), object.start[1] * (blockHeight / gm), blockWidth, blockHeight, object.charge)
+			if (client) donut({
+				ctx: players[key].canvas[layer],
+				shape: shapes[object.type],
+				x1: object.start[0] * blockWidth / gm,
+				y1: object.start[1] * blockHeight / gm,
+				x2: blockWidth,
+				y2: blockHeight,
+				percentage: object.charge
+			})
 		}
 	}
 	
@@ -802,10 +874,26 @@ export function game() {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-					borderedCircle(players[key].canvas[layer], shapes[object.type], dx, dy, blockWidth, blockHeight, percentage, 0.55)
+
+					donut({
+						ctx: players[key].canvas[layer],
+						shape: shapes[object.type],
+						x1: dx,
+						y1: dy,
+						x2: blockWidth,
+						y2: blockHeight,
+						alpha: 0.55
+					})
 				}
 				else {
-					circle(players[key].canvas[layer], object.shape, dx, dy, blockWidth, blockHeight, 1)
+					circle({
+						ctx: players[key].canvas[layer],
+						shape: object.shape,
+						x1: dx,
+						y1: dy,
+						x2: blockWidth,
+						y2: blockHeight
+					})
 				}
 			}
 		}
@@ -837,52 +925,58 @@ export function game() {
 	}
 	
 	function line(o) {
+		var alpha = o.alpha ? o.alpha : 1
+		
 		o.ctx.setLineDash(o.lineDash ? o.lineDash: [])
 		o.ctx.beginPath()
 		o.ctx.moveTo(o.x1, o.y1)
 		o.ctx.lineTo(o.x2, o.y2)
 		o.ctx.lineWidth = o.lineWidth ? o.lineWidth : 1;
-		o.ctx.strokeStyle = o.shape.strokeStyle(o.alpha)
+		o.ctx.strokeStyle = o.shape.strokeStyle(alpha)
 		o.ctx.stroke()
 		o.ctx.closePath()
 	}
 	
-	function rect(ctx, shape, x1, y1, x2, y2, alpha = 1) {
-		ctx.beginPath()
-		ctx.rect(x1, y1, x2, y2)
-		ctx.fillStyle = shape.fillStyle(alpha)
-		ctx.fill()	
-		ctx.closePath()
-	}
-	
-	function circle(ctx, shape, x1, y1, x2, y2, percent, alpha = 1) {
-		var centerX = x1 + (x2 / 2)
-		var centerY = y1 + (y2 / 2)
-		var radius = Math.sqrt(x2 + y2)
-		var degrees = percent ? percent * 3.6 : 360
+	function rect(o) {
+		var alpha = o.alpha ? o.alpha : 1
 		
-		ctx.beginPath()
-		ctx.moveTo(centerX, centerY)
-		ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), false)
-		ctx.fillStyle = shape.fillStyle(alpha)
-		ctx.fill()
-		ctx.closePath()
+		o.ctx.beginPath()
+		o.ctx.rect(o.x1, o.y1, o.x2, o.y2)
+		o.ctx.fillStyle = o.shape.fillStyle(alpha)
+		o.ctx.fill()	
+		o.ctx.closePath()
 	}
 	
-	function borderedCircle(ctx, shape, x1, y1, x2, y2, percent, alpha = 1) {
-		var centerX = x1 + (x2 / 2)
-		var centerY = y1 + (y2 / 2)
-		var radius = Math.sqrt(x2 + y2)
-		var degrees = percent ? percent * 3.6 : 360
+	function circle(o) {
+		var centerX = o.x1 + (o.x2 / 2)
+		var centerY = o.y1 + (o.y2 / 2)
+		var radius = Math.sqrt(o.x2 + o.y2)
+		var degrees = o.percentage ? o.percentage * 3.6 : 360
+		var alpha = o.alpha ? o.alpha : 1
+		
+		o.ctx.beginPath()
+		o.ctx.moveTo(centerX, centerY)
+		o.ctx.arc(centerX, centerY, radius / 2, 0, degreesToRadians(-degrees), false)
+		o.ctx.fillStyle = o.shape.fillStyle(alpha)
+		o.ctx.fill()
+		o.ctx.closePath()
+	}
+
+	function donut(o) {
+		var centerX = o.x1 + (o.x2 / 2)
+		var centerY = o.y1 + (o.y2 / 2)
+		var radius = Math.sqrt(o.x2 + o.y2)
+		var degrees = o.percentage ? o.percentage * 3.6 : 360
+		var alpha = o.alpha ? o.alpha : 1
 	
-		ctx.beginPath()
-		ctx.moveTo(centerX, centerY)
-		ctx.arc(centerX, centerY, radius * 1.25, 0, 2 * Math.PI, false)
-		ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, true)
-		ctx.arc(centerX, centerY, radius / 1.1, 0, degreesToRadians(-degrees), true)
-		ctx.fillStyle = shape.fillStyle(alpha)
-		ctx.fill()
-		ctx.closePath()
+		o.ctx.beginPath()
+		o.ctx.moveTo(centerX, centerY)
+		o.ctx.arc(centerX, centerY, radius * 1.25, 0, 2 * Math.PI, false)
+		o.ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, true)
+		o.ctx.arc(centerX, centerY, radius / 1.1, 0, degreesToRadians(-degrees), true)
+		o.ctx.fillStyle = o.shape.fillStyle(alpha)
+		o.ctx.fill()
+		o.ctx.closePath()
 	}
 	
 	function degreesToRadians(degrees) {
