@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" viewBox="0 0 100 125" style="enable-background:new 0 0 100 100;" xml:space="preserve"><g><path d="M35.3,90.9C35.5,91,35.8,91,36,91c0.7,0,1.3-0.4,1.7-1l33-55c0.4-0.6,0.4-1.4,0-2c-0.4-0.6-1-1-1.7-1H56.4L61,11.4   c0.1-0.6,0-1.2-0.4-1.7S59.6,9,59,9H31c-1.1,0-2,0.9-2,2v41c0,1.1,0.9,2,2,2h8.6L34,88.7C33.9,89.6,34.4,90.5,35.3,90.9z M44,52.3   c0.1-0.6-0.1-1.2-0.5-1.6S42.6,50,42,50h-9V13h23.5l-4.4,20.1c0,0.2-0.1,0.4,0,0.6c0,0.1,0,0.2,0,0.3c0,1.1,0.9,2,2,2h11.5L39.6,79   L44,52.3z"/></g></svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="42px" height="82px" viewBox="0 0 42 82" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.2 (44496) - http://www.bohemiancoding.com/sketch -->
+    <title>Shape</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="powerplant" fill-rule="nonzero" fill="#FFFFFF">
+            <path d="M6.3,81.9 C6.5,82 6.8,82 7,82 C7.7,82 8.3,81.6 8.7,81 L41.7,26 C42.1,25.4 42.1,24.6 41.7,24 C41.3,23.4 40.7,23 40,23 L27.4,23 L32,2.4 C32.1,1.8 32,1.2 31.6,0.7 C31.2,0.2 30.6,0 30,0 L2,0 C0.9,0 0,0.9 0,2 L0,43 C0,44.1 0.9,45 2,45 L10.6,45 L5,79.7 C4.9,80.6 5.4,81.5 6.3,81.9 Z M15,43.3 C15.1,42.7 14.9,42.1 14.5,41.7 C14.1,41.3 13.6,41 13,41 L4,41 L4,4 L27.5,4 L23.1,24.1 C23.1,24.3 23,24.5 23.1,24.7 C23.1,24.8 23.1,24.9 23.1,25 C23.1,26.1 24,27 25.1,27 L36.6,27 L10.6,70 L15,43.3 Z" id="Shape"></path>
+        </g>
+    </g>
+</svg>
