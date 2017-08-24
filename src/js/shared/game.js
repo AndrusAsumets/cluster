@@ -2,8 +2,8 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
+import { isNear, setWalkableAt, alreadyLinked, findOpenPath, isPathOpen } from './util'
 import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
-import { isNear, setWalkableAt, alreadyLinked } from './render'
 import { defaultShapes } from './shapes'
 
 export function game() {
@@ -195,7 +195,8 @@ export function game() {
 				
 				// check for open paths
 				players = setWalkableAt(players, player, gm, data.start[0], data.start[1], false)
-				if (!isPathOpen(player.grid)) {
+				var pathCheck = { finder: finder, grid: player.grid, gm: gm, bHorizontal: bHorizontal, bVertical: bVertical }
+				if (!isPathOpen(pathCheck)) {
 					players = setWalkableAt(players, player, gm, data.start[0], data.start[1], true)
 					return
 				}
@@ -234,13 +235,6 @@ export function game() {
 				break
 		}
 	})
-	
-	function isPathOpen(grid) {
-		for (var i = 0; i < bHorizontal - gm; i++) {
-			if (finder.findPath(i, 0, i, bVertical - gm, grid.clone()).length) return true
-		}
-		return false
-	}
 	
 	function energy() {
 		return true
@@ -692,12 +686,6 @@ export function game() {
 				y2: blockHeight,
 				percentage: object.charge
 			})
-		}
-	}
-	
-	function findOpenPath(grid, y1, y2) {
-		for (var i = 0; i < bHorizontal - gm; i++) {
-			if (finder.findPath(i, y1, i, y2, grid.clone()).length) return i
 		}
 	}
 	

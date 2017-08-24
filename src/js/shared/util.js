@@ -39,3 +39,16 @@ export function alreadyLinked(player, from, to) {
 	
 	return false
 }
+
+export function isPathOpen(o) {
+	for (var i = 0; i < o.bHorizontal - o.gm; i++) {
+		if (o.finder.findPath(i, 0, i, o.bVertical - o.gm, o.grid.clone()).length) return true
+	}
+	return false
+}
+
+export function findOpenPath(grid, y1, y2) {
+	for (var i = 0; i < bHorizontal - gm; i++) {
+		if (finder.findPath(i, y1, i, y2, grid.clone()).length) return i
+	}
+}
