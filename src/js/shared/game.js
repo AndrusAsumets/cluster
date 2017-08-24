@@ -1,13 +1,13 @@
+var io = require('socket.io-client')
+var PF = require('pathfinding')
+
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
 import { createMatrix, line, rect, circle, donut, image, canvas } from './draw'
 import { isNear, setWalkableAt } from './render'
 import { defaultShapes } from './shapes'
 
 export function game() {
-	var io = require('socket.io-client')
-	var PF = require('pathfinding')
-	
-	const CONNECT = 'CONNECT'
+	const CONNECT = 'CONNECT'z
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
 	const ELEMENT = 'ELEMENT'
@@ -126,7 +126,7 @@ export function game() {
 	})
 	
 	var me = client ? getUrlParams('me') : null
-	if (!me && !host) return console.log('add ?me=second to your url')
+	if (!me && !host) return console.log('add ?me=some_player_id to your url')
 	
 	var uri = client ? 'ws://188.166.0.158:1337' : 'ws://localhost:1337'
 	var socket = io.connect(uri)
@@ -185,18 +185,6 @@ export function game() {
 				}
 				break
 				
-			case ELEMENT:
-				if (client) {
-					for (var key in players) {
-						if (key != data.avoid) {
-							var element = data.element
-							element.path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], players[key].grid.clone())
-							 players[key].elements.push(element)
-						}
-					}
-				}
-				break
-				
 			case BUILDING:
 				if (!energy()) return
 				
@@ -226,6 +214,18 @@ export function game() {
 				players[data.playerId].links.push(data.link)
 
 				if (client) link()
+				break
+				
+			case ELEMENT:
+				if (client) {
+					for (var key in players) {
+						if (key != data.avoid) {
+							var element = data.element
+							element.path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], players[key].grid.clone())
+							 players[key].elements.push(element)
+						}
+					}
+				}
 				break
 		}
 	})
@@ -312,38 +312,13 @@ export function game() {
 				return
 			}
 			
-			// disallow linking to the same building
+			// disablelinking to the same building
 			if (from == to) return 
 			
 			socket.emit('message', { action: LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
 			link()
 			
 			gameMenu = {}
-			
-			/*
-			// keep the selection active
-			rect({
-				ctx: player.canvas.menu,
-				shape: shapes.light,
-				x1: from[0] / gm * blockWidth,
-				y1: from[1] * blockHeight / gm,
-				x2: blockWidth,
-				y2: blockHeight,
-				alpha: 0.1
-			})
-			
-			donut({
-				ctx: player.canvas.menu,
-				shape: shapes[gameMenu.fromBuilding.type],
-				x1: from[0] / gm * blockWidth,
-				y1: from[1] / gm * blockHeight,
-				x2: blockWidth,
-				y2: blockHeight
-			})
-			
-			gameMenu.linking = true
-			*/
-			
 		}
 		
 		// if a building was found on that block
@@ -635,7 +610,6 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-			
 				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
 				players[player.id].elements[p].path = path
 			}
