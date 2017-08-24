@@ -24,3 +24,18 @@ export function setWalkableAt(players, player, gm, x, y, walkable) {
 	players[player.id].grid = grid
 	return players
 }
+
+export function alreadyLinked(player, from, to) {
+	var links = player.links
+	
+	for (var i = 0; i < links.length; i++) {
+		if (
+			links[i].from[0] == from[0] &&
+			links[i].from[1] == from[1] &&
+			links[i].to[0] == to[0] &&
+			links[i].to[1] == to[1]
+		) return true
+	}
+	
+	return false
+}

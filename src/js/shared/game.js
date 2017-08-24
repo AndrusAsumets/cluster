@@ -1,9 +1,9 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { convertRange, createCookie, readCookie, size, getUrlParams, alreadyLinked } from './helpers'
+import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
 import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
-import { isNear, setWalkableAt } from './render'
+import { isNear, setWalkableAt, alreadyLinked } from './render'
 import { defaultShapes } from './shapes'
 
 export function game() {
