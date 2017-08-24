@@ -1,4 +1,6 @@
+import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
 import { line, rect, circle, donut, image, canvas } from './draw'
+import { defaultShapes } from './shapes'
 
 export function game() {
 	var io = require('socket.io-client')
@@ -15,13 +17,13 @@ export function game() {
 	var host = !window ? true : false
 	
 	// gameplay
-	var defaultScore = 10000
+	var defaultEnergy = 100
 	var defaultHealth = 1000
 	var defaultDamage = 10
 	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
-	var recharge = 5 * 1000
-	var types = ['earth', 'water', 'fire', 'wind']
+	var recharge = 15 * 1000
+	var materialTypes = ['earth', 'water', 'fire', 'wind']
 	var speedMultiplier = 1
 	var sHorizontal = 9 // mobile: 8
 	var sVertical = 16 // mobile: 18
@@ -32,49 +34,30 @@ export function game() {
 	var attackable = true
 	var time = (new Date).getTime()
 	var players = {}
+	var defaultBuildings = {
+		factory: {
+			cost: 250,
+			linkable: false,
+			attack: false
+		},
+		powerplant: {
+			cost: 25,
+			linkable: true,
+			attack: false
+		}	
+	}
 	
 	//window
 	var splitScreen = 2
 	var w = client ? size().x : bHorizontal
 	var h = client ? size().y : bVertical
 	w = w / splitScreen
-	h = h// / splitScreen
+	h = h // / splitScreen
 	var blockWidth = w / sHorizontal
 	var blockHeight = h / sVertical
 	
 	//ui
-	var shapes = {
-		background: {
-			fillStyle: function (alpha) { return 'rgba(25, 29, 49, ' + alpha + ')' }
-		},
-		dark: {
-			fillStyle: function (alpha) { return 'rgba(11, 7, 35, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(0, 0, 0, ' + alpha + ')' }
-		},
-		light: {
-			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
-		},
-		earth: {
-			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
-		},
-		water: {
-			fillStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' }
-		},
-		fire: {
-			fillStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' }
-		},
-		wind: {
-			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
-		},
-		factory: {
-			file: 'factory.svg'
-		}
-	}
+	var shapes = defaultShapes()
 	
 	// create matrices
 	var matrix = []
@@ -92,6 +75,10 @@ export function game() {
 		this.elements = []
 		this.projectiles = []
 		this.links = []
+		
+		//gameplay
+		this.energy = defaultEnergy
+		this.factoryBuilt = false
 		
 		// make grids from the matrices
 		this.grid = new PF.Grid(matrix)
@@ -216,7 +203,7 @@ export function game() {
 				break
 				
 			case BUILDING:
-				if (!score()) return
+				if (!energy()) return
 				
 				var player = players[data.playerId]
 				
@@ -227,16 +214,16 @@ export function game() {
 				setWalkableAt(player, data.start[0], data.start[1], false)
 				if (!isPathOpen(player.grid)) return setWalkableAt(player, data.start[0], data.start[1], true)
 				
-				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].score - 1
+				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].energy - 1
 				
-				//players[data.position].score = players[data.position].score - 1
+				//players[data.position].energy = players[data.position].energy - 1
 				players[data.playerId].buildings.push(data)
 				if (host) createPaths(player) // host
 				if (client) link()
 				break
 				
 			case LINK:
-				if (!score()) return
+				if (!energy()) return
 				
 				players[data.playerId].links.push(data.link)
 
@@ -252,22 +239,22 @@ export function game() {
 		return false
 	}
 	
-	function score() {
+	function energy() {
 		return true
 		var playing = true
-		if (client) document.getElementsByClassName('player-left')[0].innerHTML = players.left.score > 0 ? players.left.score : 0
-		if (client) document.getElementsByClassName('player-right')[0].innerHTML = players.right.score > 0 ? players.right.score : 0
+		if (client) document.getElementsByClassName('player-left')[0].innerHTML = players.left.energy > 0 ? players.left.energy : 0
+		if (client) document.getElementsByClassName('player-right')[0].innerHTML = players.right.energy > 0 ? players.right.energy : 0
 		
 		if (gameLength < 0) {
-			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerB won!'
 			playing = false
 		}
-		else if (players.left.score < 0) {
-			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerB won!'
+		else if (players.left.energy < 0) {
+			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerB won!'
 			playing = false
 		}
-		else if (players.right.score < 0) {
-			if (client) document.getElementsByClassName('score')[0].innerHTML = 'PlayerA won!'
+		else if (players.right.energy < 0) {
+			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerA won!'
 			playing = false
 		}
 		
@@ -280,15 +267,15 @@ export function game() {
 		var ms = gameLength
 		ms = 1000 * Math.round(ms / 1000)
 		var d = new Date(ms)
-		if (client) document.getElementsByClassName('score')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
+		if (client) document.getElementsByClassName('energy')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
 		
-		if (!score()) clearInterval(gameInterval)
+		if (!energy()) clearInterval(gameInterval)
 	}, 1000)
 	*/
 	
 	var gameMenu = {}
 	function createElement(event) {
-		if (!score()) return
+		if (!energy()) return
 		
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
@@ -504,8 +491,10 @@ export function game() {
 	}
 	
 	function buildPopup(player, xBlock, yBlock, left) {
+		//var availableBuildings = Object.keys(defaultBuildings)
 		if (left) {
-			for (var i = 0; i < types.length; i++) {
+			var i = 0
+			for (var building in defaultBuildings) {
 				rect({
 					ctx: player.canvas.menu,
 					shape: shapes.light,
@@ -518,52 +507,47 @@ export function game() {
 				
 				image({
 					ctx: player.canvas.menu,
-					file: shapes.factory.file,
+					file: shapes[building].file,
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
 					width: blockWidth,
 					height: blockHeight
 				})
 				
-				/*
-				donut({
-					ctx: player.canvas.menu,
-					shape: shapes[types[i]],
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight
-				})
-				*/
+				i++
 			}
 		}
 		else {
-			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
-			for (var i = 0; i < types.length; i++) {
+			var reversedDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings))).reverse()
+			var i = 0
+			for (var building in defaultBuildings) {
 				rect({
 					ctx: player.canvas.menu,
 					shape: shapes.light,
-					x1: (xBlock + i - types.length + 1) * blockWidth,
+					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
 					y2: blockHeight,
 					alpha: 0.1
 				})
-
-				donut({
+				
+				image({
 					ctx: player.canvas.menu,
-					shape: shapes[reversedTypes[i]],
-					x1: (xBlock + i - types.length + 1) * blockWidth,
+					file: shapes[building].file,
+					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight
+					width: blockWidth,
+					height: blockHeight
 				})
+				
+				i++
 			}
 		}
 	}
 
 	function selectFromPopup(player, gameMenu, xBlock) {
 		if (gameMenu.left) {
+			var listOfDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings)))
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
@@ -573,7 +557,8 @@ export function game() {
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: types[type],
+				type: materialTypes[type],
+				//type: listOfDefaultBuildings[type],
 				start: start,
 				end: end,
 				charge: 0,
@@ -583,17 +568,17 @@ export function game() {
 			socket.emit('message', { action: BUILDING, data: building, playerId: me })
 		}
 		else {
-			var type = xBlock - gameMenu.x + types.length - 1
+			var type = xBlock - gameMenu.x + materialTypes.length - 1
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
 			var end = [0, gameMenu.y * gm]
-			var reversedTypes = JSON.parse(JSON.stringify(types)).reverse()
+			var reversedmaterialTypes = JSON.parse(JSON.stringify(materialTypes)).reverse()
 			
 			// create a building
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: reversedTypes[type],
+				type: reversedmaterialTypes[type],
 				start: start,
 				end: end,
 				charge: 0,
@@ -678,7 +663,7 @@ export function game() {
 			/*
 			if (element.path[0][0] >= sHorizontal * gm - 2) {
 				players[player.id].elements.splice(p, 1)
-				//players.right.score = players.right.score - 1
+				//players.right.energy = players.right.energy - 1
 			}
 			*/
 		}
@@ -977,44 +962,4 @@ export function game() {
 		}
 		return false
 	}
-	
-	function convertRange(value, r1, r2) { 
-	    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0]
-	}
-	
-	function createCookie(name, value, days) {
-	    var expires = ""
-	    if (days) {
-	        var date = new Date();
-	        date.setTime(date.getTime() + (days*24*60*60*1000))
-	        expires = "; expires=" + date.toUTCString()
-	    }
-	    document.cookie = name + "=" + value + expires + "; path=/"
-	}
-	
-	function readCookie(name) {
-	    var nameEQ = name + "="
-	    var ca = document.cookie.split(';')
-	    for(var i=0;i < ca.length;i++) {
-	        var c = ca[i]
-	        while (c.charAt(0)==' ') c = c.substring(1,c.length)
-	        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length)
-	    }
-	    return null;
-	}
-	
-	function size() {
-		var w = window,
-		    d = document,
-		    e = d.documentElement,
-		    g = d.getElementsByTagName('body')[0],
-		    x = w.innerWidth || e.clientWidth || g.clientWidth,
-		    y = w.innerHeight|| e.clientHeight|| g.clientHeight
-		return { x: x, y: y }
-	}
-}
-
-function getUrlParams(parameter) {
-	var url = new URL(window.location.href)
-	return url.searchParams.get(parameter)	
 }
