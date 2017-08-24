@@ -20,7 +20,7 @@ io.attach(app)
 
 io.on('connection', context => {
 	console.log('new connection')
-	context.socket.emit('message', { action: 'connect' })
+	context.socket.emit('message', { action: 'CONNECT' })
 })
 
 io.on('message', (context, data) => {

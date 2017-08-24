@@ -133,9 +133,8 @@ bubblefactory.game
 sf88r.com
 
 NOW:
-* sync time
+* basic gameplay
 * emit score by host
-* dropdown for removing / upgrading
 
 PHASE1:
 * store game data to file/database & playback
@@ -249,3 +248,4 @@ a.difference(b)
 * linking between the buildings
 * avoid duplicate links
 * save links to host
+* sync time

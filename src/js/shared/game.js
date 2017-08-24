@@ -1,11 +1,13 @@
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
-import { line, rect, circle, donut, image, canvas } from './draw'
+import { createMatrix, line, rect, circle, donut, image, canvas } from './draw'
+import { isNear, setWalkableAt } from './render'
 import { defaultShapes } from './shapes'
 
 export function game() {
 	var io = require('socket.io-client')
 	var PF = require('pathfinding')
 	
+	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
 	const ELEMENT = 'ELEMENT'
@@ -60,14 +62,7 @@ export function game() {
 	var shapes = defaultShapes()
 	
 	// create matrices
-	var matrix = []
-	for (var i = 0; i < bVertical - 1; i++) {
-		matrix.push([])
-		
-		for (var j = 0; j < bHorizontal - 1; j++) {
-			matrix[i].push(0)
-		}
-	}
+	var matrix = createMatrix(bVertical, bHorizontal)
 	
 	function Player (options) {
 		this.id = options.id
@@ -148,7 +143,7 @@ export function game() {
 		var data = message.data
 		
 		switch(action) {
-			case 'connect':
+			case CONNECT:
 				console.log('connected to ws')
 				//var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
 				
@@ -184,7 +179,7 @@ export function game() {
 					
 						var buildings = data[key].buildings
 						for (var i = 0; i < buildings.length; i++) {
-							setWalkableAt(players[key], buildings[i].start[0], buildings[i].start[1], false)
+							players = setWalkableAt(players, players[key], gm, buildings[i].start[0], buildings[i].start[1], false)
 						}
 					}
 				}
@@ -211,14 +206,17 @@ export function game() {
 				if (Object.keys(findBuilding(player.buildings, data)).length > 0) return
 				
 				// check for open paths
-				setWalkableAt(player, data.start[0], data.start[1], false)
-				if (!isPathOpen(player.grid)) return setWalkableAt(player, data.start[0], data.start[1], true)
+				players = setWalkableAt(players, player, gm, data.start[0], data.start[1], false)
+				if (!isPathOpen(player.grid)) {
+					players = setWalkableAt(players, player, gm, data.start[0], data.start[1], true)
+					return
+				}
 				
 				//if (client) document.getElementsByClassName('player-' + data.position)[0].innerHTML = players[data.position].energy - 1
 				
 				//players[data.position].energy = players[data.position].energy - 1
 				players[data.playerId].buildings.push(data)
-				if (host) createPaths(player) // host
+				createPaths(player)
 				if (client) link()
 				break
 				
@@ -436,15 +434,15 @@ export function game() {
 				var type = links[l].type
 				
 				// make positions temporarily walkable
-				setWalkableAt(player, from[0], from[1], true)
-				setWalkableAt(player, to[0], to[1], true)
+				players = setWalkableAt(players, player, gm, from[0], from[1], true)
+				players = setWalkableAt(players, player, gm, to[0], to[1], true)
 				
 				// find a path between the buildings
 				var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
 				
 				// make positions unwalkable again
-				setWalkableAt(player, from[0], from[1], false)
-				setWalkableAt(player, to[0], to[1], false)
+				players = setWalkableAt(players, player, gm, from[0], from[1], false)
+				players = setWalkableAt(players, player, gm, to[0], to[1], false)
 				
 				if (!path.length) continue
 				
@@ -591,47 +589,6 @@ export function game() {
 		}
 	}
 	
-	setInterval(function() {
-		time = (new Date).getTime()
-		
-		for (var p in players) {
-			players[p].projectiles = []
-			resetProjectiles(players[p])
-			updatePaths(players[p])
-			health(players[p]) // host
-			attack(players[p])
-			hit(players[p]) // host
-		}
-	}, cycle)
-	
-	setInterval(function() {
-		for (var key in players) animate(key)
-	}, 1000 / 60)
-	
-	function animate(key) {
-		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
-		
-		charge('movement', 'buildings', key)
-		if (client) {
-			move('movement', 'elements', key)
-			move('movement', 'projectiles', key)
-		}
-		
-		/*
-		if (delay) {
-			setTimeout(function() {
-				delayed = delay
-				move(projectiles, 'movement')
-				console.log('delayed', delayed)
-				play()
-			}, delay)			
-		}
-		else {
-			move(projectiles, 'movement')	
-		}
-		*/
-	}
-	
 	function resetProjectiles(player) {
 		var buildings = player.buildings ? player.buildings : []
 		for (var r = 0; r < buildings.length; r++) {
@@ -647,7 +604,7 @@ export function game() {
 		}
 	}
 	
-	function updatePaths(player) {
+	function shiftPaths(player) {
 		var elements = player.elements ? player.elements : []
 		for (var p = 0; p < elements.length; p++) {
 			var element = player.elements[p]
@@ -677,11 +634,17 @@ export function game() {
 				!element.path ||
 				!element.path[1] ||
 				!element.path[1].length
-			) continue
+			) {
 			
-			var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
+				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
+				players[player.id].elements[p].path = path
+			}
 			
-			players[player.id].elements[p].path = path
+			else {
+				var path = finder.findPath(element.path[0][0], element.path[0][1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
+				
+				players[player.id].elements[p].path = path
+			}
 		}
 	}
 	
@@ -780,7 +743,7 @@ export function game() {
 				) continue
 	
 				var positionB = player.elements[r].path[x]
-				if (!isNear(positionA, positionB)) continue
+				if (!isNear(gm, positionA, positionB)) continue
 				
 				var projectile = {
 					path: [
@@ -824,68 +787,6 @@ export function game() {
 			}
 		}
 	}
-	
-	/*
-	function attack(player) {
-		var buildings = player.buildings ? player.buildings : []
-		var x = client ? 1 : 0
-		for (var p = 0; p < buildings.length; p++) {
-			if (!player.buildings[p].built) continue
-			
-			var positionA = player.buildings[p].start
-			for (var r = 0; r < player.elements.length; r++) {
-				if (
-					!player.elements[r].path ||
-					!player.elements[r].path[x] ||
-					!player.elements[r].path[x].length
-				) continue
-	
-				var positionB = player.elements[r].path[x]
-				if (!isNear(positionA, positionB)) continue
-				
-				var projectile = {
-					path: [
-						player.buildings[p].start,
-						player.elements[r].path[1],
-						player.elements[r].path[2]
-					],
-					shape: player.buildings[p].shape
-				}
-				
-				players[player.id].projectiles.push(projectile)
-				players[player.id].buildings[p].dynamics.fired++
-				break
-			}
-		}
-	}
-	
-	function hit(player) {
-		var projectiles = player.projectiles
-		var x = client ? 2 : 1
-		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = host ? projectiles[p].path[1][0] : projectiles[p].path[2][0]
-			var y1 = host ? projectiles[p].path[1][1] : projectiles[p].path[2][1]
-				
-			for (var r = 0; r < player.elements.length; r++) {
-				var element = player.elements[r]
-				
-				if (
-					!element.path ||
-					!element.path[x] ||
-					!element.path[x].length
-				) continue
-					
-				var x2 = element.path[1][0]
-				var y2 = element.path[1][1]
-				
-				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = elements[r].dynamics.health - defaultDamage
-					break
-				}
-			}
-		}
-	}
-	*/
 	
 	// move the elements according to their positions in space and time
 	function move(layer, type, key) {
@@ -937,29 +838,30 @@ export function game() {
 		}
 	}
 	
-	function setWalkableAt(player, x, y, walkable) {
-		var grid = players[player.id].grid
-		for (var p = -1; p < gm - 1; p++) {
-			for (var r = -1; r < gm -1; r++) {
-				var left = x + p
-				var top = y + r
-				
-				left = left < 0 ? 0 : left
-				top = top < 0 ? 0 : top
-				grid.setWalkableAt(left, top, walkable)
-			}
+	setInterval(function() {
+		time = (new Date).getTime()
+		
+		for (var p in players) {
+			players[p].projectiles = []
+			resetProjectiles(players[p])
+			shiftPaths(players[p])
+			health(players[p])
+			attack(players[p])
+			hit(players[p])
 		}
-		players[player.id].grid = grid
-	}
+	}, cycle)
 	
-	function isNear(positionA, positionB) {
-		for (var q = -gm * defaultRange; q < gm * 2 * defaultRange; q++) {
-			if (positionA[0] + q == positionB[0]) {
-				for (var o = -gm * defaultRange; o < gm * 2 * defaultRange; o++) {
-					if (positionA[1] + o == positionB[1]) return true
-				}
-			}
+	setInterval(function() {
+		for (var key in players) animate(key)
+	}, 1000 / 60)
+	
+	function animate(key) {
+		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
+		
+		charge('movement', 'buildings', key)
+		if (client) {
+			move('movement', 'elements', key)
+			move('movement', 'projectiles', key)
 		}
-		return false
 	}
 }

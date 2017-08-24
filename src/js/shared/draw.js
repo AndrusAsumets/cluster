@@ -50,6 +50,18 @@ var PIXEL_RATIO = (function () {
 	} catch(err) {}
 })()
 
+export function createMatrix(vertical, horizontal) {
+	var matrix = []
+	for (var i = 0; i < vertical - 1; i++) {
+		matrix.push([])
+		
+		for (var j = 0; j < horizontal - 1; j++) {
+			matrix[i].push(0)
+		}
+	}
+	return matrix
+}
+
 export function line(o) {
 	var alpha = o.alpha ? o.alpha : 1
 	
