@@ -415,15 +415,15 @@ export function game() {
 				var height = blockHeight / gm
 				
 				var last = [
-					path[0][0] * (width) + (width * gm / 2),
-					path[0][1] * (height) + (height * gm / 2)
+					path[0][0] * width + (width * gm / 2),
+					path[0][1] * height + (height * gm / 2)
 				]
 				
 				for (var i = 0; i < path.length ; i++) {
 					var x1 = last[0]
 					var y1 = last[1]
-					var x2 = path[i][0] * (width) + (width * (gm * 0.5))
-					var y2 = path[i][1] * (height) + (height * (gm * 0.5))
+					var x2 = path[i][0] * width + (width * gm / 2)
+					var y2 = path[i][1] * height + (height * gm / 2)
 					
 					line({
 						ctx: player.canvas.link,
@@ -765,10 +765,10 @@ export function game() {
 				!object.path[1].length
 			) continue
 
-			var x1 = object.path[0][0] * (blockWidth / gm)
-			var y1 = object.path[0][1] * (blockHeight / gm)
-			var x2 = object.path[1][0] * (blockWidth / gm)
-			var y2 = object.path[1][1] * (blockHeight / gm)
+			var x1 = object.path[0][0] * blockWidth / gm
+			var y1 = object.path[0][1] * blockHeight / gm
+			var x2 = object.path[1][0] * blockWidth / gm
+			var y2 = object.path[1][1] * blockHeight / gm
 			var dt = (new Date).getTime() - time
 			var dx = x1 - (x1 - x2) * dt / cycle
 			var dy = y1 - (y1 - y2) * dt / cycle	
@@ -821,8 +821,8 @@ export function game() {
 	
 	function animate(key) {
 		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
-		
 		charge('movement', 'buildings', key)
+		
 		if (client) {
 			move('movement', 'elements', key)
 			move('movement', 'projectiles', key)
