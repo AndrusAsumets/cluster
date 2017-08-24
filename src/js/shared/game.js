@@ -18,25 +18,22 @@ export function game() {
 	var client = window ? true : false
 	var host = !window ? true : false
 	
-	// gameplay
-	var defaultEnergy = 100
-	var defaultHealth = 1000
-	var defaultDamage = 10
-	var defaultRange = 2
-	var gameLength = 1 * 60 * 1000
-	var recharge = 15 * 1000
-	var materialTypes = ['earth', 'water', 'fire', 'wind']
-	var speedMultiplier = 1
-	var sHorizontal = 9 // mobile: 8
-	var sVertical = 16 // mobile: 18
-	var gm = 3 // grid multiplier
-	var bHorizontal = sHorizontal * gm
-	var bVertical = sVertical * gm
-	var cycle = 1000 / speedMultiplier
-	var attackable = true
-	var time = (new Date).getTime()
-	var players = {}
-	var defaultBuildings = {
+	// gameplay constants
+	const defaultEnergy = 100
+	const defaultHealth = 1000
+	const defaultDamage = 10
+	const defaultRange = 2
+	const gameLength = 1 * 60 * 1000
+	const recharge = 15 * 1000
+	const materialTypes = ['earth', 'water', 'fire', 'wind']
+	const speedMultiplier = 1
+	const sHorizontal = 9 // mobile: 8
+	const sVertical = 16 // mobile: 18
+	const gm = 3 // grid multiplier
+	const bHorizontal = sHorizontal * gm
+	const bVertical = sVertical * gm
+	const cycle = 1000 / speedMultiplier
+	const defaultBuildings = {
 		factory: {
 			cost: 250,
 			linkable: false,
@@ -48,21 +45,25 @@ export function game() {
 			offensive: false
 		}	
 	}
+
+	//gameplay variables
+	var time = (new Date).getTime()
+	var players = {}
 	
 	//window
-	var splitScreen = 2
+	const splitScreen = 2
 	var w = client ? size().x : bHorizontal
 	var h = client ? size().y : bVertical
 	w = w / splitScreen
 	h = h
-	var blockWidth = w / sHorizontal
-	var blockHeight = h / sVertical
+	const blockWidth = w / sHorizontal
+	const blockHeight = h / sVertical
 	
 	//ui
-	var shapes = defaultShapes()
+	const shapes = defaultShapes()
 	
 	// create matrices
-	var matrix = createMatrix(bVertical, bHorizontal)
+	const matrix = createMatrix(bVertical, bHorizontal)
 	
 	function Player (options) {
 		this.id = options.id
