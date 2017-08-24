@@ -14,7 +14,7 @@ export function game() {
 	const SET_BUILDING = 'SET_BUILDING'
 	const SET_LINK = 'SET_LINK'
 	
-	//platform
+	// platform
 	var client = window ? true : false
 	var host = !window ? true : false
 	
@@ -46,11 +46,11 @@ export function game() {
 		}	
 	}
 
-	//gameplay variables
+	// gameplay variables
 	var time = (new Date).getTime()
 	var players = {}
 	
-	//window
+	// window
 	const splitScreen = 2
 	var w = client ? size().x : bHorizontal
 	var h = client ? size().y : bVertical
@@ -59,7 +59,7 @@ export function game() {
 	const blockWidth = w / sHorizontal
 	const blockHeight = h / sVertical
 	
-	//ui
+	// ui
 	const shapes = defaultShapes()
 	
 	// create matrices
@@ -72,7 +72,7 @@ export function game() {
 		this.projectiles = []
 		this.links = []
 		
-		//gameplay
+		// gameplay
 		this.energy = defaultEnergy
 		this.factoryBuilt = false
 		
