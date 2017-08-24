@@ -2,7 +2,7 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
-import { createMatrix, line, rect, circle, donut, image, canvas } from './draw'
+import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
 import { isNear, setWalkableAt } from './render'
 import { defaultShapes } from './shapes'
 
