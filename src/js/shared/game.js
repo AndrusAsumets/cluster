@@ -7,7 +7,7 @@ import { isNear, setWalkableAt } from './render'
 import { defaultShapes } from './shapes'
 
 export function game() {
-	const CONNECT = 'CONNECT'z
+	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
 	const ELEMENT = 'ELEMENT'
@@ -40,12 +40,12 @@ export function game() {
 		factory: {
 			cost: 250,
 			linkable: false,
-			attack: false
+			offensive: false
 		},
 		powerplant: {
 			cost: 25,
 			linkable: true,
-			attack: false
+			offensive: false
 		}	
 	}
 	
