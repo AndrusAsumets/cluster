@@ -12,12 +12,13 @@ export function isNear(gm, positionA, positionB) {
 export function setWalkableAt(players, player, gm, x, y, walkable) {
 	var grid = players[player.id].grid
 	for (var p = -1; p < gm - 1; p++) {
-		for (var r = -1; r < gm -1; r++) {
+		for (var r = -1; r < gm - 1; r++) {
 			var left = x + p
 			var top = y + r
 			
 			left = left < 0 ? 0 : left
 			top = top < 0 ? 0 : top
+
 			grid.setWalkableAt(left, top, walkable)
 		}
 	}
@@ -42,13 +43,16 @@ export function alreadyLinked(player, from, to) {
 
 export function isPathOpen(o) {
 	for (var i = 0; i < o.bHorizontal - o.gm; i++) {
-		if (o.finder.findPath(i, 0, i, o.bVertical - o.gm, o.grid.clone()).length) return true
+		//1: moves from left to right
+		//2: moves from right to left
+		if (o.finder.findPath(i, 0, o.bHorizontal - o.gm - i, o.bVertical - o.gm, o.grid.clone()).length) return true
 	}
+	
 	return false
 }
 
-export function findOpenPath(grid, y1, y2) {
-	for (var i = 0; i < bHorizontal - gm; i++) {
-		if (finder.findPath(i, y1, i, y2, grid.clone()).length) return i
+export function findOpenPath(o) {
+	for (var i = 0; i < o.bHorizontal - o.gm; i++) {
+		if (o.finder.findPath(i, o.y1, i, o.y2, o.grid.clone()).length) return i
 	}
 }

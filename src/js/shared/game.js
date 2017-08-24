@@ -195,7 +195,15 @@ export function game() {
 				
 				// check for open paths
 				players = setWalkableAt(players, player, gm, data.start[0], data.start[1], false)
-				var pathCheck = { finder: finder, grid: player.grid, gm: gm, bHorizontal: bHorizontal, bVertical: bVertical }
+				
+				var pathCheck = {
+					finder: finder,
+					grid: player.grid,
+					gm: gm,
+					bHorizontal: bHorizontal,
+					bVertical: bVertical
+				}
+				
 				if (!isPathOpen(pathCheck)) {
 					players = setWalkableAt(players, player, gm, data.start[0], data.start[1], true)
 					return
@@ -648,11 +656,27 @@ export function game() {
 							
 							// first find open path from top
 							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
-								start[0] = findOpenPath(players[r].grid, 0, gm)
+								var findOpenPathCheck = {
+									finder: finder,
+									grid: players[r].grid,
+									bHorizontal: bHorizontal,
+									gm: gm,
+									y1: 0,
+									y2: gm
+								}
+								start[0] = findOpenPath(findOpenPathCheck)
 								
 								// and then find open path from bottom
 								if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
-									end[0] = findOpenPath(players[r].grid, bVertical - (gm * 2), bVertical - gm)
+									var findOpenPathCheck = {
+										finder: finder,
+										grid: players[r].grid,
+										bHorizontal: bHorizontal,
+										gm: gm,
+										y1: bVertical - (gm * 2),
+										y2: bVertical - gm
+									}
+									end[0] = findOpenPath(findOpenPathCheck)
 								}
 							}
 							
