@@ -10,9 +10,9 @@ export function game() {
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
-	const ELEMENT = 'ELEMENT'
-	const BUILDING = 'BUILDING'
-	const LINK = 'LINK'
+	const SET_ELEMENT = 'SET_ELEMENT'
+	const SET_BUILDING = 'SET_BUILDING'
+	const SET_LINK = 'SET_LINK'
 	
 	//platform
 	var client = window ? true : false
@@ -186,7 +186,7 @@ export function game() {
 				}
 				break
 				
-			case BUILDING:
+			case SET_BUILDING:
 				if (!energy()) return
 				
 				var player = players[data.playerId]
@@ -218,14 +218,14 @@ export function game() {
 				if (client) link()
 				break
 				
-			case LINK:
+			case SET_LINK:
 				if (!energy()) return
 
 				players[data.playerId].links.push(data.link)
 				if (client) link()
 				break
 				
-			case ELEMENT:
+			case SET_ELEMENT:
 				if (client) {
 					var playerId = data.playerId
 					var element = data.element
@@ -323,7 +323,7 @@ export function game() {
 			// disablelinking to the same building
 			if (from == to) return 
 			
-			socket.emit('message', { action: LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
+			socket.emit('message', { action: SET_LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
 			link()
 			
 			gameMenu = {}
@@ -536,7 +536,7 @@ export function game() {
 				dynamics: {}
 			}
 			
-			socket.emit('message', { action: BUILDING, data: building, playerId: me })
+			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
 		}
 		else {
 			var type = xBlock - gameMenu.x + materialTypes.length - 1
@@ -558,7 +558,7 @@ export function game() {
 				}
 			}
 			
-			socket.emit('message', { action: BUILDING, data: building, playerId: me })
+			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
 		}
 	}
 	
@@ -696,7 +696,7 @@ export function game() {
 							}
 							players[r].elements.push(element)
 							
-							socket.emit('message', { action: ELEMENT, data: { element: element, playerId: key } })
+							socket.emit('message', { action: SET_ELEMENT, data: { element: element, playerId: key } })
 						}
 					}
 				}
