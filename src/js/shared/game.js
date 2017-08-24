@@ -210,20 +210,25 @@ export function game() {
 				
 			case LINK:
 				if (!energy()) return
-				
-				players[data.playerId].links.push(data.link)
 
+				players[data.playerId].links.push(data.link)
 				if (client) link()
 				break
 				
 			case ELEMENT:
 				if (client) {
+					var playerId = data.playerId
+					var element = data.element
+					
 					for (var key in players) {
-						if (key != data.avoid) {
-							var element = data.element
+						if (key != playerId) {
 							element.path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], players[key].grid.clone())
 							 players[key].elements.push(element)
 						}
+						
+						else {
+							players[playerId].buildings[element.parentIndex].charge = 0
+						}	
 					}
 				}
 				break
@@ -637,7 +642,7 @@ export function game() {
 				objects[p].charge = object.charge
 			}
 			else if (object.charge >= 100) {
-				players[key].buildings[p].charge = 0	
+				players[key].buildings[p].charge = 0
 				players[key].buildings[p].built = true
 				
 				if (host) {
@@ -659,6 +664,8 @@ export function game() {
 							
 							var element = {
 								id: players[r].elements.length,
+								playerId: key,
+								parentIndex: p,
 								type: object.type,
 								start: start,
 								end: end,
@@ -670,7 +677,7 @@ export function game() {
 							}
 							players[r].elements.push(element)
 							
-							socket.emit('message', { action: ELEMENT, data: { element: element, avoid: key } })
+							socket.emit('message', { action: ELEMENT, data: { element: element, playerId: key } })
 						}
 					}
 				}
