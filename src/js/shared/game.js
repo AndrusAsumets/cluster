@@ -29,7 +29,7 @@ export function game() {
 	var speedMultiplier = 1
 	var sHorizontal = 9 // mobile: 8
 	var sVertical = 16 // mobile: 18
-	var gm = 3
+	var gm = 3 // grid multiplier
 	var bHorizontal = sHorizontal * gm
 	var bVertical = sVertical * gm
 	var cycle = 1000 / speedMultiplier
@@ -54,7 +54,7 @@ export function game() {
 	var w = client ? size().x : bHorizontal
 	var h = client ? size().y : bVertical
 	w = w / splitScreen
-	h = h // / splitScreen
+	h = h
 	var blockWidth = w / sHorizontal
 	var blockHeight = h / sVertical
 	
@@ -647,9 +647,11 @@ export function game() {
 							var start = [objects[p].start[0], direction[0][1]]
 							var end = [objects[p].start[0], direction[1][1]]
 							
+							// first find open path from top
 							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
 								start[0] = findOpenPath(players[r].grid, 0, gm)
 								
+								// and then find open path from bottom
 								if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
 									end[0] = findOpenPath(players[r].grid, bVertical - (gm * 2), bVertical - gm)
 								}
