@@ -6,6 +6,7 @@ export function game() {
 	
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
+	const ELEMENT = 'ELEMENT'
 	const BUILDING = 'BUILDING'
 	const LINK = 'LINK'
 	
@@ -19,9 +20,9 @@ export function game() {
 	var defaultDamage = 10
 	var defaultRange = 2
 	var gameLength = 1 * 60 * 1000
-	var recharge = 15 * 1000
+	var recharge = 5 * 1000
 	var types = ['earth', 'water', 'fire', 'wind']
-	var speedMultiplier = 5
+	var speedMultiplier = 1
 	var sHorizontal = 9 // mobile: 8
 	var sVertical = 16 // mobile: 18
 	var gm = 3
@@ -197,6 +198,18 @@ export function game() {
 						var buildings = data[key].buildings
 						for (var i = 0; i < buildings.length; i++) {
 							setWalkableAt(players[key], buildings[i].start[0], buildings[i].start[1], false)
+						}
+					}
+				}
+				break
+				
+			case ELEMENT:
+				if (client) {
+					for (var key in players) {
+						if (key != data.avoid) {
+							var element = data.element
+							element.path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], players[key].grid.clone())
+							 players[key].elements.push(element)
 						}
 					}
 				}
@@ -596,7 +609,6 @@ export function game() {
 	setInterval(function() {
 		time = (new Date).getTime()
 		
-		var elements = []
 		for (var p in players) {
 			players[p].projectiles = []
 			resetProjectiles(players[p])
@@ -604,18 +616,7 @@ export function game() {
 			health(players[p]) // host
 			attack(players[p])
 			hit(players[p]) // host
-			
-			if (host) {
-				if (
-					'elements' in players[p] &&
-					players[p].elements.length
-				) {
-					elements.push([players[p].id, players[p].elements])
-				}
-			}
 		}
-		
-		//if (host) socket.emit('message', { action: 'elements', data: elements })
 	}, cycle)
 	
 	setInterval(function() {
@@ -626,8 +627,10 @@ export function game() {
 		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
 		
 		charge('movement', 'buildings', key)
-		move('movement', 'elements', key)
-		move('movement', 'projectiles', key)	
+		if (client) {
+			move('movement', 'elements', key)
+			move('movement', 'projectiles', key)
+		}
 		
 		/*
 		if (delay) {
@@ -722,35 +725,39 @@ export function game() {
 				objects[p].charge = object.charge
 			}
 			else if (object.charge >= 100) {
-				players[key].buildings[p].charge = 0
+				players[key].buildings[p].charge = 0	
 				players[key].buildings[p].built = true
 				
-				for (var r in players) {
-					if (key != r) {
-						var direction = getDirection(r)
-						var start = [objects[p].start[0], direction[0][1]]
-						var end = [objects[p].start[0], direction[1][1]]
-						
-						if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
-							start[0] = findOpenPath(players[r].grid, 0, gm)
+				if (host) {
+					for (var r in players) {
+						if (key != r) {
+							var direction = getDirection(r)
+							var start = [objects[p].start[0], direction[0][1]]
+							var end = [objects[p].start[0], direction[1][1]]
 							
 							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
-								end[0] = findOpenPath(players[r].grid, bVertical - (gm * 2), bVertical - gm)
+								start[0] = findOpenPath(players[r].grid, 0, gm)
+								
+								if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
+									end[0] = findOpenPath(players[r].grid, bVertical - (gm * 2), bVertical - gm)
+								}
 							}
-						}
-						
-						var element = {
-							id: players[r].elements.length,
-							type: object.type,
-							start: start,
-							end: end,
-							path: finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()),
-							dynamics: {
-								totalHealth: defaultHealth,
-								health: defaultHealth
+							
+							var element = {
+								id: players[r].elements.length,
+								type: object.type,
+								start: start,
+								end: end,
+								path: finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()),
+								dynamics: {
+									totalHealth: defaultHealth,
+									health: defaultHealth
+								}
 							}
+							players[r].elements.push(element)
+							
+							socket.emit('message', { action: ELEMENT, data: { element: element, avoid: key } })
 						}
-						players[r].elements.push(element)
 					}
 				}
 			}
