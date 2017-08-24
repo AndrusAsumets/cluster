@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
+import { convertRange, createCookie, readCookie, size, getUrlParams, alreadyLinked } from './helpers'
 import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
 import { isNear, setWalkableAt } from './render'
 import { defaultShapes } from './shapes'
@@ -307,7 +307,7 @@ export function game() {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 			
-			if (alreadyLinked(from, to)) {
+			if (alreadyLinked(players[me], from, to)) {
 				gameMenu = {}
 				return
 			}
@@ -384,16 +384,6 @@ export function game() {
 		else {
 			gameMenu = {}
 		}
-	}
-	
-	function alreadyLinked(from, to) {
-		var links = players[me].links
-		
-		for (var i = 0; i < links.length; i++) {
-			if (links[i].from == from && links[i].to == to) return true
-		}
-		
-		return false
 	}
 	
 	function link() {
