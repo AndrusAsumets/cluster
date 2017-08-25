@@ -468,7 +468,7 @@ export function game() {
 			for (var building in defaultBuildings) {
 				rect({
 					ctx: player.canvas.menu,
-					shape: shapes.light,
+					shape: shapes.dark,
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
@@ -479,10 +479,10 @@ export function game() {
 				image({
 					ctx: player.canvas.menu,
 					file: shapes[building].file,
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight
+					x1: (xBlock + i) * blockWidth + (blockWidth / 3),
+					y1: yBlock * blockHeight + (blockHeight / 3),
+					width: blockWidth / 3,
+					height: blockHeight / 3
 				})
 				
 				i++
