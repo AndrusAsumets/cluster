@@ -404,7 +404,7 @@ export function game() {
 				
 				// make positions temporarily walkable
 				players[key] = setWalkableAt(players[key], gm, from[0], from[1], true)
-				players[key] = setWalkableAt(players[key], player, gm, to[0], to[1], true)
+				players[key] = setWalkableAt(players[key], gm, to[0], to[1], true)
 				
 				// find a path between the buildings
 				var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
