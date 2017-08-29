@@ -7,6 +7,7 @@ import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
 import { defaultShapes } from './shapes'
 
 export function game() {
+	// networking constants
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
@@ -20,14 +21,14 @@ export function game() {
 	
 	// gameplay constants
 	const defaultEnergy = 100
-	const defaultHealth = 1000
-	const defaultDamage = 10
+	const defaultHealth = 100
+	const defaultDamage = 100
 	const defaultRange = 2
 	const gameLength = 1 * 60 * 1000
 	const recharge = 15 * 1000
 	const materialTypes = ['earth', 'water', 'fire', 'wind']
 	const speedMultiplier = 1
-	const sHorizontal = 9 // mobile: 8
+	const sHorizontal = 12 // mobile: 8
 	const sVertical = 16 // mobile: 18
 	const gm = 3 // grid multiplier
 	const bHorizontal = sHorizontal * gm
@@ -83,7 +84,7 @@ export function game() {
 		
 		if (client) {
 			this.container = document.createElement('div')
-			this.container.className = 'player player_' + this.id
+			this.container.className = 'player player_' + this.id + ' polygon-clip-hexagon'
 			document.getElementsByClassName('game')[0].appendChild(this.container)
 			this.canvas = client ? {
 				background: canvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
@@ -93,7 +94,7 @@ export function game() {
 			} : null
 			
 			// create a visual UI grid
-			for (var i = 0; i < sHorizontal; i++) {
+			for (var i = 0; i < sHorizontal + 1; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -101,11 +102,11 @@ export function game() {
 					y1: 0,
 					x2: blockWidth * i,
 					y2: h, 
-					alpha: 0.1
+					alpha: 0.2
 				})
 			}
 			
-			for (var i = 0; i < sVertical; i++) {
+			for (var i = 0; i < sVertical + 1; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -113,7 +114,7 @@ export function game() {
 					y1: blockHeight * i,
 					x2: w,
 					y2: blockHeight * i,
-					alpha: 0.1
+					alpha: 0.2
 				})
 			}
 			
@@ -180,7 +181,7 @@ export function game() {
 					
 						var buildings = data[key].buildings
 						for (var i = 0; i < buildings.length; i++) {
-							players = setWalkableAt(players, players[key], gm, buildings[i].start[0], buildings[i].start[1], false)
+							players[key] = setWalkableAt(players[key], gm, buildings[i].start[0], buildings[i].start[1], false)
 						}
 					}
 				}
@@ -195,7 +196,7 @@ export function game() {
 				if (Object.keys(findBuilding(player.buildings, data)).length > 0) return
 				
 				// check for open paths
-				players = setWalkableAt(players, player, gm, data.start[0], data.start[1], false)
+				players[data.playerId] = setWalkableAt(players[data.playerId], gm, data.start[0], data.start[1], false)
 				
 				var pathCheck = {
 					finder: finder,
@@ -206,7 +207,7 @@ export function game() {
 				}
 				
 				if (!isPathOpen(pathCheck)) {
-					players = setWalkableAt(players, player, gm, data.start[0], data.start[1], true)
+					players[data.playerId] = setWalkableAt(players[data.playerId], gm, data.start[0], data.start[1], true)
 					return
 				}
 				
@@ -227,18 +228,13 @@ export function game() {
 				
 			case SET_ELEMENT:
 				if (client) {
-					var playerId = data.playerId
 					var element = data.element
+					var playerId = element.playerId
+					var building = data.building
 					
 					for (var key in players) {
-						if (key != playerId) {
-							element.path = finder.findPath(element.start[0], element.start[1], element.end[0], element.end[1], players[key].grid.clone())
-							 players[key].elements.push(element)
-						}
-						
-						else {
-							players[playerId].buildings[element.parentIndex].charge = 0
-						}	
+						if (key != playerId) players[key].elements.push(element)
+						else players[playerId].buildings[building].charge = 0
 					}
 				}
 				break
@@ -407,15 +403,15 @@ export function game() {
 				var type = links[l].type
 				
 				// make positions temporarily walkable
-				players = setWalkableAt(players, player, gm, from[0], from[1], true)
-				players = setWalkableAt(players, player, gm, to[0], to[1], true)
+				players[key] = setWalkableAt(players[key], gm, from[0], from[1], true)
+				players[key] = setWalkableAt(players[key], player, gm, to[0], to[1], true)
 				
 				// find a path between the buildings
 				var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
 				
 				// make positions unwalkable again
-				players = setWalkableAt(players, player, gm, from[0], from[1], false)
-				players = setWalkableAt(players, player, gm, to[0], to[1], false)
+				players[key] = setWalkableAt(players[key], gm, from[0], from[1], false)
+				players[key] = setWalkableAt(players[key], gm, to[0], to[1], false)
 				
 				if (!path.length) continue
 				
@@ -482,7 +478,7 @@ export function game() {
 					x1: (xBlock + i) * blockWidth + (blockWidth / 3),
 					y1: yBlock * blockHeight + (blockHeight / 3),
 					width: blockWidth / 3,
-					height: blockHeight / 3
+					height: blockWidth / 3
 				})
 				
 				i++
@@ -543,13 +539,13 @@ export function game() {
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
 			var end = [0, gameMenu.y * gm]
-			var reversedmaterialTypes = JSON.parse(JSON.stringify(materialTypes)).reverse()
+			var reversedMaterialTypes = JSON.parse(JSON.stringify(materialTypes)).reverse()
 			
 			// create a building
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: reversedmaterialTypes[type],
+				type: reversedMaterialTypes[type],
 				start: start,
 				end: end,
 				charge: 0,
@@ -573,7 +569,7 @@ export function game() {
 	function health(player) {
 		var elements = player.elements ? player.elements : []
 		for (var r = 0; r < elements.length; r++) {
-			if (elements[r].dynamics.health <= 0) players[player.id].elements.shift()
+			if (elements[r].dynamics.health <= 0) players[player.id].elements.splice(r, 1)
 		}
 	}
 	
@@ -620,19 +616,10 @@ export function game() {
 		}
 	}
 	
-	function getDirection(index) {
-		index = parseInt(index) - 1
-		index = 6
-		
+	function getDirection() {
 		return [
-			[[bHorizontal / splitScreen, bVertical / splitScreen], [0, 0]], // for the top left player
-			[[0, bVertical / splitScreen], [bHorizontal / splitScreen, 0]], // top right
-			[[bHorizontal / splitScreen, 0], [0, bVertical / splitScreen]], // bottom left
-			[[0, 0 ], [bHorizontal / splitScreen, bVertical / splitScreen]], // bottom right
-			[[0, bVertical / 2 / splitScreen], [bHorizontal / splitScreen, bVertical / 2 / splitScreen]], // coming from left
-			[[bHorizontal / splitScreen, bVertical - gm], [bHorizontal / splitScreen, 0]], // coming from bottom
-			[[bHorizontal / splitScreen, 0], [bHorizontal / splitScreen, bVertical - gm]] //coming from top
-		][index]
+			[] //coming from top
+		][0]
 	}
 	
 	function charge(layer, type, key) {
@@ -651,7 +638,13 @@ export function game() {
 				if (host) {
 					for (var r in players) {
 						if (key != r) {
-							var direction = getDirection(r)
+							var direction = [[
+								bHorizontal / splitScreen, 
+								0
+							], [
+								bHorizontal / splitScreen, 
+								bVertical - gm
+							]]
 							var start = [objects[p].start[0], direction[0][1]]
 							var end = [objects[p].start[0], direction[1][1]]
 							
@@ -684,7 +677,6 @@ export function game() {
 							var element = {
 								id: players[r].elements.length,
 								playerId: key,
-								parentIndex: p,
 								type: object.type,
 								start: start,
 								end: end,
@@ -694,9 +686,10 @@ export function game() {
 									health: defaultHealth
 								}
 							}
-							players[r].elements.push(element)
 							
-							socket.emit('message', { action: SET_ELEMENT, data: { element: element, playerId: key } })
+							socket.emit('message', { action: SET_ELEMENT, data: { element: element, building: p } })
+							
+							players[r].elements.push(element)
 						}
 					}
 				}
@@ -718,7 +711,7 @@ export function game() {
 		var buildings = player.buildings ? player.buildings : []
 		var x = 1
 		for (var p = 0; p < buildings.length; p++) {
-			if (!player.buildings[p].built) continue
+			//if (!player.buildings[p].built) continue
 			
 			var positionA = player.buildings[p].start
 			for (var r = 0; r < player.elements.length; r++) {
@@ -803,6 +796,7 @@ export function game() {
 					donut({
 						ctx: players[key].canvas[layer],
 						shape: shapes[object.type],
+						percentage: percentage,
 						x1: dx,
 						y1: dy,
 						x2: blockWidth,
@@ -837,9 +831,17 @@ export function game() {
 		}
 	}, cycle)
 	
-	setInterval(function() {
+	if (host) {
+		setInterval(function() {
+			for (var key in players) animate(key)
+		}, 1000 / 60)
+	}
+	
+	function animationFrame() {
+		requestAnimationFrame(animationFrame)
 		for (var key in players) animate(key)
-	}, 1000 / 60)
+	}
+	if (client) requestAnimationFrame(animationFrame)
 	
 	function animate(key) {
 		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)

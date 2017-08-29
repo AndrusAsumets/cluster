@@ -9,8 +9,8 @@ export function isNear(gm, positionA, positionB) {
 	return false
 }
 
-export function setWalkableAt(players, player, gm, x, y, walkable) {
-	var grid = players[player.id].grid
+export function setWalkableAt(player, gm, x, y, walkable) {
+	var grid = player.grid
 	for (var p = -1; p < gm - 1; p++) {
 		for (var r = -1; r < gm - 1; r++) {
 			var left = x + p
@@ -22,8 +22,8 @@ export function setWalkableAt(players, player, gm, x, y, walkable) {
 			grid.setWalkableAt(left, top, walkable)
 		}
 	}
-	players[player.id].grid = grid
-	return players
+	player.grid = grid
+	return player
 }
 
 export function alreadyLinked(player, from, to) {

@@ -26,6 +26,7 @@ html, body {
 .game {
 	display: flex;
 	flex-wrap: wrap;
+    //transform: rotateX(45deg) rotateZ(45deg);
 }
 
 .menu {
@@ -38,15 +39,10 @@ html, body {
 	position: relative;
 	height: 100vh;
 	width: 50vw;
-	font-size: 1.5em;
 }
 
-.player:nth-child(1) {
-	border-right: 1px solid rgba(0, 0, 0, 0.4);
-}
-
-.player:nth-child(2) {
-	border-left: 1px solid rgba(0, 0, 0, 0.4);
+.player {
+	border: 1px solid rgba(0, 0, 0, 0.4);	
 }
 
 .elements {
@@ -69,4 +65,14 @@ html, body {
 	cursor: pointer;
 	font-size: 1em;
 	font-family: 'Helvetica Neue', 'sans';
+}
+
+
+.clip-svg {
+    width: 0;
+    height: 0;
+}
+
+.polygon-clip-hexagon {
+    //clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }

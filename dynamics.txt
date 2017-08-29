@@ -91,7 +91,7 @@ if (energy)
 * building another factory will decrease building and research times
 * first factory for free
 * split: 1 > 2 > 4 > 8
-* laboratory: recharge time
+* laboratory: recharge time, upgrade materials
 
 
 UI:
