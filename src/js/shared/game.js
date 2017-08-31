@@ -230,11 +230,11 @@ export function game() {
 				if (client) {
 					var element = data.element
 					var playerId = element.playerId
-					var building = data.building
+					var buildingIndex = data.buildingIndex
 					
 					for (var key in players) {
 						if (key != playerId) players[key].elements.push(element)
-						else players[playerId].buildings[building].charge = 0
+						else players[playerId].buildings[buildingIndex].charge = 0
 					}
 				}
 				break
@@ -687,7 +687,7 @@ export function game() {
 								}
 							}
 							
-							socket.emit('message', { action: SET_ELEMENT, data: { element: element, building: p } })
+							socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: p } })
 							
 							players[r].elements.push(element)
 						}

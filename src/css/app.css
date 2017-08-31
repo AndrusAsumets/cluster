@@ -27,6 +27,7 @@ html, body {
 	display: flex;
 	flex-wrap: wrap;
     //transform: rotateX(45deg) rotateZ(45deg);
+    //transform: rotateX(30deg) rotateY(30deg) rotateZ(60deg);
 }
 
 .menu {
