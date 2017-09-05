@@ -25,10 +25,10 @@ export function game() {
 	const defaultDamage = 100
 	const defaultRange = 2
 	const gameLength = 1 * 60 * 1000
-	const recharge = 2.5 * 1000
+	const recharge = 3 * 1000
 	const speedMultiplier = 1
-	const sHorizontal = 24 // mobile: 8
-	const sVertical = 16 // mobile: 18
+	const sHorizontal = 16 // mobile: 8
+	const sVertical = 9 // mobile: 18
 	const gm = 3 // grid multiplier
 	const bHorizontal = sHorizontal * gm
 	const bVertical = sVertical * gm
@@ -209,19 +209,14 @@ export function game() {
 				// check for open paths
 				players[building.playerId] = setWalkableAt(players[building.playerId], gm, building.start[0], building.start[1], false)
 				
-				var pathCheck = {
-					finder: finder,
-					grid: player.grid,
-					gm: gm,
-					bHorizontal: bHorizontal,
-					bVertical: bVertical
+				var found = false
+				for (var i = 0; i < bVertical - gm; i++) {
+					if (finder.findPath(building.start[0], i, bHorizontal - gm, building.end[1], player.grid.clone()).length) found = true
 				}
+				if (!found) return setWalkableAt(players[building.playerId], gm, building.start[0], building.start[1], true)
 				
-				if (!isPathOpen(pathCheck)) {
-					players[building.playerId] = setWalkableAt(players[building.playerId], gm, building.start[0], building.start[1], true)
-					return
-				}
 				
+
 				//if (client) document.getElementsByClassName('player-' + building.position)[0].innerHTML = players[building.position].energy - 1
 				
 				//players[building.position].energy = players[building.position].energy - 1
@@ -300,7 +295,9 @@ export function game() {
 		var y = event.clientY
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
-		var position = xBlock < sHorizontal / splitScreen ? 'left' : 'right'
+		var position = me == 'player1' ? 'left' : 'right'
+		if (position == 'left' && xBlock * gm > bHorizontal / 2) return
+		if (position == 'right' && xBlock * gm < bHorizontal / 2) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
@@ -365,22 +362,24 @@ export function game() {
 		
 		// build options popup that goes to right
 		else if (
-			(gameMenu.position = 'left' && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'left' && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'left' && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'left' && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
+			(position == 'left' && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
+			(position == 'left' && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
+			(position == 'left' && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
+			(position == 'left' && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
 		) {	
+			gameMenu.direction = 'toRight'
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
 		
 		// build options popup that goes to left
 		else if (
-			(gameMenu.position = 'right' && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'right' && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'right' && gameMenu.x - 1 == xBlock && gameMenu.y == yBlock) ||
-			(gameMenu.position = 'right' && gameMenu.x     == xBlock && gameMenu.y == yBlock)
+			(position == 'right' && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
+			(position == 'right' && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
+			(position == 'right' && gameMenu.x - 1 == xBlock && gameMenu.y == yBlock) ||
+			(position == 'right' && gameMenu.x     == xBlock && gameMenu.y == yBlock)
 		) {
+			gameMenu.direction = 'toLeft'
 			selectFromPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
@@ -390,13 +389,13 @@ export function game() {
 			!gameMenu.x &&
 			!gameMenu.y
 		) {
-			if (position == 'left' && me == 'player1') { 
+			if (position == 'left') { 
 				buildPopup(player, xBlock, yBlock, position)
-				gameMenu = { x: xBlock, y: yBlock, position: position }
+				gameMenu = { x: xBlock, y: yBlock}
 			}
-			else if (position == 'right' && me == 'player2') { 
+			else {
 				buildPopup(player, xBlock, yBlock, position)
-				gameMenu = { x: xBlock, y: yBlock, position: position }
+				gameMenu = { x: xBlock, y: yBlock}
 			}
 		}
 		
@@ -554,11 +553,11 @@ export function game() {
 	}
 
 	function selectFromPopup(player, gameMenu, xBlock) {
-		if (gameMenu.position == 'left') {
+		if (gameMenu.direction == 'toRight') {
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [sHorizontal * gm, gameMenu.y * gm]	
+			var end = [sHorizontal * gm, gameMenu.y * gm]
 			
 			// create a building
 			var building = {
@@ -575,7 +574,7 @@ export function game() {
 			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
 		}
 		else {
-			var type = xBlock - gameMenu.x + Object.keys(defaultBuildings).reverse().length - 1
+			var type = xBlock - gameMenu.x + Object.keys(defaultBuildings).length - 1
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
 			var end = [0, gameMenu.y * gm]
@@ -656,10 +655,51 @@ export function game() {
 		}
 	}
 	
-	function getDirection() {
-		return [
-			[] //coming from top
-		][0]
+	function detectCollision(p) {
+		var player = players[p]
+		var x = 2
+		var epoch = (new Date).getTime()
+		for (var r = 0; r < player.elements.length; r++) {
+			if (
+				!player.elements[r].path ||
+				!player.elements[r].path[x] ||
+				!player.elements[r].path[x].length
+			) continue
+
+			var positionA = player.elements[r].path[x]
+			
+			for (var p2 in players) {
+				if (p == p2) continue
+				var anotherPlayer = players[p2]
+				
+				for (var r2 = 0; r2 < anotherPlayer.elements.length; r2++) {
+					if (
+						!anotherPlayer.elements[r2].path ||
+						!anotherPlayer.elements[r2].path[0] ||
+						!anotherPlayer.elements[r2].path[0].length
+					) continue
+		
+					var positionB = anotherPlayer.elements[r2].path[0]
+					
+					if (
+						isNear(1, positionA, anotherPlayer.elements[r2].path[0]) &&
+						epoch != players[p2].elements[r2].lastCollision
+					) {	
+						// make positions unwalkable
+						players[p] = setWalkableAt(players[p], gm, positionB[0], positionB[1], false)
+						
+						// find a path between the buildings
+						var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], players[p].grid.clone())
+						
+						// make positions walkable again
+						players[p] = setWalkableAt(players[p], gm, positionB[0], positionB[1], true)
+						
+						players[p].elements[r].path = path
+						players[p].elements[r].lastCollision = epoch
+					}
+				}
+			}
+		}
 	}
 	
 	function charge(layer, type, key) {
@@ -712,7 +752,6 @@ export function game() {
 							}
 							*/
 							var path = finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone())
-							console.log(path)
 							var element = {
 								id: players[r].elements.length,
 								playerId: key,
@@ -864,6 +903,7 @@ export function game() {
 			players[p].projectiles = []
 			resetProjectiles(players[p])
 			shiftPaths(players[p])
+			detectCollision(p)
 			health(players[p])
 			attack(players[p])
 			hit(players[p])

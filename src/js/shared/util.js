@@ -42,10 +42,10 @@ export function alreadyLinked(player, from, to) {
 }
 
 export function isPathOpen(o) {
-	for (var i = 0; i < o.bHorizontal - o.gm; i++) {
+	for (var i = 0; i < o.bVertical - o.gm; i++) {
 		//1: moves from left to right
 		//2: moves from right to left
-		if (o.finder.findPath(i, 0, o.bHorizontal - o.gm - i, o.bVertical - o.gm, o.grid.clone()).length) return true
+		if (o.finder.findPath(o.x1, o.bVertical - o.gm, o.bHorizontal - o.gm - i, 0, o.grid.clone()).length) return true
 	}
 	
 	return false
