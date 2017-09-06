@@ -7,7 +7,7 @@ import { isNear, setWalkableAt, alreadyLinked, findOpenPath, isPathOpen } from '
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
-	// networking
+	// action constants
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
@@ -18,22 +18,7 @@ export function game() {
 	// platform
 	const client = window ? true : false
 	const host = !window ? true : false
-	
-	// gameplay
-	const cycle = 1000 // how often should the events happen
 
-	// gameplay
-	const defaultEnergy = 100
-	const defaultHealth = 100
-	const defaultDamage = 25
-	const defaultRange = 2
-	const shapes = defaultShapes()
-	const buildings = defaultBuildings()
-	const gameLength = 1 * 60 * 1000
-	const recharge = 10 * 1000
-	var time = (new Date).getTime()
-	var players = {}
-	
 	// window
 	const smallHorizontal = 16 // how many blocks to have on x scale
 	const smallVertical = 10 // how many blocks to have on y scale
@@ -46,35 +31,47 @@ export function game() {
 	const blockWidth = w / smallHorizontal
 	const blockHeight = h / smallVertical
 	
-	// create a matrix
+	//grid
+	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
-	
-	// make a grid from the matrix
 	var grid = new PF.Grid(matrix)
+
+	// gameplay
+	const defaultEnergy = 100
+	const defaultHealth = 100
+	const defaultDamage = 50
+	const defaultRange = 2
+	const shapes = defaultShapes()
+	const buildings = defaultBuildings()
+	const gameLength = 1 * 60 * 1000
+	const recharge = 10 * 1000 // how often should the buildings create new elements
+	const cycle = 1000 // how often should the events happen
+	const fps = 1000 / 60
+	var time = (new Date).getTime()
+	var players = {}
 	
+	// player instance
 	function Player (options) {
+		const self = this
+		
 		this.id = options.id
 		this.buildings = []
 		this.elements = []
 		this.projectiles = []
 		this.links = []
-		
-		// gameplay
 		this.energy = defaultEnergy
 		this.factoryBuilt = false
 		
-		var self = this
-		
 		if (client) {
 			this.container = document.createElement('div')
-			this.container.className = 'player player_' + this.id + ' polygon-clip-hexagon'
+			this.container.className = 'player ' + this.id
 			document.getElementsByClassName('game')[0].appendChild(this.container)
-			this.canvas = client ? {
+			this.canvas = {
 				background: canvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
 				link: canvas(this.container, 'link_' + this.id, w, h, 2, blockHeight),
 				movement: canvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
 				menu: canvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
-			} : null
+			} 
 			
 			// create a visual UI grid
 			for (var i = 0; i < smallHorizontal + 1; i++) {
@@ -85,7 +82,7 @@ export function game() {
 					y1: 0,
 					x2: blockWidth * i,
 					y2: h, 
-					alpha: 0.2
+					alpha: 0.1
 				})
 			}
 			
@@ -97,7 +94,7 @@ export function game() {
 					y1: blockHeight * i,
 					x2: w,
 					y2: blockHeight * i,
-					alpha: 0.2
+					alpha: 0.1
 				})
 			}
 			
@@ -106,10 +103,7 @@ export function game() {
 		}
 	}
 	
-	var finder = new PF.AStarFinder({
-	    allowDiagonal: true
-	})
-	
+	// networking
 	var me = client ? getUrlParams('me') : null
 	if (!me && !host) return console.log('add ?me=some_player_id to your url')
 	
@@ -118,6 +112,7 @@ export function game() {
 	
 	if (client) {
 		socket.on('reconnect', function () {
+			// for dev purposes, reload the page after reconnect
 			location.reload()
 		})
 	}
@@ -550,6 +545,8 @@ export function game() {
 	}
 	
 	function resetProjectiles(player) {
+		players[player.id].projectiles = []
+		
 		var buildings = player.buildings ? player.buildings : []
 		for (var r = 0; r < buildings.length; r++) {
 			if (!'fired' in buildings[r].dynamics) continue
@@ -557,7 +554,7 @@ export function game() {
 		}
 	}
 	
-	function isDestroyed(player) {
+	function health(player) {
 		var elements = player.elements ? player.elements : []
 		for (var r = 0; r < elements.length; r++) {
 			if (elements[r].dynamics.health <= 0) players[player.id].elements.splice(r, 1)
@@ -813,7 +810,6 @@ export function game() {
 				var y2 = element.path[1][1]
 				
 				if (x1 == x2 && y1 == y2) {
-					console.log('hit')
 					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
 					break
 				}
@@ -876,14 +872,14 @@ export function game() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
-			players[p].projectiles = []
 			resetProjectiles(players[p])
 			shiftPaths(players[p])
 		}
 		
+		// then run the last part because projectiles of the projectiles couldn't be updated otherwise
 		for (var p in players) {
 			detectCollision(p)
-			isDestroyed(players[p])
+			health(players[p])
 			attack(players[p])
 			hit(players[p])
 		}
@@ -891,13 +887,13 @@ export function game() {
 	
 	if (host) {
 		setInterval(function() {
-			for (var key in players) animate(key)
-		}, 1000 / 60)
+			for (var p in players) animate(p)
+		}, fps)
 	}
 	
 	function animationFrame() {
 		requestAnimationFrame(animationFrame)
-		for (var key in players) animate(key)
+		for (var p in players) animate(p)
 	}
 	if (client) requestAnimationFrame(animationFrame)
 	
