@@ -1,41 +1,3 @@
-export function defaultShapes() {
-	return {
-		background: {
-			fillStyle: function (alpha) { return 'rgba(25, 29, 49, ' + alpha + ')' }
-		},
-		dark: {
-			fillStyle: function (alpha) { return 'rgba(11, 7, 35, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(0, 0, 0, ' + alpha + ')' }
-		},
-		light: {
-			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
-		},
-		earth: {
-			fillStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(194, 97, 204, ' + alpha + ')' }
-		},
-		water: {
-			fillStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(0, 190, 229, ' + alpha + ')' }
-		},
-		fire: {
-			fillStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 74, 61, ' + alpha + ')' }
-		},
-		wind: {
-			fillStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' },
-			strokeStyle: function (alpha) { return 'rgba(255, 255, 255, ' + alpha + ')' }
-		},
-		factory: {
-			file: 'factory.svg'
-		},
-		powerplant: {
-			file: 'powerplant.svg'
-		}
-	}
-}
-
 var PIXEL_RATIO = (function () {
 	try {
 	    var ctx = document.createElement('canvas').getContext('2d'),
@@ -75,7 +37,7 @@ export function line(o) {
 	o.ctx.closePath()
 }
 
-export function rect(o) {
+export function rectangle(o) {
 	var alpha = o.alpha ? o.alpha : 1
 	
 	o.ctx.beginPath()

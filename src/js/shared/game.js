@@ -1,13 +1,13 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
+import { defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, alreadyLinked, findOpenPath, isPathOpen } from './util'
-import { createMatrix, canvas, line, rect, circle, donut, image } from './draw'
-import { defaultShapes } from './shapes'
+import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
-	// networking constants
+	// networking
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
@@ -16,66 +16,40 @@ export function game() {
 	const SET_LINK = 'SET_LINK'
 	
 	// platform
-	var client = window ? true : false
-	var host = !window ? true : false
+	const client = window ? true : false
+	const host = !window ? true : false
 	
-	// gameplay constants
+	// gameplay
+	const cycle = 1000 // how often should the events happen
+
+	// gameplay
 	const defaultEnergy = 100
 	const defaultHealth = 100
 	const defaultDamage = 25
 	const defaultRange = 2
+	const shapes = defaultShapes()
+	const buildings = defaultBuildings()
 	const gameLength = 1 * 60 * 1000
 	const recharge = 10 * 1000
-	const speedMultiplier = 2
-	const sHorizontal = 16 // mobile: 8
-	const sVertical = 10 // mobile: 18
-	const gm = 3 // grid multiplier
-	const bHorizontal = sHorizontal * gm
-	const bVertical = sVertical * gm
-	const cycle = 1000 / speedMultiplier
-	const defaultBuildings = {
-		earth: {
-			cost: 250,
-			linkable: false,
-			offensive: false
-		},
-		water: {
-			cost: 25,
-			linkable: true,
-			offensive: false
-		},
-		fire: {
-			cost: 250,
-			linkable: false,
-			offensive: false
-		},
-		wind: {
-			cost: 25,
-			linkable: true,
-			offensive: false
-		}	
-	}
-
-	// gameplay variables
 	var time = (new Date).getTime()
 	var players = {}
 	
 	// window
-	const splitScreen = 2
-	var w = client ? size().x : bHorizontal
-	var h = client ? size().y : bVertical
-	w = w
-	h = h
-	const blockWidth = w / sHorizontal
-	const blockHeight = h / sVertical
+	const smallHorizontal = 16 // how many blocks to have on x scale
+	const smallVertical = 10 // how many blocks to have on y scale
+	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
+	const horizontal = smallHorizontal * gm
+	const vertical = smallVertical * gm
+	const sizes = client ? size() : { x: horizontal, y: vertical }
+	const w = sizes.x
+	const h = sizes.y
+	const blockWidth = w / smallHorizontal
+	const blockHeight = h / smallVertical
 	
-	// ui
-	const shapes = defaultShapes()
+	// create a matrix
+	const matrix = createMatrix(vertical, horizontal)
 	
-	// create matrices
-	const matrix = createMatrix(bVertical, bHorizontal)
-	
-	// make grids from the matrices
+	// make a grid from the matrix
 	var grid = new PF.Grid(matrix)
 	
 	function Player (options) {
@@ -103,7 +77,7 @@ export function game() {
 			} : null
 			
 			// create a visual UI grid
-			for (var i = 0; i < sHorizontal + 1; i++) {
+			for (var i = 0; i < smallHorizontal + 1; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -115,7 +89,7 @@ export function game() {
 				})
 			}
 			
-			for (var i = 0; i < sVertical + 1; i++) {
+			for (var i = 0; i < smallVertical + 1; i++) {
 				line({
 					ctx: this.canvas.background,
 					shape: shapes.light,
@@ -210,8 +184,8 @@ export function game() {
 				grid = setWalkableAt(grid, gm, building.start[0], building.start[1], false)
 				
 				var found = false
-				for (var i = 0; i < bVertical - gm; i++) {
-					if (finder.findPath(building.start[0], i, bHorizontal - gm, building.end[1], grid.clone()).length) found = true
+				for (var i = 0; i < vertical - gm; i++) {
+					if (finder.findPath(building.start[0], i, horizontal - gm, building.end[1], grid.clone()).length) found = true
 				}
 				
 				if (!found) {
@@ -298,16 +272,16 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= bHorizontal / 2) return
-		if (position == 'right' && xBlock * gm < bHorizontal / 2) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2) return
+		if (position == 'right' && xBlock * gm < horizontal / 2) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
 		if (
 			xBlock < 0 ||
 			yBlock < 0 ||
-			xBlock >= sHorizontal ||
-			yBlock >= sVertical
+			xBlock >= smallHorizontal ||
+			yBlock >= smallVertical
 		) {
 			return
 		}
@@ -342,7 +316,7 @@ export function game() {
 			gameMenu.fromBuilding = building
 			gameMenu.linking = true
 			
-			rect({
+			rectangle({
 				ctx: player.canvas.menu,
 				shape: shapes.light,
 				x1: xBlock * blockWidth,
@@ -475,12 +449,12 @@ export function game() {
 	}
 	
 	function buildPopup(player, xBlock, yBlock, position) {
-		//var availableBuildings = Object.keys(defaultBuildings)
+		//var availableBuildings = Object.keys(buildings)
 		if (position == 'left') {
 			var i = 0
 			
-			for (var building in defaultBuildings) {
-				rect({
+			for (var building in buildings) {
+				rectangle({
 					ctx: player.canvas.menu,
 					shape: shapes.dark,
 					x1: (xBlock + i) * blockWidth,
@@ -489,17 +463,6 @@ export function game() {
 					y2: blockHeight,
 					alpha: 0.1
 				})
-				
-				/*
-				image({
-					ctx: player.canvas.menu,
-					file: shapes[building].file,
-					x1: (xBlock + i) * blockWidth + (blockWidth / 3),
-					y1: yBlock * blockHeight + (blockHeight / 3),
-					width: blockWidth / 3,
-					height: blockWidth / 3
-				})
-				*/
 				
 				donut({
 					ctx: player.canvas.menu,
@@ -515,34 +478,23 @@ export function game() {
 			}
 		}
 		else {
-			var reversedDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings))).reverse()
+			var reversedbuildings = JSON.parse(JSON.stringify(Object.keys(buildings))).reverse()
 			var i = 0
-			for (var building in defaultBuildings) {
-				rect({
+			for (var building in buildings) {
+				rectangle({
 					ctx: player.canvas.menu,
 					shape: shapes.light,
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
+					x1: (xBlock + i - reversedbuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
 					y2: blockHeight,
 					alpha: 0.1
 				})
 				
-				/*
-				image({
-					ctx: player.canvas.menu,
-					file: shapes[building].file,	
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight
-				})
-				*/
-				
 				donut({
 					ctx: player.canvas.menu,
 					shape: shapes[building],
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
+					x1: (xBlock + i - reversedbuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
 					y2: blockHeight,
@@ -559,16 +511,15 @@ export function game() {
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [bHorizontal, gameMenu.y * gm]
+			var end = [horizontal, gameMenu.y * gm]
 			
 			// create a building
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: Object.keys(defaultBuildings)[type],
+				type: Object.keys(buildings)[type],
 				start: start,
 				end: end,
-				direction: 'right',
 				charge: 0,
 				dynamics: {}
 			}
@@ -576,7 +527,7 @@ export function game() {
 			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
 		}
 		else {
-			var type = xBlock - gameMenu.x + Object.keys(defaultBuildings).length - 1
+			var type = xBlock - gameMenu.x + Object.keys(buildings).length - 1
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
 			var end = [0, gameMenu.y * gm]
@@ -585,10 +536,9 @@ export function game() {
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: Object.keys(defaultBuildings)[type],
+				type: Object.keys(buildings)[type],
 				start: start,
 				end: end,
-				direction: 'left',
 				charge: 0,
 				dynamics: {
 					fired: 0
@@ -628,7 +578,7 @@ export function game() {
 			players[player.id].elements[p].path.shift()
 			
 			/*
-			if (element.path[0][0] >= sHorizontal * gm - 2) {
+			if (element.path[0][0] >= smallHorizontal * gm - 2) {
 				players[player.id].elements.splice(p, 1)
 				//players.right.energy = players.right.energy - 1
 			}
@@ -671,9 +621,7 @@ export function game() {
 				!player.elements[r].length &&
 				!player.elements[r].path &&
 				!player.elements[r].path[a] &&
-				!player.elements[r].path[a].length &&
-				!player.elements[r].path[a + 1] &&
-				!player.elements[r].path[a + 1].length
+				!player.elements[r].path[a].length
 			) continue
 
 			var positionA = player.elements[r].path[a]
@@ -692,9 +640,7 @@ export function game() {
 						!anotherPlayer.elements[r2].length &&
 						!anotherPlayer.elements[r2].path &&
 						!anotherPlayer.elements[r2].path[b] &&
-						!anotherPlayer.elements[r2].path[b].length &&
-						!anotherPlayer.elements[r2].path[b + 1] &&
-						!anotherPlayer.elements[r2].path[b + 1].length
+						!anotherPlayer.elements[r2].path[b].length
 					) continue
 		
 					var positionB = anotherPlayer.elements[r2].path[b]
@@ -748,7 +694,7 @@ export function game() {
 							var end = [objects[p].end[0], objects[p].end[1]]
 							
 							//change direction to right
-							if (r == 'player2') end[0] = bHorizontal - gm
+							if (r == 'player2') end[0] = horizontal - gm
 							
 							/*
 							// first find open path from top
@@ -756,7 +702,7 @@ export function game() {
 								var findOpenPathCheck = {
 									finder: finder,
 									grid: players[r].grid,
-									bHorizontal: bHorizontal,
+									horizontal: horizontal,
 									gm: gm,
 									y1: 0,
 									y2: gm
@@ -768,10 +714,10 @@ export function game() {
 									var findOpenPathCheck = {
 										finder: finder,
 										grid: players[r].grid,
-										bHorizontal: bHorizontal,
+										horizontal: horizontal,
 										gm: gm,
-										y1: bVertical - (gm * 2),
-										y2: bVertical - gm
+										y1: vertical - (gm * 2),
+										y2: vertical - gm
 									}
 									end[0] = findOpenPath(findOpenPathCheck)
 								}

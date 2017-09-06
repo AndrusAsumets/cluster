@@ -18,9 +18,6 @@ export function setWalkableAt(grid, gm, x, y, walkable) {
 		for (var r = -m; r < gm - m; r++) {
 			var left = x + p
 			var top = y + r
-			
-			//left = left < 0 ? 0 : left
-			//top = top < 0 ? 0 : top
 
 			grid.setWalkableAt(left, top, walkable)
 		}
