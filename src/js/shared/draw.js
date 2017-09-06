@@ -46,8 +46,7 @@ var PIXEL_RATIO = (function () {
 				ctx.oBackingStorePixelRatio ||
 				ctx.backingStorePixelRatio || 1
 	
-	    //return dpr / bsr
-	    return 1
+	    return dpr / bsr
 	} catch(err) {}
 })()
 

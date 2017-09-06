@@ -22,13 +22,13 @@ export function game() {
 	// gameplay constants
 	const defaultEnergy = 100
 	const defaultHealth = 100
-	const defaultDamage = 100
+	const defaultDamage = 25
 	const defaultRange = 2
 	const gameLength = 1 * 60 * 1000
-	const recharge = 3 * 1000
-	const speedMultiplier = 1
+	const recharge = 10 * 1000
+	const speedMultiplier = 2
 	const sHorizontal = 16 // mobile: 8
-	const sVertical = 9 // mobile: 18
+	const sVertical = 10 // mobile: 18
 	const gm = 3 // grid multiplier
 	const bHorizontal = sHorizontal * gm
 	const bVertical = sVertical * gm
@@ -75,6 +75,9 @@ export function game() {
 	// create matrices
 	const matrix = createMatrix(bVertical, bHorizontal)
 	
+	// make grids from the matrices
+	var grid = new PF.Grid(matrix)
+	
 	function Player (options) {
 		this.id = options.id
 		this.buildings = []
@@ -85,9 +88,6 @@ export function game() {
 		// gameplay
 		this.energy = defaultEnergy
 		this.factoryBuilt = false
-		
-		// make grids from the matrices
-		this.grid = new PF.Grid(matrix)
 		
 		var self = this
 		
@@ -191,7 +191,7 @@ export function game() {
 					
 						var buildings = data[key].buildings
 						for (var i = 0; i < buildings.length; i++) {
-							players[key] = setWalkableAt(players[key], gm, buildings[i].start[0], buildings[i].start[1], false)
+							grid = setWalkableAt(grid, gm, buildings[i].start[0], buildings[i].start[1], false)
 						}
 					}
 				}
@@ -207,21 +207,23 @@ export function game() {
 				if (Object.keys(findBuilding(player.buildings, building)).length > 0) return
 				
 				// check for open paths
-				players[building.playerId] = setWalkableAt(players[building.playerId], gm, building.start[0], building.start[1], false)
+				grid = setWalkableAt(grid, gm, building.start[0], building.start[1], false)
 				
 				var found = false
 				for (var i = 0; i < bVertical - gm; i++) {
-					if (finder.findPath(building.start[0], i, bHorizontal - gm, building.end[1], player.grid.clone()).length) found = true
+					if (finder.findPath(building.start[0], i, bHorizontal - gm, building.end[1], grid.clone()).length) found = true
 				}
-				if (!found) return setWalkableAt(players[building.playerId], gm, building.start[0], building.start[1], true)
 				
-				
+				if (!found) {
+					grid = setWalkableAt(grid, gm, building.start[0], building.start[1], true)
+					return
+				}
 
 				//if (client) document.getElementsByClassName('player-' + building.position)[0].innerHTML = players[building.position].energy - 1
 				
 				//players[building.position].energy = players[building.position].energy - 1
 				players[building.playerId].buildings.push(building)
-				createPaths(player)
+				for (var p in players) createPaths(players[p])
 				if (client) link()
 				break
 				
@@ -296,7 +298,7 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm > bHorizontal / 2) return
+		if (position == 'left' && xBlock * gm >= bHorizontal / 2) return
 		if (position == 'right' && xBlock * gm < bHorizontal / 2) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
@@ -418,15 +420,15 @@ export function game() {
 				var type = links[l].type
 				
 				// make positions temporarily walkable
-				players[key] = setWalkableAt(players[key], gm, from[0], from[1], true)
-				players[key] = setWalkableAt(players[key], gm, to[0], to[1], true)
+				grid = setWalkableAt(grid, gm, from[0], from[1], true)
+				grid = setWalkableAt(grid, gm, to[0], to[1], true)
 				
 				// find a path between the buildings
-				var path = finder.findPath(from[0], from[1], to[0], to[1], player.grid.clone())
+				var path = finder.findPath(from[0], from[1], to[0], to[1], grid.clone())
 				
 				// make positions unwalkable again
-				players[key] = setWalkableAt(players[key], gm, from[0], from[1], false)
-				players[key] = setWalkableAt(players[key], gm, to[0], to[1], false)
+				grid = setWalkableAt(grid, gm, from[0], from[1], false)
+				grid = setWalkableAt(grid, gm, to[0], to[1], false)
 				
 				if (!path.length) continue
 				
@@ -529,7 +531,7 @@ export function game() {
 				/*
 				image({
 					ctx: player.canvas.menu,
-					file: shapes[building].file,
+					file: shapes[building].file,	
 					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
 					width: blockWidth,
@@ -557,7 +559,7 @@ export function game() {
 			var type = xBlock - gameMenu.x
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [sHorizontal * gm, gameMenu.y * gm]
+			var end = [bHorizontal, gameMenu.y * gm]
 			
 			// create a building
 			var building = {
@@ -605,7 +607,7 @@ export function game() {
 		}
 	}
 	
-	function health(player) {
+	function isDestroyed(player) {
 		var elements = player.elements ? player.elements : []
 		for (var r = 0; r < elements.length; r++) {
 			if (elements[r].dynamics.health <= 0) players[player.id].elements.splice(r, 1)
@@ -640,33 +642,43 @@ export function game() {
 			
 			if (
 				!element.path ||
-				!element.path[1] ||
-				!element.path[1].length
+				!element.path[0] ||
+				!element.path[0].length
 			) {
-				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
+				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
 				players[player.id].elements[p].path = path
 			}
 			
+			/*
 			else {
-				var path = finder.findPath(element.path[0][0], element.path[0][1], player.elements[p].end[0], player.elements[p].end[1], player.grid.clone())
+				var path = finder.findPath(element.path[0][0], element.path[0][1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
 				
 				players[player.id].elements[p].path = path
 			}
+			*/
 		}
 	}
 	
 	function detectCollision(p) {
 		var player = players[p]
-		var x = 2
-		var epoch = (new Date).getTime()
+		var a = 1
+		var b = 1
 		for (var r = 0; r < player.elements.length; r++) {
 			if (
-				!player.elements[r].path ||
-				!player.elements[r].path[x] ||
-				!player.elements[r].path[x].length
+				!player.elements &&
+				!player.elements.length &&
+				!player.elements[r] &&
+				!player.elements[r].length &&
+				!player.elements[r].path &&
+				!player.elements[r].path[a] &&
+				!player.elements[r].path[a].length &&
+				!player.elements[r].path[a + 1] &&
+				!player.elements[r].path[a + 1].length
 			) continue
 
-			var positionA = player.elements[r].path[x]
+			var positionA = player.elements[r].path[a]
+			if (!positionA) continue
+			if (!positionA.length) continue
 			
 			for (var p2 in players) {
 				if (p == p2) continue
@@ -674,28 +686,42 @@ export function game() {
 				
 				for (var r2 = 0; r2 < anotherPlayer.elements.length; r2++) {
 					if (
-						!anotherPlayer.elements[r2].path ||
-						!anotherPlayer.elements[r2].path[0] ||
-						!anotherPlayer.elements[r2].path[0].length
+						!anotherPlayer.elements &&
+						!anotherPlayer.elements.length &&
+						!anotherPlayer.elements[r2] &&
+						!anotherPlayer.elements[r2].length &&
+						!anotherPlayer.elements[r2].path &&
+						!anotherPlayer.elements[r2].path[b] &&
+						!anotherPlayer.elements[r2].path[b].length &&
+						!anotherPlayer.elements[r2].path[b + 1] &&
+						!anotherPlayer.elements[r2].path[b + 1].length
 					) continue
 		
-					var positionB = anotherPlayer.elements[r2].path[0]
+					var positionB = anotherPlayer.elements[r2].path[b]
+					if (!positionB) continue
+					if (!positionB.length) continue
 					
-					if (
-						isNear(1, positionA, anotherPlayer.elements[r2].path[0]) &&
-						epoch != players[p2].elements[r2].lastCollision
-					) {	
+					if (isNear(gm, positionA, positionB)) {	
 						// make positions unwalkable
-						players[p] = setWalkableAt(players[p], gm, positionB[0], positionB[1], false)
+						grid = setWalkableAt(grid, gm, positionB[0], positionB[1], false)
 						
 						// find a path between the buildings
-						var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], players[p].grid.clone())
+						var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], grid.clone())
 						
 						// make positions walkable again
-						players[p] = setWalkableAt(players[p], gm, positionB[0], positionB[1], true)
+						grid = setWalkableAt(grid, gm, positionB[0], positionB[1], true)
 						
-						players[p].elements[r].path = path
-						players[p].elements[r].lastCollision = epoch
+						if (path.length) players[p].elements[r].path = path
+						
+						var projectile = {
+							path: [
+								player.elements[r].path[a - 1],
+								anotherPlayer.elements[r2].path[b]
+							],
+							shape: shapes[player.elements[r].type]
+						}
+						
+						players[player.id].projectiles.push(projectile)
 					}
 				}
 			}
@@ -751,7 +777,12 @@ export function game() {
 								}
 							}
 							*/
-							var path = finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone())
+							
+							// make a temporary hole into the grid
+							grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], true)
+							var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+							grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
+							
 							var element = {
 								id: players[r].elements.length,
 								playerId: key,
@@ -805,8 +836,7 @@ export function game() {
 				var projectile = {
 					path: [
 						player.buildings[p].start,
-						player.elements[r].path[1],
-						player.elements[r].path[2]
+						player.elements[r].path[1]
 					],
 					shape: shapes[player.buildings[p].type]
 				}
@@ -820,24 +850,24 @@ export function game() {
 	
 	function hit(player) {
 		var projectiles = player.projectiles
-		var x = 1
 		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = host ? projectiles[p].path[1][0] : projectiles[p].path[1][0]
-			var y1 = host ? projectiles[p].path[1][1] : projectiles[p].path[1][1]
+			var x1 = projectiles[p].path[1][0]
+			var y1 = projectiles[p].path[1][1]
 				
 			for (var r = 0; r < player.elements.length; r++) {
 				var element = player.elements[r]
 				
 				if (
 					!element.path ||
-					!element.path[x] ||
-					!element.path[x].length
+					!element.path[1] ||
+					!element.path[1].length
 				) continue
 					
 				var x2 = element.path[1][0]
 				var y2 = element.path[1][1]
 				
 				if (x1 == x2 && y1 == y2) {
+					console.log('hit')
 					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
 					break
 				}
@@ -903,8 +933,11 @@ export function game() {
 			players[p].projectiles = []
 			resetProjectiles(players[p])
 			shiftPaths(players[p])
+		}
+		
+		for (var p in players) {
 			detectCollision(p)
-			health(players[p])
+			isDestroyed(players[p])
 			attack(players[p])
 			hit(players[p])
 		}

@@ -9,21 +9,23 @@ export function isNear(gm, positionA, positionB) {
 	return false
 }
 
-export function setWalkableAt(player, gm, x, y, walkable) {
-	var grid = player.grid
-	for (var p = -1; p < gm - 1; p++) {
-		for (var r = -1; r < gm - 1; r++) {
+export function setWalkableAt(grid, gm, x, y, walkable) {
+	var m = Math.abs(gm / 3)
+	x = x <= m ? m : x
+	y = y <= m ? m : y
+	
+	for (var p = -m; p < gm - m; p++) {
+		for (var r = -m; r < gm - m; r++) {
 			var left = x + p
 			var top = y + r
 			
-			left = left < 0 ? 0 : left
-			top = top < 0 ? 0 : top
+			//left = left < 0 ? 0 : left
+			//top = top < 0 ? 0 : top
 
 			grid.setWalkableAt(left, top, walkable)
 		}
 	}
-	player.grid = grid
-	return player
+	return grid
 }
 
 export function alreadyLinked(player, from, to) {
