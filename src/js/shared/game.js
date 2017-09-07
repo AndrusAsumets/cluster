@@ -44,7 +44,7 @@ export function game() {
 	const shapes = defaultShapes()
 	const buildings = defaultBuildings()
 	const gameLength = 1 * 60 * 1000
-	const recharge = 10 * 1000 // how often should the buildings create new elements
+	const recharge = 60 * 1000 // how often should the buildings create new elements
 	const cycle = 1000 // how often should the events happen
 	const fps = 1000 / 60
 	var time = (new Date).getTime()
