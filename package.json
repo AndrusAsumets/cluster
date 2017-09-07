@@ -13,8 +13,6 @@
   "dependencies": {
     "babel-polyfill": "^6.23.0",
     "cors": "^2.8.4",
-    "express": "^4.15.4",
-    "forever": "^0.15.3",
     "kcors": "^2.2.1",
     "koa": "^2.2.0",
     "koa-better-body": "^3.0.4",
