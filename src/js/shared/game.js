@@ -50,7 +50,7 @@ export function game() {
 	var time = (new Date).getTime()
 	var players = {}
 	
-	// player instance
+	// player
 	function Player (options) {
 		const self = this
 		
@@ -98,8 +98,8 @@ export function game() {
 				})
 			}
 			
-			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createElement(event) })
-			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createElement(event) })
+			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
+			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
 		}
 	}
 	
@@ -253,7 +253,7 @@ export function game() {
 	*/
 	
 	var gameMenu = {}
-	function createElement(event) {
+	function createMenu(event) {
 		if (!energy()) return
 		
 		event.preventDefault()
