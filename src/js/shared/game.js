@@ -20,8 +20,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 16 // how many blocks to have on x scale
-	const smallVertical = 10 // how many blocks to have on y scale
+	const smallHorizontal = 24 // how many blocks to have on x scale
+	const smallVertical = 14 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -38,8 +38,8 @@ export function game() {
 
 	// gameplay
 	const defaultEnergy = 100
-	const defaultHealth = 100
-	const defaultDamage = 5
+	const defaultHealth = 200
+	const defaultDamage = 1
 	const defaultRange = 2
 	const shapes = defaultShapes()
 	const buildings = defaultBuildings()
@@ -647,17 +647,22 @@ export function game() {
 					if (!positionB) continue
 					if (!positionB.length) continue
 					
-					if (isNear(gm, positionA, positionB)) {	
-						// make positions unwalkable
-						grid = setWalkableAt(grid, gm, positionB[0], positionB[1], false)
+					if (isNear(gm, positionA, positionB)) {
 						
-						// find a path between the buildings
-						var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], grid.clone())
+						var path = []
+						try {
+							// make positions unwalkable
+							grid = setWalkableAt(grid, gm, positionB[0], positionB[1], false)
+							
+							// find a path between the buildings
+							var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], grid.clone())
+							
+							// make positions walkable again
+							grid = setWalkableAt(grid, gm, positionB[0], positionB[1], true)
 						
-						// make positions walkable again
-						grid = setWalkableAt(grid, gm, positionB[0], positionB[1], true)
-						
-						if (path.length) players[p].elements[r].path = path
+							if (path.length) players[p].elements[r].path = path
+						} catch (err) { continue }
+							
 						
 						var projectile = {
 							path: [
@@ -909,10 +914,17 @@ export function game() {
 		}
 	}
 	
+	function unWalkBuildings(player) {
+		for (var i = 0; i < player.buildings.length; i++) {
+			grid = setWalkableAt(grid, gm, player.buildings[i].start[0], player.buildings[i].start[1], false)
+		}
+	}
+	
 	setInterval(function() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
+			unWalkBuildings(players[p])
 			hit(players[p])
 			deepHit(players[p])
 			health(players[p])
