@@ -4,7 +4,6 @@ const serve = require('koa-static')
 let router = require('koa-router')()
 var bodyParser = require('koa-bodyparser')
 var cors = require('kcors')
-var timesyncServer = require('timesync/server')
 const IO = require('koa-socket')
 const io = new IO()
 const PORT = 1337
@@ -29,15 +28,6 @@ io.on('message', (context, data) => {
 })
 
 app.listen(PORT)
-
-/*
-var express = require('express')
-var server = express()
-
-server.use(express.static('public'))
-server.use('/timesync', timesyncServer.requestHandler)
-server.listen(8081)
-*/
 
 global.window = null
 game()
