@@ -51,7 +51,7 @@ export function isPathOpen(o) {
 }
 
 export function findOpenPath(o) {
-	for (var i = 0; i < o.bHorizontal - o.gm; i++) {
-		if (o.finder.findPath(i, o.y1, i, o.y2, o.grid.clone()).length) return i
+	for (var i = 0; i < o.size - o.gm; i++) {
+		if (o.finder.findPath(o.x1, i, o.x2, i, o.grid.clone()).length) return i
 	}
 }

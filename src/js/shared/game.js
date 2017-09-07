@@ -20,8 +20,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 24 // how many blocks to have on x scale
-	const smallVertical = 14 // how many blocks to have on y scale
+	const smallHorizontal = 8 // how many blocks to have on x scale
+	const smallVertical = 8 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -181,7 +181,7 @@ export function game() {
 				
 				var found = false
 				for (var i = 0; i < vertical - gm; i++) {
-					if (finder.findPath(building.start[0], i, horizontal - gm, building.end[1], grid.clone()).length) found = true
+					if (finder.findPath(0, i, horizontal - gm, vertical - gm - i, grid.clone()).length) found = true
 				}
 				
 				if (!found) {
@@ -445,7 +445,6 @@ export function game() {
 	}
 	
 	function buildPopup(player, xBlock, yBlock, position) {
-		//var availableBuildings = Object.keys(buildings)
 		if (position == 'left') {
 			var i = 0
 			
@@ -648,7 +647,6 @@ export function game() {
 					if (!positionB.length) continue
 					
 					if (isNear(gm, positionA, positionB)) {
-						
 						var path = []
 						try {
 							// make positions unwalkable
@@ -740,27 +738,27 @@ export function game() {
 							if (r == 'player2') end[0] = horizontal - gm
 							
 							/*
-							// first find open path from top
-							if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
+							// first find open path from left
+							if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone()).length) {
 								var findOpenPathCheck = {
 									finder: finder,
-									grid: players[r].grid,
-									horizontal: horizontal,
+									grid: grid,
+									size: vertical,
 									gm: gm,
-									y1: 0,
-									y2: gm
+									x1: 0,
+									x2: gm
 								}
 								start[0] = findOpenPath(findOpenPathCheck)
 								
-								// and then find open path from bottom
-								if (!finder.findPath(start[0], start[1], end[0], end[1], players[r].grid.clone()).length) {
+								// and then find open path from right
+								if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone()).length) {
 									var findOpenPathCheck = {
 										finder: finder,
-										grid: players[r].grid,
-										horizontal: horizontal,
+										grid: grid,
+										size: vertical,
 										gm: gm,
-										y1: vertical - (gm * 2),
-										y2: vertical - gm
+										x1: horizontal - (gm * 2),
+										x2: horizontal - gm
 									}
 									end[0] = findOpenPath(findOpenPathCheck)
 								}
@@ -914,7 +912,7 @@ export function game() {
 		}
 	}
 	
-	function unWalkBuildings(player) {
+	function walkBuildings(player) {
 		for (var i = 0; i < player.buildings.length; i++) {
 			grid = setWalkableAt(grid, gm, player.buildings[i].start[0], player.buildings[i].start[1], false)
 		}
@@ -924,7 +922,7 @@ export function game() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
-			unWalkBuildings(players[p])
+			walkBuildings(players[p])
 			hit(players[p])
 			deepHit(players[p])
 			health(players[p])
