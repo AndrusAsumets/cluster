@@ -31,7 +31,7 @@ export function game() {
 	const blockWidth = w / smallHorizontal
 	const blockHeight = h / smallVertical
 	
-	//grid
+	// grid
 	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
 	var grid = new PF.Grid(matrix)
@@ -39,7 +39,7 @@ export function game() {
 	// gameplay
 	const defaultEnergy = 100
 	const defaultHealth = 100
-	const defaultDamage = 50
+	const defaultDamage = 5
 	const defaultRange = 2
 	const shapes = defaultShapes()
 	const buildings = defaultBuildings()
@@ -58,6 +58,7 @@ export function game() {
 		this.buildings = []
 		this.elements = []
 		this.projectiles = []
+		this.deepProjectiles = []
 		this.links = []
 		this.energy = defaultEnergy
 		this.factoryBuilt = false
@@ -546,6 +547,7 @@ export function game() {
 	
 	function resetProjectiles(player) {
 		players[player.id].projectiles = []
+		players[player.id].deepProjectiles = []
 		
 		var buildings = player.buildings ? player.buildings : []
 		for (var r = 0; r < buildings.length; r++) {
@@ -606,10 +608,11 @@ export function game() {
 		}
 	}
 	
-	function detectCollision(p) {
+	function collision(p) {
 		var player = players[p]
 		var a = 1
 		var b = 1
+
 		for (var r = 0; r < player.elements.length; r++) {
 			if (
 				!player.elements &&
@@ -664,8 +667,46 @@ export function game() {
 							shape: shapes[player.elements[r].type]
 						}
 						
-						players[player.id].projectiles.push(projectile)
+						players[anotherPlayer.id].deepProjectiles.push(projectile)
+						
+						var projectile = {
+							path: [
+								anotherPlayer.elements[r2].path[a - 1],
+								player.elements[r].path[b]
+							],
+							shape: shapes[anotherPlayer.elements[r2].type]
+						}
+						
+						players[player.id].deepProjectiles.push(projectile)
+						
+						break
 					}
+				}
+			}
+		}
+	}
+	
+	function deepHit(player) {		
+		for (var r = 0; r < player.elements.length; r++) {
+			var element = player.elements[r]
+			
+			if (
+				!element.path ||
+				!element.path[1] ||
+				!element.path[1].length
+			) continue
+				
+			var x2 = element.path[1][0]
+			var y2 = element.path[1][1]
+			
+			var projectiles = player.deepProjectiles
+			for (var p = 0; p < projectiles.length; p++) {
+				var x1 = projectiles[p].path[1][0]
+				var y1 = projectiles[p].path[1][1]
+				
+				if (x1 == x2 && y1 == y2) {
+					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
+					break
 				}
 			}
 		}
@@ -872,16 +913,17 @@ export function game() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
+			hit(players[p])
+			deepHit(players[p])
+			health(players[p])
 			resetProjectiles(players[p])
 			shiftPaths(players[p])
 		}
 		
 		// then run the last part because projectiles of the projectiles couldn't be updated otherwise
 		for (var p in players) {
-			detectCollision(p)
-			health(players[p])
+			collision(p)
 			attack(players[p])
-			hit(players[p])
 		}
 	}, cycle)
 	
@@ -904,6 +946,7 @@ export function game() {
 		if (client) {
 			move('movement', 'elements', key)
 			move('movement', 'projectiles', key)
+			move('movement', 'deepProjectiles', key)
 		}
 	}
 }
