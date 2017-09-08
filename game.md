@@ -1,10 +1,51 @@
-cluster
+cluster.game
 
-
-* point attack
+NOW:
+* game saving to file/database
+* well (increases energy)
 * energy count
-* game over
-* booster
+* energy counter
+* unlinking
+* factory (trains elements -> walkers, flyers, kamikazes -> wind, fire, earth, water)
+* pointing for the kamikazes and flares
+* booster (decreases recharge time)
+* laser (defends agains elements)
+* radar (increases range on lasers and sends flares)
+* fog of warS
+* silo (element storage for queueing)
+
+PHASE1:
+* store game data to file/database & playback
+* game balance & upgrades
+* different sizes for the bubbles that correspond to strength/power
+* click on a bubble, then press on a factory to release the power
+* cant build here warning
+* enemy picker
+* game rooms
+* lobby
+* deployment
+* human testing
+
+PHASE2:
+* emit only to host option
+* menu & player switching for mobile
+* game modes (2 player, 4 player)
+* ranking
+* ionic
+* automated testing
+* pricing model
+* release strategy
+* IP
+* app store / play store
+* operations
+
+PEOPLE:
+* scaling -> Kristo
+* UI -> Kaarel
+* sounds > Markku?
+* illustrations -> Ingmar Järve (ingmarjarve.tumblr.com)
+* story > who?
+* moneying model > bootstrappig/funding?
 
 
 
@@ -21,8 +62,6 @@ cluster
 
 
 
-select block > select a building from researched buildings
-select an offensive building > options: link attack, upgrade 
 
 
 
@@ -42,18 +81,28 @@ select an offensive building > options: link attack, upgrade
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+--
 base energy: 100
 costs:
 power plant - 25
 laboratory - 50
 
-
+--
 laboratory: generates 1 energy per second / 60 energy per minute
 upgrade cost: base 2
-
-
-global game variables for a player:
-energy, elements
 
 if (energy)
 	- factory (research buildings, components using energy)
@@ -87,9 +136,6 @@ if (energy)
 * repair link: click on a power plant > repair > click on building > (if path) create path for a link
 * bubble inner size radius: strength
 * bubble size: damage
-* leveling: base 2
-* building another factory will decrease building and research times
-* first factory for free
 * split: 1 > 2 > 4 > 8
 * laboratory: recharge time, upgrade materials
 
@@ -117,6 +163,7 @@ earth (green): damage
 fire (red): splash
 wind (white): range
 
+
 element | slow      | speed     | range    | air       | splash   | horde    | damage    | strength  |
 --------|-----------|-----------|----------|-----------|----------|----------|-----------|-----------|
 earth   |  0        |  1        |  1       |  0        |  1       |  0       |  2        |  2        | 7
@@ -124,53 +171,6 @@ water   |  1        |  2        |  1       |  1        |  1       |  0       |  
 fire    |  0        |  1        |  1       |  0        |  2       |  1       |  1        |  1        | 5
 wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
-
-* varying recharge count for bubbles
-* recalculate paths on build, diff and update just the elements for which diffs dont match
-
-bubblefactory.games
-bubblefactory.game
-sf88r.com
-
-NOW:
-* basic gameplay
-* emit score by host
-
-PHASE1:
-* store game data to file/database & playback
-* game balance & upgrades
-* different sizes for the bubbles that correspond to strength/power
-* click on a bubble, then press on a factory to release the power
-* cant build here warning
-* enemy picker
-* game rooms
-* lobby
-* deployment
-* human testing
-
-PHASE2:
-* emit only to host option
-* menu & player switching for mobile
-* game modes (2 player, 4 player)
-* ranking
-* ionic
-* automated testing
-* pricing model
-* release strategy
-* IP
-* app store / play store
-* operations
-
-PEOPLE:
-* story > who?
-* moneying model > bootstrappig/funding
-* help for development > Kristjan? Arco?
-* sounds > Markku?
-* UI & landing -> Kaarel? & Okeiko?
-* scaling -> Kristo?
-
-npm run server
-npm run client
 
 password auth: 
 https://www.digitalocean.com/community/tutorials/how-to-set-up-password-authentication-with-nginx-on-ubuntu-14-04 

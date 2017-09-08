@@ -274,7 +274,7 @@ export function game() {
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// if from and to buildings were found
-		if (
+		 if (
 			gameMenu.fromBuilding &&
 			Object.keys(gameMenu.fromBuilding).length > 0 &&
 			Object.keys(building).length > 0
