@@ -243,18 +243,6 @@ export function game() {
 		return playing
 	}
 	
-	/*
-	var gameInterval = setInterval(function() {
-		gameLength = gameLength - 1000
-		var ms = gameLength
-		ms = 1000 * Math.round(ms / 1000)
-		var d = new Date(ms)
-		if (client) document.getElementsByClassName('energy')[0].innerHTML = d.getUTCMinutes() + ':' + d.getUTCSeconds()
-		
-		if (!energy()) clearInterval(gameInterval)
-	}, 1000)
-	*/
-	
 	var gameMenu = {}
 	function createMenu(event) {
 		if (!energy()) return
@@ -874,6 +862,10 @@ export function game() {
 		}
 	}
 	
+	function score(player) {
+		document.getElementsByClassName('score-' + player.id)[0].innerHTML = player.energy
+	}
+	
 	setInterval(function() {
 		time = (new Date).getTime()
 		
@@ -890,6 +882,7 @@ export function game() {
 		for (var p in players) {
 			collision(p)
 			attack(players[p])
+			if (client) score(players[p])
 		}
 	}, cycle)
 	
