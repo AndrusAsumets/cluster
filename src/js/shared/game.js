@@ -3,7 +3,7 @@ var PF = require('pathfinding')
 
 import { defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
-import { isNear, setWalkableAt, alreadyLinked, findOpenPath, isPathOpen } from './util'
+import { isNear, setWalkableAt, alreadyLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
@@ -20,8 +20,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 24 // how many blocks to have on x scale
-	const smallVertical = 14 // how many blocks to have on y scale
+	const smallHorizontal = 32 // how many blocks to have on x scale
+	const smallVertical = 18 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -38,8 +38,8 @@ export function game() {
 
 	// gameplay
 	const defaultEnergy = 100
-	const defaultHealth = 200
-	const defaultDamage = 1
+	const defaultHealth = 100
+	const defaultDamage = 20
 	const defaultRange = 2
 	const shapes = defaultShapes()
 	const buildings = defaultBuildings()
@@ -83,7 +83,7 @@ export function game() {
 					y1: 0,
 					x2: blockWidth * i,
 					y2: h, 
-					alpha: 0.1
+					alpha: 0.075
 				})
 			}
 			
@@ -95,7 +95,7 @@ export function game() {
 					y1: blockHeight * i,
 					x2: w,
 					y2: blockHeight * i,
-					alpha: 0.1
+					alpha: 0.075
 				})
 			}
 			
@@ -736,34 +736,6 @@ export function game() {
 							
 							//change direction to right
 							if (r == 'player2') end[0] = horizontal - gm
-							
-							/*
-							// first find open path from left
-							if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone()).length) {
-								var findOpenPathCheck = {
-									finder: finder,
-									grid: grid,
-									size: vertical,
-									gm: gm,
-									x1: 0,
-									x2: gm
-								}
-								start[0] = findOpenPath(findOpenPathCheck)
-								
-								// and then find open path from right
-								if (!finder.findPath(start[0], start[1], end[0], end[1], grid.clone()).length) {
-									var findOpenPathCheck = {
-										finder: finder,
-										grid: grid,
-										size: vertical,
-										gm: gm,
-										x1: horizontal - (gm * 2),
-										x2: horizontal - gm
-									}
-									end[0] = findOpenPath(findOpenPathCheck)
-								}
-							}
-							*/
 							
 							// make a temporary hole into the grid
 							grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], true)

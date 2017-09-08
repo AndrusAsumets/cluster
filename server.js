@@ -1,24 +1,19 @@
 const Koa = require('koa')
-let app = new Koa()
+const app = new Koa()
 const serve = require('koa-static')
-let router = require('koa-router')()
-var bodyParser = require('koa-bodyparser')
-var cors = require('kcors')
+const router = require('koa-router')()
 const IO = require('koa-socket')
 const io = new IO()
-const PORT = 1337
 import { game } from './src/js/shared/game'
 
+const PORT = 1337
 
-app.use(bodyParser())
-app.use(cors())
 app.use(router.routes())
 app.use(serve('./public'), { hidden: true })
-
 io.attach(app)
 
 io.on('connection', context => {
-	console.log('new connection')
+	console.log('new ws client')
 	context.socket.emit('message', { action: 'CONNECT' })
 })
 

@@ -1,10 +1,10 @@
->> THE BUBBLE FACTORY
-bubblef.com
+cluster
 
 
-
-
-
+* point attack
+* energy count
+* game over
+* booster
 
 
 
