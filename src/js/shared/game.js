@@ -7,7 +7,7 @@ import { isNear, setWalkableAt, alreadyLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
-	// action constants
+	// actions
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
@@ -596,14 +596,6 @@ export function game() {
 				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
 				players[player.id].elements[p].path = path
 			}
-			
-			/*
-			else {
-				var path = finder.findPath(element.path[0][0], element.path[0][1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
-				
-				players[player.id].elements[p].path = path
-			}
-			*/
 		}
 	}
 	
@@ -894,7 +886,7 @@ export function game() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
-			walkBuildings(players[p])
+			walkBuildings(players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
 			hit(players[p])
 			deepHit(players[p])
 			health(players[p])
