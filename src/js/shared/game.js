@@ -61,7 +61,6 @@ export function game() {
 		this.deepProjectiles = []
 		this.links = []
 		this.energy = defaultEnergy
-		this.factoryBuilt = false
 		
 		if (client) {
 			this.container = document.createElement('div')
