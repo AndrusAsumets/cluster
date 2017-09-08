@@ -1,7 +1,5 @@
 require('dotenv').config()
 
-console.log(process.env.WS_DEVELOPMENT_SERVER, process.env.WS_DEVELOPMENT_PORT)
-
 var webpack = require('webpack')
 var webpackDev = require('webpack-dev-server')
 
