@@ -47,7 +47,8 @@ export function game() {
 	const gameLength = 1 * 60 * 1000
 	const recharge = 60 * 1000 // how often should the buildings create new elements
 	const cycle = 1000 // how often should the events happen
-	const fps = 1000 / 60
+	const fps = cycle / 60
+	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
 	
@@ -245,7 +246,7 @@ export function game() {
 	
 	var gameMenu = {}
 	function createMenu(event) {
-		if (!energy()) return
+		if (gameOver) return
 		
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
@@ -551,16 +552,12 @@ export function game() {
 				!element.path ||
 				!element.path[1] ||
 				!element.path[1].length
-			) continue
-			
-			players[player.id].elements[p].path.shift()
-			
-			/*
-			if (element.path[0][0] >= smallHorizontal * gm - 2) {
+			) {
 				players[player.id].elements.splice(p, 1)
-				//players.right.energy = players.right.energy - 1
+				players[player.id].energy = players[player.id].energy - 1
+			} else {
+				players[player.id].elements[p].path.shift()
 			}
-			*/
 		}
 	}
 	
@@ -864,9 +861,11 @@ export function game() {
 	
 	function score(player) {
 		document.getElementsByClassName('score-' + player.id)[0].innerHTML = player.energy
+		
+		if (player.energy == 0) gameOver = true
 	}
 	
-	setInterval(function() {
+	var gameInterval = setInterval(function() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
@@ -882,7 +881,7 @@ export function game() {
 		for (var p in players) {
 			collision(p)
 			attack(players[p])
-			if (client) score(players[p])
+			if (client && !gameOver) score(players[p])
 		}
 	}, cycle)
 	
