@@ -273,18 +273,8 @@ export function game() {
 		if (position == 'right' && xBlock * gm < horizontal / 2) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
-		// make sure we dont act when user tries to click outside of stage. also, disable first and last rows
-		if (
-			xBlock < 0 ||
-			yBlock < 0 ||
-			xBlock >= smallHorizontal ||
-			yBlock >= smallVertical
-		) {
-			return
-		}
-		
 		// if from and to buildings were found
-		else if (
+		if (
 			gameMenu.fromBuilding &&
 			Object.keys(gameMenu.fromBuilding).length > 0 &&
 			Object.keys(building).length > 0
