@@ -6,6 +6,7 @@
   "scripts": {
     "server": "nodemon transpile-server",
     "client": "node development.js",
+    "env": "cp .env.default .env",
     "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
     "production": "node transpile-production"
   },
