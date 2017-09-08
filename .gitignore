@@ -2,6 +2,9 @@ node_modules/
 .env
 npm-debug.log
 
+# build
+build/
+
 # OS generated files #
 ######################
 .DS_Store

@@ -1,9 +1,13 @@
+require('dotenv').config()
+
+console.log(process.env.WS_DEVELOPMENT_SERVER, process.env.WS_DEVELOPMENT_PORT)
+
 var webpack = require('webpack')
 var webpackDev = require('webpack-dev-server')
 
 const PORT = 3000
 const HOST = '0.0.0.0'
-const config = require('./webpack.development.config.js')(HOST)
+const config = require('./scripts/webpack.development.config.js')(HOST)
 
 new webpackDev(webpack(config), {
     publicPath: config.output.publicPath,

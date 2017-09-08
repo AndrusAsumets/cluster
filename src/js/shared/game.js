@@ -101,14 +101,16 @@ export function game() {
 			
 			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
 			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
-		}
+		}  
 	}
 	
 	// networking
 	var me = client ? getUrlParams('me') : null
 	if (!me && !host) return console.log('add ?me=some_player_id to your url')
 	
-	var uri = client ? 'ws://188.166.0.158:1337' : 'ws://localhost:1337'
+	var uri = process.env.WS_SERVER && process.env.WS_PORT 
+		? 'ws://' + process.env.WS_SERVER + ':' + process.env.WS_PORT
+		: 'ws://localhost:1337'
 	var socket = io.connect(uri)
 	
 	if (client) {

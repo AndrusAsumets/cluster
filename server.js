@@ -9,7 +9,7 @@ import { game } from './src/js/shared/game'
 const PORT = 1337
 
 app.use(router.routes())
-app.use(serve('./public'), { hidden: true })
+app.use(serve('./build'), { hidden: true })
 io.attach(app)
 
 io.on('connection', context => {

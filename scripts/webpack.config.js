@@ -1,5 +1,9 @@
+require('dotenv').config()
+
 var path = require('path')
 var webpack = require('webpack')
+var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = function() {
 	return {
@@ -8,9 +12,8 @@ module.exports = function() {
 	        './client.js'
 	    ],
 	    output: {
-	        path: path.join(__dirname, 'development'),
-	        publicPath: '/dev',
-	        filename: 'bundle.js'
+	        path: (__dirname.split('/scripts')[0]),
+	        filename: path.join('build', 'bundle.min.js')
 	    },
 	    resolve: {
 	        extensions: ['*', '.js']
@@ -30,23 +33,19 @@ module.exports = function() {
 	            {
 	                test: /\.(png|jpg|jpeg|gif|svg)$/,
 	                loader: 'url-loader?limit=10000'
-	            },
-	            {
-	                test: /\.(jpe?g|png|ico|gif|eot|otf|webp|svg|ttf|woff|woff2)(\?.*)?$/,
-	                loader: 'url-loader?limit=10000',
-	                query: {
-	                    name: '/build/static/media/[name].[ext]'
-	                }
 	            }
 	        ]
 	    },
 	    plugins: [
-	        new webpack.HotModuleReplacementPlugin(),
+	    	new ExtractTextPlugin('build/bundle.min.css'),
+	        new CopyWebpackPlugin([
+	            { from: 'index.production.html', to: 'build/index.html' }
+	        ]),
 	        new webpack.DefinePlugin({
 	            "process.env": {
-	                NODE_ENV: JSON.stringify('development'),
-	                WS_SERVER: JSON.stringify(process.env.WS_DEVELOPMENT_SERVER),
-	                WS_PORT: JSON.stringify(process.env.WS_DEVELOPMENT_PORT)
+	                NODE_ENV: JSON.stringify('production'),
+	                WS_SERVER: JSON.stringify(process.env.WS_PRODUCTION_SERVER),
+	                WS_PORT: JSON.stringify(process.env.WS_PRODUCTION_PORT)
 	            }
 	        })
 	    ]
