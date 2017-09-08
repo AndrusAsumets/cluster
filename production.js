@@ -6,13 +6,21 @@ const serve = require('koa-static')
 const router = require('koa-router')()
 const IO = require('koa-socket')
 const io = new IO()
+const fs = require('fs')
 import { game } from './src/js/shared/game'
 
-const PORT = process.env.WS_DEVELOPMENT_PORT || 1337
+const PORT = process.env.WS_PRODUCTION_PORT || 1337
 
 app.use(router.routes())
 app.use(serve('./build'), { hidden: true })
 io.attach(app)
+
+router.get('/',
+    async function(context) {
+        console.log('./build/index.html')
+        context.body = fs.readFileSync('./build/index.html', 'utf8')
+    }
+)
 
 io.on('connection', context => {
 	console.log('new ws client')
@@ -29,4 +37,4 @@ app.listen(PORT)
 global.window = null
 game()
 
-console.log('Development server is listening on', PORT)
+console.log('Production server is listening on', PORT)

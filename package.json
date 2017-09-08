@@ -6,13 +6,15 @@
   "scripts": {
     "server": "nodemon transpile-server",
     "client": "node development.js",
-    "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors"
+    "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
+    "production": "node transpile-production"
   },
   "author": "Andrus Asumets <andrus@asumets.ee>",
   "license": "",
   "dependencies": {
     "dotenv": "^4.0.0",
     "koa": "^2.2.0",
+    "koa-bodyparser": "^4.2.0",
     "koa-router": "^7.2.1",
     "koa-socket": "^4.4.0",
     "koa-static": "^4.0.1",
