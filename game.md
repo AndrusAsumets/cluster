@@ -11,7 +11,7 @@ NOW:
 * booster (decreases recharge time)
 * laser (defends agains elements)
 * radar (increases range on lasers and sends flares)
-* fog of warS
+* fog of war
 * silo (element storage for queueing)
 
 PHASE1:
@@ -19,8 +19,6 @@ PHASE1:
 * game balance & upgrades
 * different sizes for the bubbles that correspond to strength/power
 * click on a bubble, then press on a factory to release the power
-* cant build here warning
-* enemy picker
 * game rooms
 * lobby
 * deployment

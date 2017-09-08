@@ -25,9 +25,10 @@ export function game() {
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
+	const overflowY = 60
 	const sizes = client ? size() : { x: horizontal, y: vertical }
 	const w = sizes.x
-	const h = sizes.y
+	const h = sizes.y - overflowY
 	const blockWidth = w / smallHorizontal
 	const blockHeight = h / smallVertical
 	
@@ -265,7 +266,7 @@ export function game() {
 		player.canvas.menu.clearRect(0, 0, w, h)
 		
 		var x = event.clientX
-		var y = event.clientY
+		var y = event.clientY - overflowY
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
