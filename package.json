@@ -4,7 +4,7 @@
   "description": "",
   "main": "init.js",
   "scripts": {
-    "server": "nodemon register",
+    "server": "nodemon transpile-server",
     "client": "node scripts/development.js",
     "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors"
   },
