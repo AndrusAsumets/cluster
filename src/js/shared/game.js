@@ -175,6 +175,8 @@ export function game() {
 						if (!players[key]) continue
 						
 						players[key].energy = data[key].energy
+						
+						document.getElementsByClassName('score-' + key)[0].innerHTML = data[key].energy
 					}
 				}
 				break
@@ -490,53 +492,39 @@ export function game() {
 	}
 
 	function selectFromPopup(player, gameMenu, xBlock) {
+		var index, type, id, start, end
 		if (gameMenu.direction == 'toRight') {
-			var index = xBlock - gameMenu.x
-			var type = Object.keys(buildings)[index]
-			var id = player.elements.length
-			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [horizontal, gameMenu.y * gm]
-			
-			// create a building
-			var building = {
-				playerId: player.id,
-				id: id,
-				type: type,
-				start: start,
-				end: end,
-				charge: 0,
-				dynamics: {}
-			}
-			
-			var message = {
-				action: SET_BUILDING,
-				data: Object.assign({}, buildings[type], building),
-				playerId: me
-			}
-			
-			socket.emit('message', message)
+			index = xBlock - gameMenu.x
+			type = Object.keys(buildings)[index]
+			id = player.elements.length
+			start = [gameMenu.x * gm, gameMenu.y * gm]
+			end = [horizontal, gameMenu.y * gm]
 		}
 		else {
-			var type = xBlock - gameMenu.x + Object.keys(buildings).length - 1
-			var id = player.elements.length
-			var start = [gameMenu.x * gm, gameMenu.y * gm]
-			var end = [0, gameMenu.y * gm]
-			
-			// create a building
-			var building = {
-				playerId: player.id,
-				id: id,
-				type: Object.keys(buildings)[type],
-				start: start,
-				end: end,
-				charge: 0,
-				dynamics: {
-					fired: 0
-				}
-			}
-			
-			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
+			index = xBlock - gameMenu.x + Object.keys(buildings).length - 1
+			type = Object.keys(buildings)[index]
+			id = player.elements.length
+			start = [gameMenu.x * gm, gameMenu.y * gm]
+			end = [0, gameMenu.y * gm]
 		}
+		
+		var building = {
+			playerId: player.id,
+			id: id,
+			type: type,
+			start: start,
+			end: end,
+			charge: 0,
+			dynamics: {}
+		}
+		
+		var message = {
+			action: SET_BUILDING,
+			data: Object.assign({}, buildings[type], building),
+			playerId: me
+		}
+		
+		socket.emit('message', message)
 	}
 	
 	function resetProjectiles(player) {
@@ -895,21 +883,19 @@ export function game() {
 		}
 	}
 	
-	function score(player) {
-		if (client) document.getElementsByClassName('score-' + player.id)[0].innerHTML = player.energy
-		
-		if (player.energy == 0) gameOver = true
-	}
-	
 	function broadcastEnergy() {
-		var currentEnergy = {}
+		var currentPlayer = {}
 		
 		for (var p in players) {
-			currentEnergy[p] = {}
-			currentEnergy[p].energy = players[p].energy
+			currentPlayer[p] = {}
+			currentPlayer[p].energy = players[p].energy
 		}
 		
-		socket.emit('message', { action: SET_ENERGY, data: currentEnergy })
+		socket.emit('message', { action: SET_ENERGY, data: currentPlayer })
+	}
+	
+	function end(player) {
+		if (player.energy < 0) gameOver = true
 	}
 	
 	setInterval(function() {
@@ -931,7 +917,7 @@ export function game() {
 			
 			if (!gameOver) {
 				energy(players[p])
-				score(players[p])
+				end(players[p])
 			}
 		}
 		
