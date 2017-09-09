@@ -220,28 +220,6 @@ export function game() {
 		}
 	})
 	
-	function energy() {
-		return true
-		var playing = true
-		if (client) document.getElementsByClassName('player-left')[0].innerHTML = players.left.energy > 0 ? players.left.energy : 0
-		if (client) document.getElementsByClassName('player-right')[0].innerHTML = players.right.energy > 0 ? players.right.energy : 0
-		
-		if (gameLength < 0) {
-			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerB won!'
-			playing = false
-		}
-		else if (players.left.energy < 0) {
-			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerB won!'
-			playing = false
-		}
-		else if (players.right.energy < 0) {
-			if (client) document.getElementsByClassName('energy')[0].innerHTML = 'PlayerA won!'
-			playing = false
-		}
-		
-		return playing
-	}
-	
 	var gameMenu = {}
 	function createMenu(event) {
 		if (gameOver) return
