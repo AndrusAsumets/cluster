@@ -9,7 +9,7 @@ import { createMatrix, canvas, line, rectangle, circle, dot, donut } from './dra
 export function game() {
 	// gameplay
 	const cycle = 1000 // how often should the events happen
-	const recharge = 60 * cycle // how often should the buildings create new elements
+	const recharge = 30 * cycle // how often should the buildings create new elements
 	const fps = cycle / 60
 	var gameOver = false
 	var time = (new Date).getTime()
