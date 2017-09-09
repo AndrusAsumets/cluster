@@ -118,6 +118,13 @@ export function circle(o) {
 	o.ctx.fill()
 	o.ctx.closePath()
 	o.ctx.restore()
+	
+	o.ctx.beginPath()
+	o.ctx.moveTo(centerX, centerY)
+	o.ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI, true)
+	o.ctx.fillStyle = o.shape.fillStyle(alpha)
+	o.ctx.fill()
+	o.ctx.closePath()
 }
 
 export function image(o) {

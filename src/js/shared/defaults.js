@@ -18,17 +18,17 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' }
 	},
-	water: {
-		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }
+	well: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' }
 	},
 	factory: {
 		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }
 	},
-	well: {
-		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' }
+	laser: {
+		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }
 	}
 }
 
@@ -45,13 +45,17 @@ export const defaultBuildings = {
 		offensive: false
 	},
 	*/
-	factory: {
-		cost: 50,
-		offensive: true
-	},
 	well: {
 		cost: 25,
 		linkable: true,
 		producer: true
-	}	
+	},
+	factory: {
+		cost: 50,
+		offensive: true
+	},
+	laser: {
+		cost: 50,
+		defensive: true
+	}
 }

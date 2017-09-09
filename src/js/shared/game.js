@@ -717,7 +717,8 @@ export function game() {
 		var buildings = player.buildings ? player.buildings : []
 		var x = 1
 		for (var p = 0; p < buildings.length; p++) {
-			//if (!player.buildings[p].built) continue
+			if (!player.buildings[p].defensive) continue
+			if (!player.buildings[p].built) continue
 			
 			var positionA = player.buildings[p].start
 			for (var r = 0; r < player.elements.length; r++) {
@@ -809,7 +810,7 @@ export function game() {
 					})
 				}
 				else {
-					circle({
+					dot({
 						ctx: players[key].canvas[layer],
 						shape: object.shape,
 						x1: dx,
