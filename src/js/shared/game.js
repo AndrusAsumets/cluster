@@ -4,7 +4,7 @@ var PF = require('pathfinding')
 import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, isLinked, isPathOpen } from './util'
-import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
+import { createMatrix, canvas, line, rectangle, circle, dot, donut } from './draw'
 
 export function game() {
 	// gameplay
@@ -116,7 +116,6 @@ export function game() {
 	}
 	
 	socket.on('message', function (message) {
-		var to = message.to
 		var action = message.action
 		var data = message.data
 		
@@ -147,7 +146,6 @@ export function game() {
 						
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
-						
 						players[key].links = data[key].links
 						link()
 					
@@ -655,49 +653,20 @@ export function game() {
 			var object = objects[p]
 			
 			if (object.charge < 100) {
-				object.charge = object.charge + convertRange(1 / 60, [0, recharge / 1000], [0, 100])
+				object.charge = object.charge + convertRange(1 / 60, [0, recharge / cycle], [0, 100])
 				objects[p].charge = object.charge
 			}
+			
 			else if (object.charge >= 100) {
-				players[key].buildings[p].charge = 0
 				players[key].buildings[p].built = true
 				
-				if (host) {
-					for (var r in players) {
-						if (key != r) {
-							var start = [objects[p].start[0], objects[p].start[1]]
-							var end = [objects[p].end[0], objects[p].end[1]]
-							
-							//change direction to right
-							if (r == 'player2') end[0] = horizontal - gm
-							
-							// make a temporary hole into the grid
-							grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], true)
-							var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
-							grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
-							
-							var element = {
-								id: players[r].elements.length,
-								playerId: key,
-								type: object.type,
-								start: start,
-								end: end,
-								path: path,
-								dynamics: {
-									totalHealth: defaultHealth,
-									health: defaultHealth
-								}
-							}
-							
-							socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: p } })
-							
-							players[r].elements.push(element)
-						}
-					}
+				if (object.offensive) {
+					players[key].buildings[p].charge = 0
+					if (host) newElement(objects, key, p)
 				}
 			}
 			
-			if (client) donut({
+			if (client) circle({
 				ctx: players[key].canvas[layer],
 				shape: defaultShapes[object.type],
 				x1: object.start[0] * blockWidth / gm,
@@ -707,6 +676,41 @@ export function game() {
 				percentage: object.charge
 			})
 		}
+	}
+	
+	function newElement(objects, key, p) {
+		var object = objects[p]
+		for (var r in players) {
+			if (key != r) {
+				var start = [objects[p].start[0], objects[p].start[1]]
+				var end = [objects[p].end[0], objects[p].end[1]]
+				
+				//change direction to right
+				if (r == 'player2') end[0] = horizontal - gm
+				
+				// make a temporary hole into the grid
+				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], true)
+				var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
+				
+				var element = {
+					id: players[r].elements.length,
+					playerId: key,
+					type: object.type,
+					start: start,
+					end: end,
+					path: path,
+					dynamics: {
+						totalHealth: defaultHealth,
+						health: defaultHealth
+					}
+				}
+				
+				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: p } })
+				
+				players[r].elements.push(element)
+			}
+		}		
 	}
 	
 	function attack(player) {

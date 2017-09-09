@@ -22,7 +22,7 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }
 	},
-	fire: {
+	factory: {
 		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }
 	},
@@ -44,16 +44,14 @@ export const defaultBuildings = {
 		linkable: true,
 		offensive: false
 	},
-	fire: {
-		cost: 250,
-		linkable: false,
-		offensive: false
-	},
 	*/
+	factory: {
+		cost: 50,
+		offensive: true
+	},
 	well: {
 		cost: 25,
 		linkable: true,
-		offensive: false,
 		producer: true
 	}	
 }

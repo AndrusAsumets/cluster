@@ -63,7 +63,7 @@ export function rectangle(o) {
 	o.ctx.closePath()
 }
 
-export function circle(o) {
+export function dot(o) {
 	var centerX = o.x1 + (o.x2 / 2)
 	var centerY = o.y1 + (o.y2 / 2)
 	var radius = Math.sqrt(o.x2 + o.y2)
@@ -93,6 +93,31 @@ export function donut(o) {
 	o.ctx.fillStyle = o.shape.fillStyle(alpha)
 	o.ctx.fill()
 	o.ctx.closePath()
+}
+
+export function circle(o) {
+	var centerX = o.x1 + (o.x2 / 2)
+	var centerY = o.y1 + (o.y2 / 2)
+	var radius = Math.sqrt(o.x2 + o.y2)
+	var degrees = o.percentage ? o.percentage * 3.6 : 360
+	var alpha = o.alpha ? o.alpha : 1
+	
+	o.ctx.beginPath()
+	o.ctx.moveTo(centerX, centerY)
+	o.ctx.arc(centerX, centerY, radius * 1.25, 0, degreesToRadians(-degrees), true)
+	o.ctx.fillStyle = o.shape.fillStyle(alpha)
+	o.ctx.fill()
+	o.ctx.closePath()
+
+	o.ctx.save()
+	o.ctx.globalCompositeOperation = 'destination-out'
+	o.ctx.beginPath()
+	o.ctx.moveTo(centerX, centerY)
+	o.ctx.arc(centerX, centerY, radius * 1.1, 0, 2 * Math.PI, false)
+	o.ctx.clip()
+	o.ctx.fill()
+	o.ctx.closePath()
+	o.ctx.restore()
 }
 
 export function image(o) {
