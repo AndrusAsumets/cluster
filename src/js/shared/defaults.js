@@ -1,6 +1,7 @@
 export const defaultEnergy = 100
 export const defaultHealth = 100
 export const defaultDamage = 20
+export const defaultAbsorb = 20
 
 export const defaultShapes = {
 	background: {

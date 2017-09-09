@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, isLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, dot, donut } from './draw'
@@ -9,7 +9,7 @@ import { createMatrix, canvas, line, rectangle, circle, dot, donut } from './dra
 export function game() {
 	// gameplay
 	const cycle = 1000 // how often should the events happen
-	const recharge = 6 * cycle // how often should the buildings create new elements
+	const recharge = 60 * cycle // how often should the buildings create new elements
 	const fps = cycle / 60
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -228,8 +228,8 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 && !'x' in gameMenu) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 && !'x' in gameMenu) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// if from and to buildings were found
@@ -516,7 +516,7 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				decreaseEnergy(player)
+				decreaseEnergy(player, defaultAbsorb)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
