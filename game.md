@@ -11,7 +11,7 @@ NOW:
 * booster (decreases recharge time)
 * laser (defends agains elements)
 * radar (increases range on lasers and sends flares)
-* fog of war
+* fog of war?
 * silo (element storage for queueing)
 
 PHASE1:

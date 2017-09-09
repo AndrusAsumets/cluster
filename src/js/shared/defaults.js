@@ -23,7 +23,7 @@ export function defaultShapes() {
 			fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
 			strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }
 		},
-		wind: {
+		well: {
 			fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 			strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' }
 		}
@@ -32,6 +32,7 @@ export function defaultShapes() {
 
 export function defaultBuildings() {
 	return {
+		/*
 		earth: {
 			cost: 250,
 			linkable: false,
@@ -47,10 +48,12 @@ export function defaultBuildings() {
 			linkable: false,
 			offensive: false
 		},
-		wind: {
+		*/
+		well: {
 			cost: 25,
 			linkable: true,
-			offensive: false
+			offensive: false,
+			producer: true
 		}	
 	}
 }

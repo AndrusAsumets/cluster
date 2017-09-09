@@ -7,10 +7,25 @@ import { isNear, setWalkableAt, alreadyLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
+	// gameplay
+	const defaultEnergy = 100
+	const defaultHealth = 100
+	const defaultDamage = 20
+	const defaultRange = 2
+	const shapes = defaultShapes()
+	const buildings = defaultBuildings()
+	const recharge = 6 * 1000 // how often should the buildings create new elements
+	const cycle = 1000 // how often should the events happen
+	const fps = cycle / 60
+	var gameOver = false
+	var time = (new Date).getTime()
+	var players = {}
+	
 	// actions
 	const CONNECT = 'CONNECT'
 	const GET_STATE = 'GET_STATE'
 	const SET_STATE = 'SET_STATE'
+	const SET_ENERGY = 'SET_ENERGY'
 	const SET_ELEMENT = 'SET_ELEMENT'
 	const SET_BUILDING = 'SET_BUILDING'
 	const SET_LINK = 'SET_LINK'
@@ -36,21 +51,6 @@ export function game() {
 	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
 	var grid = new PF.Grid(matrix)
-
-	// gameplay
-	const defaultEnergy = 100
-	const defaultHealth = 100
-	const defaultDamage = 20
-	const defaultRange = 2
-	const shapes = defaultShapes()
-	const buildings = defaultBuildings()
-	const gameLength = 1 * 60 * 1000
-	const recharge = 60 * 1000 // how often should the buildings create new elements
-	const cycle = 1000 // how often should the events happen
-	const fps = cycle / 60
-	var gameOver = false
-	var time = (new Date).getTime()
-	var players = {}
 	
 	// player
 	function Player (options) {
@@ -162,17 +162,24 @@ export function game() {
 						players[key].links = data[key].links
 						link()
 					
-						var buildings = data[key].buildings
-						for (var i = 0; i < buildings.length; i++) {
-							grid = setWalkableAt(grid, gm, buildings[i].start[0], buildings[i].start[1], false)
+						for (var i = 0; i < data[key].buildings.length; i++) {
+							grid = setWalkableAt(grid, gm, data[key].buildings[i].start[0], data[key].buildings[i].start[1], false)
 						}
 					}
 				}
 				break
 				
-			case SET_BUILDING:
-				if (!energy()) return
+			case SET_ENERGY:
+				if (client) {
+					for (var key in data) {
+						if (!players[key]) continue
+						
+						players[key].energy = data[key].energy
+					}
+				}
+				break
 				
+			case SET_BUILDING:
 				var building = data
 				var player = players[building.playerId]
 				
@@ -191,18 +198,18 @@ export function game() {
 					grid = setWalkableAt(grid, gm, building.start[0], building.start[1], true)
 					return
 				}
-
-				//if (client) document.getElementsByClassName('player-' + building.position)[0].innerHTML = players[building.position].energy - 1
 				
-				//players[building.position].energy = players[building.position].energy - 1
+				decreaseEnergy(players[building.playerId], buildings[building.type].cost)
+				
 				players[building.playerId].buildings.push(building)
+				
 				for (var p in players) createPaths(players[p])
+				
 				if (client) link()
+				
 				break
 				
 			case SET_LINK:
-				if (!energy()) return
-
 				players[data.playerId].links.push(data.link)
 				if (client) link()
 				break
@@ -484,7 +491,8 @@ export function game() {
 
 	function selectFromPopup(player, gameMenu, xBlock) {
 		if (gameMenu.direction == 'toRight') {
-			var type = xBlock - gameMenu.x
+			var index = xBlock - gameMenu.x
+			var type = Object.keys(buildings)[index]
 			var id = player.elements.length
 			var start = [gameMenu.x * gm, gameMenu.y * gm]
 			var end = [horizontal, gameMenu.y * gm]
@@ -493,14 +501,20 @@ export function game() {
 			var building = {
 				playerId: player.id,
 				id: id,
-				type: Object.keys(buildings)[type],
+				type: type,
 				start: start,
 				end: end,
 				charge: 0,
 				dynamics: {}
 			}
 			
-			socket.emit('message', { action: SET_BUILDING, data: building, playerId: me })
+			var message = {
+				action: SET_BUILDING,
+				data: Object.assign({}, buildings[type], building),
+				playerId: me
+			}
+			
+			socket.emit('message', message)
 		}
 		else {
 			var type = xBlock - gameMenu.x + Object.keys(buildings).length - 1
@@ -554,7 +568,7 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				players[player.id].energy = players[player.id].energy - 1
+				decreaseEnergy(player)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
@@ -860,13 +874,45 @@ export function game() {
 		}
 	}
 	
+	function increaseEnergy(player, amount = 1) {
+		players[player.id].energy = players[player.id].energy + amount
+	}
+	
+	function decreaseEnergy(player, amount = 1) {
+		players[player.id].energy = players[player.id].energy - amount
+	}
+	
+	function energy(player) {
+		for (var i = 0; i < player.buildings.length; i++) {
+			var building = player.buildings[i]
+			
+			if (
+				building.producer == true && 
+				building.built == true
+			) {
+				increaseEnergy(player)
+			}
+		}
+	}
+	
 	function score(player) {
-		document.getElementsByClassName('score-' + player.id)[0].innerHTML = player.energy
+		if (client) document.getElementsByClassName('score-' + player.id)[0].innerHTML = player.energy
 		
 		if (player.energy == 0) gameOver = true
 	}
 	
-	var gameInterval = setInterval(function() {
+	function broadcastEnergy() {
+		var currentEnergy = {}
+		
+		for (var p in players) {
+			currentEnergy[p] = {}
+			currentEnergy[p].energy = players[p].energy
+		}
+		
+		socket.emit('message', { action: SET_ENERGY, data: currentEnergy })
+	}
+	
+	setInterval(function() {
 		time = (new Date).getTime()
 		
 		for (var p in players) {
@@ -882,8 +928,14 @@ export function game() {
 		for (var p in players) {
 			collision(p)
 			attack(players[p])
-			if (client && !gameOver) score(players[p])
+			
+			if (!gameOver) {
+				energy(players[p])
+				score(players[p])
+			}
 		}
+		
+		if (host) broadcastEnergy()
 	}, cycle)
 	
 	if (host) {
