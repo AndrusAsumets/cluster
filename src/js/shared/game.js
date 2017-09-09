@@ -228,8 +228,8 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2) return
-		if (position == 'right' && xBlock * gm < horizontal / 2) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !'x' in gameMenu) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !'x' in gameMenu) return
 		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		
 		// if from and to buildings were found
