@@ -24,6 +24,22 @@ export function createMatrix(vertical, horizontal) {
 	return matrix
 }
 
+export function canvas(container, className, w, h, z, top) {
+	var ratio = PIXEL_RATIO
+	var canvas = document.createElement('canvas')
+	canvas.className = className
+	canvas.width = w * ratio
+	canvas.height = h * ratio
+	canvas.style.position = 'absolute'
+	canvas.style.top = 0
+	canvas.style.width = w + 'px'
+	canvas.style.height = h + 'px'
+	canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
+	canvas.style.zIndex = z
+	container.appendChild(canvas)
+	return canvas.getContext('2d')
+}
+
 export function line(o) {
 	var alpha = o.alpha ? o.alpha : 1
 	
@@ -85,22 +101,6 @@ export function image(o) {
 		o.ctx.drawImage(img, o.x1, o.y1, o.width, o.height)
 	}
 	img.src = 'public/images/' + o.file
-}
-
-export function canvas(container, className, w, h, z, top) {
-	var ratio = PIXEL_RATIO
-	var canvas = document.createElement('canvas')
-	canvas.className = className
-	canvas.width = w * ratio
-	canvas.height = h * ratio
-	canvas.style.position = 'absolute'
-	canvas.style.top = 0
-	canvas.style.width = w + 'px'
-	canvas.style.height = h + 'px'
-	canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
-	canvas.style.zIndex = z
-	container.appendChild(canvas)
-	return canvas.getContext('2d')
 }
 
 function degreesToRadians(degrees) {

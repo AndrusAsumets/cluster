@@ -2,14 +2,14 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings } from './defaults'
-import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
-import { isNear, setWalkableAt, alreadyLinked, isPathOpen } from './util'
+import { convertRange, size, getUrlParams } from './helpers'
+import { isNear, setWalkableAt, isLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
 	// gameplay
-	const recharge = 6 * 1000 // how often should the buildings create new elements
 	const cycle = 1000 // how often should the events happen
+	const recharge = 6 * cycle // how often should the buildings create new elements
 	const fps = cycle / 60
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -34,7 +34,7 @@ export function game() {
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
-	const overflowY = 60
+	const overflowY = 60 // height of the scoring menu in pixels
 	const sizes = client ? size() : { x: horizontal, y: vertical }
 	const w = sizes.x
 	const h = sizes.y - overflowY
@@ -123,13 +123,8 @@ export function game() {
 		switch(action) {
 			case CONNECT:
 				console.log('connected to ws')
-				//var room = window ? (window.location.hash ? '/' + window.location.hash : '/') : room
 				
 				if (client) {
-					//if (players[id]) return
-					//var playerId = readCookie('playerId') && readCookie('playerId') != 'undefined' ? readCookie('playerId') : id ? id : String(Math.random()).split('.')[1]
-					//createCookie(String(playerId), playerId, 1)
-					
 					if (me == 'player1' || me == 'player2') {
 						players[me] = new Player({ id: me })
 						socket.emit('message', { action: GET_STATE, data: me })
@@ -248,7 +243,7 @@ export function game() {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 			
-			if (alreadyLinked(players[me], from, to)) {
+			if (isLinked(players[me], from, to)) {
 				gameMenu = {}
 				return
 			}

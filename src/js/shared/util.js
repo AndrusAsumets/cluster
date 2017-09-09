@@ -25,7 +25,7 @@ export function setWalkableAt(grid, gm, x, y, walkable) {
 	return grid
 }
 
-export function alreadyLinked(player, from, to) {
+export function isLinked(player, from, to) {
 	var links = player.links
 	
 	for (var i = 0; i < links.length; i++) {
