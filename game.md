@@ -42,53 +42,6 @@ PEOPLE:
 * story > who?
 * moneying model > bootstrappig/funding?
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 --
 base energy: 100
 costs:
