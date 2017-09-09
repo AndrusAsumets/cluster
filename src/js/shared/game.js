@@ -1,19 +1,13 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { defaultShapes, defaultBuildings } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, createCookie, readCookie, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, alreadyLinked, isPathOpen } from './util'
 import { createMatrix, canvas, line, rectangle, circle, donut } from './draw'
 
 export function game() {
 	// gameplay
-	const defaultEnergy = 100
-	const defaultHealth = 100
-	const defaultDamage = 20
-	const defaultRange = 2
-	const shapes = defaultShapes()
-	const buildings = defaultBuildings()
 	const recharge = 6 * 1000 // how often should the buildings create new elements
 	const cycle = 1000 // how often should the events happen
 	const fps = cycle / 60
@@ -79,7 +73,7 @@ export function game() {
 			for (var i = 0; i < smallHorizontal + 1; i++) {
 				line({
 					ctx: this.canvas.background,
-					shape: shapes.light,
+					shape: defaultShapes.light,
 					x1: blockWidth * i,
 					y1: 0,
 					x2: blockWidth * i,
@@ -91,7 +85,7 @@ export function game() {
 			for (var i = 0; i < smallVertical + 1; i++) {
 				line({
 					ctx: this.canvas.background,
-					shape: shapes.light,
+					shape: defaultShapes.light,
 					x1: 0,
 					y1: blockHeight * i,
 					x2: w,
@@ -175,8 +169,7 @@ export function game() {
 						if (!players[key]) continue
 						
 						players[key].energy = data[key].energy
-						
-						document.getElementsByClassName('score-' + key)[0].innerHTML = data[key].energy
+						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.abs(data[key].energy)
 					}
 				}
 				break
@@ -201,14 +194,10 @@ export function game() {
 					return
 				}
 				
-				decreaseEnergy(players[building.playerId], buildings[building.type].cost)
-				
+				decreaseEnergy(players[building.playerId], defaultBuildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
-				
 				for (var p in players) createPaths(players[p])
-				
 				if (client) link()
-				
 				break
 				
 			case SET_LINK:
@@ -304,7 +293,7 @@ export function game() {
 			
 			rectangle({
 				ctx: player.canvas.menu,
-				shape: shapes.light,
+				shape: defaultShapes.light,
 				x1: xBlock * blockWidth,
 				y1: yBlock * blockHeight,
 				x2: blockWidth,
@@ -314,7 +303,7 @@ export function game() {
 
 			donut({
 				ctx: player.canvas.menu,
-				shape: shapes[gameMenu.fromBuilding.type],
+				shape: defaultShapes[gameMenu.fromBuilding.type],
 				x1: xBlock * blockWidth,
 				y1: yBlock * blockHeight,
 				x2: blockWidth,
@@ -367,6 +356,99 @@ export function game() {
 		}
 	}
 	
+	function buildPopup(player, xBlock, yBlock, position) {
+		if (position == 'left') {
+			var i = 0
+			
+			for (var building in defaultBuildings) {
+				rectangle({
+					ctx: player.canvas.menu,
+					shape: defaultShapes.dark,
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					alpha: 0.1
+				})
+				
+				donut({
+					ctx: player.canvas.menu,
+					shape: defaultShapes[building],
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					percentage: 100
+				})
+				
+				i++
+			}
+		}
+		else {
+			var reversedDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings))).reverse()
+			var i = 0
+			for (var building in defaultBuildings) {
+				rectangle({
+					ctx: player.canvas.menu,
+					shape: defaultShapes.light,
+					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					alpha: 0.1
+				})
+				
+				donut({
+					ctx: player.canvas.menu,
+					shape: defaultShapes[building],
+					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
+					y1: yBlock * blockHeight,
+					x2: blockWidth,
+					y2: blockHeight,
+					percentage: 100
+				})
+				
+				i++
+			}
+		}
+	}
+	
+	function selectFromPopup(player, gameMenu, xBlock) {
+		var index, type, id, start, end
+		if (gameMenu.direction == 'toRight') {
+			index = xBlock - gameMenu.x
+			type = Object.keys(defaultBuildings)[index]
+			id = player.elements.length
+			start = [gameMenu.x * gm, gameMenu.y * gm]
+			end = [horizontal, gameMenu.y * gm]
+		}
+		else {
+			index = xBlock - gameMenu.x + Object.keys(defaultBuildings).length - 1
+			type = Object.keys(defaultBuildings)[index]
+			id = player.elements.length
+			start = [gameMenu.x * gm, gameMenu.y * gm]
+			end = [0, gameMenu.y * gm]
+		}
+		
+		var building = {
+			playerId: player.id,
+			id: id,
+			type: type,
+			start: start,
+			end: end,
+			charge: 0,
+			dynamics: {}
+		}
+		
+		var message = {
+			action: SET_BUILDING,
+			data: Object.assign({}, defaultBuildings[type], building),
+			playerId: me
+		}
+		
+		socket.emit('message', message)
+	}
+	
 	function link() {
 		for (var key in players) {
 			var player = players[key]
@@ -408,7 +490,7 @@ export function game() {
 					
 					line({
 						ctx: player.canvas.link,
-						shape: shapes[type],
+						shape: defaultShapes[type],
 						x1: x1,
 						y1: y1,
 						x2: x2,
@@ -432,99 +514,6 @@ export function game() {
 		}
 		
 		return {}
-	}
-	
-	function buildPopup(player, xBlock, yBlock, position) {
-		if (position == 'left') {
-			var i = 0
-			
-			for (var building in buildings) {
-				rectangle({
-					ctx: player.canvas.menu,
-					shape: shapes.dark,
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					alpha: 0.1
-				})
-				
-				donut({
-					ctx: player.canvas.menu,
-					shape: shapes[building],
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					percentage: 100
-				})
-				
-				i++
-			}
-		}
-		else {
-			var reversedbuildings = JSON.parse(JSON.stringify(Object.keys(buildings))).reverse()
-			var i = 0
-			for (var building in buildings) {
-				rectangle({
-					ctx: player.canvas.menu,
-					shape: shapes.light,
-					x1: (xBlock + i - reversedbuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					alpha: 0.1
-				})
-				
-				donut({
-					ctx: player.canvas.menu,
-					shape: shapes[building],
-					x1: (xBlock + i - reversedbuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					percentage: 100
-				})
-				
-				i++
-			}
-		}
-	}
-
-	function selectFromPopup(player, gameMenu, xBlock) {
-		var index, type, id, start, end
-		if (gameMenu.direction == 'toRight') {
-			index = xBlock - gameMenu.x
-			type = Object.keys(buildings)[index]
-			id = player.elements.length
-			start = [gameMenu.x * gm, gameMenu.y * gm]
-			end = [horizontal, gameMenu.y * gm]
-		}
-		else {
-			index = xBlock - gameMenu.x + Object.keys(buildings).length - 1
-			type = Object.keys(buildings)[index]
-			id = player.elements.length
-			start = [gameMenu.x * gm, gameMenu.y * gm]
-			end = [0, gameMenu.y * gm]
-		}
-		
-		var building = {
-			playerId: player.id,
-			id: id,
-			type: type,
-			start: start,
-			end: end,
-			charge: 0,
-			dynamics: {}
-		}
-		
-		var message = {
-			action: SET_BUILDING,
-			data: Object.assign({}, buildings[type], building),
-			playerId: me
-		}
-		
-		socket.emit('message', message)
 	}
 	
 	function resetProjectiles(player) {
@@ -639,7 +628,7 @@ export function game() {
 								player.elements[r].path[a - 1],
 								anotherPlayer.elements[r2].path[b]
 							],
-							shape: shapes[player.elements[r].type]
+							shape: defaultShapes[player.elements[r].type]
 						}
 						
 						players[anotherPlayer.id].deepProjectiles.push(projectile)
@@ -649,7 +638,7 @@ export function game() {
 								anotherPlayer.elements[r2].path[a - 1],
 								player.elements[r].path[b]
 							],
-							shape: shapes[anotherPlayer.elements[r2].type]
+							shape: defaultShapes[anotherPlayer.elements[r2].type]
 						}
 						
 						players[player.id].deepProjectiles.push(projectile)
@@ -737,7 +726,7 @@ export function game() {
 			
 			if (client) donut({
 				ctx: players[key].canvas[layer],
-				shape: shapes[object.type],
+				shape: defaultShapes[object.type],
 				x1: object.start[0] * blockWidth / gm,
 				y1: object.start[1] * blockHeight / gm,
 				x2: blockWidth,
@@ -769,7 +758,7 @@ export function game() {
 						player.buildings[p].start,
 						player.elements[r].path[1]
 					],
-					shape: shapes[player.buildings[p].type]
+					shape: defaultShapes[player.buildings[p].type]
 				}
 				
 				players[player.id].projectiles.push(projectile)
@@ -833,7 +822,7 @@ export function game() {
 
 					donut({
 						ctx: players[key].canvas[layer],
-						shape: shapes[object.type],
+						shape: defaultShapes[object.type],
 						percentage: percentage,
 						x1: dx,
 						y1: dy,
@@ -910,7 +899,7 @@ export function game() {
 			shiftPaths(players[p])
 		}
 		
-		// then run the last part because projectiles of the projectiles couldn't be updated otherwise
+		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
 			collision(p)
 			attack(players[p])
@@ -921,7 +910,7 @@ export function game() {
 			}
 		}
 		
-		if (host) broadcastEnergy()
+		if (host && !gameOver) broadcastEnergy()
 	}, cycle)
 	
 	if (host) {

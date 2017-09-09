@@ -2,9 +2,6 @@ cluster.game
 
 NOW:
 * game saving to file/database
-* well (increases energy)
-* energy count
-* energy counter
 * unlinking
 * factory (trains elements -> walkers, flyers, kamikazes -> wind, fire, earth, water)
 * pointing for the kamikazes and flares
