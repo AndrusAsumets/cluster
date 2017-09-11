@@ -4,12 +4,12 @@ var PF = require('pathfinding')
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, isLinked, isPathOpen } from './util'
-import { createMatrix, canvas, line, rectangle, circle, dot, donut } from './draw'
+import { createMatrix, ctx, line, rectangle, circle, dot, donut } from './draw'
 
 export function game() {
 	// gameplay
 	const cycle = 1000 // how often should the events happen
-	const recharge = 30 * cycle // how often should the buildings create new elements
+	const recharge = 15 * cycle // how often should the buildings create new elements
 	const fps = cycle / 60
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -29,8 +29,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 32 // how many blocks to have on x scale
-	const smallVertical = 18 // how many blocks to have on y scale
+	const smallHorizontal = 24 // how many blocks to have on x scale
+	const smallVertical = 14 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -57,46 +57,48 @@ export function game() {
 		this.deepProjectiles = []
 		this.links = []
 		this.energy = defaultEnergy
+	}
+	
+	var canvas = {}
+	
+	if (client) {
+		var container = document.createElement('div')
+		container.className = 'player'
+		document.getElementsByClassName('game')[0].appendChild(container)
+		canvas = {
+			background: ctx(container, 'background', w, h, 1, blockHeight),
+			link: ctx(container, 'link', w, h, 2, blockHeight),
+			movement: ctx(container, 'movement', w, h, 3, blockHeight),
+			menu: ctx(container, 'menu', w, h, 4, blockHeight)
+		} 
 		
-		if (client) {
-			this.container = document.createElement('div')
-			this.container.className = 'player ' + this.id
-			document.getElementsByClassName('game')[0].appendChild(this.container)
-			this.canvas = {
-				background: canvas(this.container, 'background_' + this.id, w, h, 1, blockHeight),
-				link: canvas(this.container, 'link_' + this.id, w, h, 2, blockHeight),
-				movement: canvas(this.container, 'movement_' + this.id, w, h, 3, blockHeight),
-				menu: canvas(this.container, 'menu_' + this.id, w, h, 4, blockHeight)
-			} 
-			
-			// create a visual UI grid
-			for (var i = 0; i < smallHorizontal + 1; i++) {
-				line({
-					ctx: this.canvas.background,
-					shape: defaultShapes.light,
-					x1: blockWidth * i,
-					y1: 0,
-					x2: blockWidth * i,
-					y2: h, 
-					alpha: 0.075
-				})
-			}
-			
-			for (var i = 0; i < smallVertical + 1; i++) {
-				line({
-					ctx: this.canvas.background,
-					shape: defaultShapes.light,
-					x1: 0,
-					y1: blockHeight * i,
-					x2: w,
-					y2: blockHeight * i,
-					alpha: 0.075
-				})
-			}
-			
-			document.getElementsByClassName(this.container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
-			document.getElementsByClassName(this.container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
-		}  
+		// create a visual UI grid
+		for (var i = 0; i < smallHorizontal + 1; i++) {
+			line({
+				ctx: canvas.background,
+				shape: defaultShapes.light,
+				x1: blockWidth * i,
+				y1: 0,
+				x2: blockWidth * i,
+				y2: h, 
+				alpha: 0.075
+			})
+		}
+		
+		for (var i = 0; i < smallVertical + 1; i++) {
+			line({
+				ctx: canvas.background,
+				shape: defaultShapes.light,
+				x1: 0,
+				y1: blockHeight * i,
+				x2: w,
+				y2: blockHeight * i,
+				alpha: 0.075
+			})
+		}
+		
+		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
+		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
 	}
 	
 	// networking
@@ -162,7 +164,7 @@ export function game() {
 						if (!players[key]) continue
 						
 						players[key].energy = data[key].energy
-						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.abs(data[key].energy)
+						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
 					}
 				}
 				break
@@ -171,8 +173,11 @@ export function game() {
 				var building = data
 				var player = players[building.playerId]
 				
+				// if not sufficient energy
+				if (player.energy - defaultBuildings[building.type].cost < 0) return
+				
 				// check if there's an building on that location already
-				if (Object.keys(findBuilding(player.buildings, building)).length > 0) return
+				if (Object.keys(findBuilding(player.buildings, building)).length) return
 				
 				// check for open paths
 				grid = setWalkableAt(grid, gm, building.start[0], building.start[1], false)
@@ -221,7 +226,7 @@ export function game() {
 		if ('touches' in event) event = event.touches[0]
 		
 		var player = players[me]
-		player.canvas.menu.clearRect(0, 0, w, h)
+		canvas.menu.clearRect(0, 0, w, h)
 		
 		var x = event.clientX
 		var y = event.clientY - marginTop
@@ -263,7 +268,7 @@ export function game() {
 			gameMenu.linking = true
 			
 			rectangle({
-				ctx: player.canvas.menu,
+				ctx: canvas.menu,
 				shape: defaultShapes.light,
 				x1: xBlock * blockWidth,
 				y1: yBlock * blockHeight,
@@ -273,7 +278,7 @@ export function game() {
 			})
 
 			donut({
-				ctx: player.canvas.menu,
+				ctx: canvas.menu,
 				shape: defaultShapes[gameMenu.fromBuilding.type],
 				x1: xBlock * blockWidth,
 				y1: yBlock * blockHeight,
@@ -333,7 +338,7 @@ export function game() {
 			
 			for (var building in defaultBuildings) {
 				rectangle({
-					ctx: player.canvas.menu,
+					ctx: canvas.menu,
 					shape: defaultShapes.dark,
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
@@ -343,7 +348,7 @@ export function game() {
 				})
 				
 				donut({
-					ctx: player.canvas.menu,
+					ctx: canvas.menu,
 					shape: defaultShapes[building],
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
@@ -360,7 +365,7 @@ export function game() {
 			var i = 0
 			for (var building in defaultBuildings) {
 				rectangle({
-					ctx: player.canvas.menu,
+					ctx: canvas.menu,
 					shape: defaultShapes.light,
 					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
@@ -370,7 +375,7 @@ export function game() {
 				})
 				
 				donut({
-					ctx: player.canvas.menu,
+					ctx: canvas.menu,
 					shape: defaultShapes[building],
 					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
@@ -425,7 +430,7 @@ export function game() {
 			var player = players[key]
 			var links = player.links
 			
-			player.canvas.link.clearRect(0, 0, w, h)
+			canvas.link.clearRect(0, 0, w, h)
 			
 			for (var l = 0; l < links.length; l++) {
 				var from = links[l].from
@@ -460,7 +465,7 @@ export function game() {
 					var y2 = path[i][1] * height + (height * gm / 2)
 					
 					line({
-						ctx: player.canvas.link,
+						ctx: canvas.link,
 						shape: defaultShapes[type],
 						x1: x1,
 						y1: y1,
@@ -653,7 +658,7 @@ export function game() {
 			var object = objects[p]
 			
 			if (object.charge < 100) {
-				object.charge = object.charge + convertRange(1 / 60, [0, recharge / cycle], [0, 100])
+				object.charge = object.charge + convertRange(1 / fps, [0, recharge / cycle], [0, 100])
 				objects[p].charge = object.charge
 			}
 			
@@ -666,8 +671,8 @@ export function game() {
 				}
 			}
 			
-			if (client) circle({
-				ctx: players[key].canvas[layer],
+			if (client) donut({
+				ctx: canvas[layer],
 				shape: defaultShapes[object.type],
 				x1: object.start[0] * blockWidth / gm,
 				y1: object.start[1] * blockHeight / gm,
@@ -797,9 +802,9 @@ export function game() {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-
+					
 					donut({
-						ctx: players[key].canvas[layer],
+						ctx: canvas[layer],
 						shape: defaultShapes[object.type],
 						percentage: percentage,
 						x1: dx,
@@ -811,7 +816,7 @@ export function game() {
 				}
 				else {
 					dot({
-						ctx: players[key].canvas[layer],
+						ctx: canvas[layer],
 						shape: object.shape,
 						x1: dx,
 						y1: dy,
@@ -829,7 +834,7 @@ export function game() {
 		}
 	}
 	
-	function increaseEnergy(player, amount = 1) {
+	function increaseEnergy(player, amount = defaultBuildings.well.income) {
 		players[player.id].energy = players[player.id].energy + amount
 	}
 	
@@ -899,12 +904,12 @@ export function game() {
 	
 	function animationFrame() {
 		requestAnimationFrame(animationFrame)
+		if (client) canvas.movement.clearRect(0, 0, w, h)
 		for (var p in players) animate(p)
 	}
 	if (client) requestAnimationFrame(animationFrame)
 	
 	function animate(key) {
-		if (client) players[key].canvas.movement.clearRect(0, 0, w, h)
 		charge('movement', 'buildings', key)
 		
 		if (client) {

@@ -24,7 +24,7 @@ export function createMatrix(vertical, horizontal) {
 	return matrix
 }
 
-export function canvas(container, className, w, h, z, top) {
+export function ctx(container, className, w, h, z, top) {
 	var ratio = PIXEL_RATIO
 	var canvas = document.createElement('canvas')
 	canvas.className = className

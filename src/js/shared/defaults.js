@@ -1,4 +1,4 @@
-export const defaultEnergy = 100
+export const defaultEnergy = 10000
 export const defaultHealth = 100
 export const defaultDamage = 20
 export const defaultAbsorb = 20
@@ -49,7 +49,8 @@ export const defaultBuildings = {
 	well: {
 		cost: 25,
 		linkable: true,
-		producer: true
+		producer: true,
+		income: 0.5
 	},
 	factory: {
 		cost: 50,
