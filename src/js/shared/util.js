@@ -49,3 +49,12 @@ export function isPathOpen(o) {
 	
 	return false
 }
+
+export function findOpenPath(o) {
+	for (var i = 0; i < o.height - o.gm; i++) {
+		var path = o.finder.findPath(o.start[0], o.start[1], o.end[0], i, o.grid.clone())
+		if (path.length) return path
+	}
+	
+	return []
+}
