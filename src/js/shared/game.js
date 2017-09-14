@@ -48,8 +48,6 @@ export function game() {
 	
 	// player
 	function Player (options) {
-		const self = this
-		
 		this.id = options.id
 		this.buildings = []
 		this.elements = []
@@ -426,11 +424,11 @@ export function game() {
 	}
 	
 	function link() {
+		canvas.link.clearRect(0, 0, w, h)
+		
 		for (var key in players) {
 			var player = players[key]
 			var links = player.links
-			
-			canvas.link.clearRect(0, 0, w, h)
 			
 			for (var l = 0; l < links.length; l++) {
 				var from = links[l].from
