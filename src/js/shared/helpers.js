@@ -16,3 +16,16 @@ export function getUrlParams(parameter) {
 	var url = new URL(window.location.href)
 	return url.searchParams.get(parameter)	
 }
+
+export function isCached(objects, object) {
+	for (var i = 0; i < objects.length; i++) {
+		var count = Object.keys(object).length
+		var found = 0
+		for (var j = 0; j < count; j++) {
+			var key = Object.keys(object)[j]
+			if (objects[i][key] == object[key]) found++
+		}
+
+		if (found == count) return objects[i].canvas
+	}
+}
