@@ -3,7 +3,7 @@ var PF = require('pathfinding')
 
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
-import { isNear, setWalkableAt, isLinked, isPathOpen } from './util'
+import { isNear, setWalkableAt, isLinked, findOpenPath } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut } from './draw'
 
 export function game() {
@@ -48,8 +48,6 @@ export function game() {
 	
 	// player
 	function Player (options) {
-		const self = this
-		
 		this.id = options.id
 		this.buildings = []
 		this.elements = []
@@ -426,11 +424,11 @@ export function game() {
 	}
 	
 	function link() {
+		canvas.link.clearRect(0, 0, w, h)
+		
 		for (var key in players) {
 			var player = players[key]
 			var links = player.links
-			
-			canvas.link.clearRect(0, 0, w, h)
 			
 			for (var l = 0; l < links.length; l++) {
 				var from = links[l].from
@@ -687,15 +685,23 @@ export function game() {
 		var object = objects[p]
 		for (var r in players) {
 			if (key != r) {
-				var start = [objects[p].start[0], objects[p].start[1]]
-				var end = [objects[p].end[0], objects[p].end[1]]
+				var start = objects[p].start
+				var end = objects[p].end
+				
+				console.log('new element')
 				
 				//change direction to right
 				if (r == 'player2') end[0] = horizontal - gm
 				
 				// make a temporary hole into the grid
-				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], true)
+				grid = setWalkableAt(grid, gm, start[0], start[1], true)
+				
+				// see if a path was found using default positions
 				var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+				
+				//if something is blocking, then find a better path
+				if (!path.length) path = findOpenPath({ finder: finder, grid: grid, gm: gm, height: vertical, start: start, end: end })
+				
 				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
 				
 				var element = {
