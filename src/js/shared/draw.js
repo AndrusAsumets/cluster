@@ -10,7 +10,7 @@ var PIXEL_RATIO = (function () {
 				ctx.msBackingStorePixelRatio ||
 				ctx.oBackingStorePixelRatio ||
 				ctx.backingStorePixelRatio || 1
-	
+
 	    return dpr / bsr
 	} catch(err) {}
 })()
@@ -19,7 +19,7 @@ export function createMatrix(vertical, horizontal) {
 	var matrix = []
 	for (var i = 0; i < vertical - 1; i++) {
 		matrix.push([])
-		
+
 		for (var j = 0; j < horizontal - 1; j++) {
 			matrix[i].push(0)
 		}
@@ -45,7 +45,7 @@ export function ctx(container, className, w, h, z, top) {
 
 export function line(o) {
 	var alpha = o.alpha ? o.alpha : 1
-	
+
 	o.ctx.setLineDash(o.lineDash ? o.lineDash: [])
 	o.ctx.beginPath()
 	o.ctx.moveTo(o.x1, o.y1)
@@ -58,11 +58,11 @@ export function line(o) {
 
 export function rectangle(o) {
 	var alpha = o.alpha ? o.alpha : 1
-	
+
 	o.ctx.beginPath()
 	o.ctx.rect(o.x1, o.y1, o.x2, o.y2)
 	o.ctx.fillStyle = o.shape.fillStyle(alpha)
-	o.ctx.fill()	
+	o.ctx.fill()
 	o.ctx.closePath()
 }
 
@@ -75,7 +75,7 @@ export function dot(o) {
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
-	
+
 	/*
 	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, alpha: alpha, fillStyle: fillStyle })
 	if (cacheIndex) {
@@ -85,7 +85,7 @@ export function dot(o) {
 
 	var canvas = document.createElement('canvas')
 	var ctx = canvas.getContext('2d')
-	
+
 	canvas.width = o.x2
 	canvas.height = o.y2
 	*/
@@ -96,7 +96,7 @@ export function dot(o) {
 	o.ctx.fillStyle = fillStyle
 	o.ctx.fill()
 	o.ctx.closePath()
-	
+
 	/*
 	var image = new Image()
 	image.onload = function() {
@@ -123,7 +123,7 @@ export function donut(o) {
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
-	
+
 	/*
 	var cacheIndex = isCached(donuts, { type: 'donut', radians: radians, alpha: alpha, fillStyle: fillStyle })
 	if (cacheIndex) {
@@ -134,7 +134,7 @@ export function donut(o) {
 
 	var canvas = document.createElement('canvas')
 	var ctx = canvas.getContext('2d')
-	
+
 	canvas.width = o.x2
 	canvas.height = o.y2
 	*/
@@ -147,7 +147,7 @@ export function donut(o) {
 	o.ctx.fillStyle = fillStyle
 	o.ctx.fill()
 	o.ctx.closePath()
-	
+
 	/*
 	var image = new Image()
 	image.onload = function() {
@@ -171,7 +171,7 @@ export function circle(o) {
 	var radius = Math.sqrt(o.x2 + o.y2)
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var alpha = o.alpha ? o.alpha : 1
-	
+
 	o.ctx.beginPath()
 	o.ctx.moveTo(centerX, centerY)
 	o.ctx.arc(centerX, centerY, radius * 1.25, 0, degreesToRadians(-degrees), true)
@@ -188,7 +188,7 @@ export function circle(o) {
 	o.ctx.fill()
 	o.ctx.closePath()
 	o.ctx.restore()
-	
+
 	o.ctx.beginPath()
 	o.ctx.moveTo(centerX, centerY)
 	o.ctx.arc(centerX, centerY, radius * 0.9, 0, 2 * Math.PI, true)
@@ -199,13 +199,14 @@ export function circle(o) {
 
 var images = []
 export function image(o) {
+	const size = 3.5
 	var cacheIndex = isCached(images, { type: o.type })
-	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(images[cacheIndex].image, o.x1 + o.width / 8, o.y1 + o.height / 8, o.width - o.width / 4, o.height - o.height / 4)
-	
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(images[cacheIndex].image, o.x1 + o.width / size, o.y1 + o.height / size, o.width - o.width / (size / 2), o.height - o.height / (size / 2))
+
 	var image = new Image()
 	image.onload = function() {
-		o.ctx.drawImage(image, o.x1 + o.width / 8, o.y1 + o.height / 8, o.width - o.width / 4, o.height - o.height / 4)
-		
+		o.ctx.drawImage(image, o.x1 + o.width / size, o.y1 + o.height / size, o.width - o.width / (size / 2), o.height - o.height / (size / 2))
+
 		images.push({
 			type: o.type,
 			image: image

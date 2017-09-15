@@ -25,14 +25,18 @@ export const defaultShapes = {
 		file: '/public/images/turbine.svg'
 	},
 	factory: {
-		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
+		//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+		//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/factory.svg'
 	},
-	laser: {
-		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
-		file: '/public/images/laser.svg'
+	shield: {
+		//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
+		//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/shield.svg'
 	}
 }
 
@@ -59,7 +63,7 @@ export const defaultBuildings = {
 		cost: 50,
 		offensive: true
 	},
-	laser: {
+	shield: {
 		cost: 50,
 		defensive: true
 	}
