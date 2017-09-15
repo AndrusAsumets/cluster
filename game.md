@@ -1,20 +1,24 @@
 cluster.game
 
+
 NOW:
-* game saving to file/database
+* optimize engine
+* recharge circle for buildings
+* upgrades (also add a bar that displays upgrade level)
+* different sizes for the bubbles that correspond to strength/power
 * unlinking
-* factory (trains elements -> walkers, flyers)
-* pointing for the kamikazes and flares
+* selling
+* laboratory (train 4 types of skills)
+* airport
+* pointing attack for kamikazes, missiles and flares?
+* health bar
 * booster (decreases recharge time)
-* radar (increases range on lasers and sends flares)?
 * fog of war?
-* silo (element storage for queueing)?
+* radar (increases range on lasers and sends flares?)
 
 PHASE1:
-* store game data to file/database & playback
 * game balance & upgrades
-* different sizes for the bubbles that correspond to strength/power
-* click on a bubble, then press on a factory to release the power
+* store game data to file/database & playback
 * game rooms
 * lobby
 * deployment
@@ -119,11 +123,11 @@ fire    |  0        |  1        |  1       |  0        |  2       |  1       |  
 wind    |  0        |  1        |  2       |  0        |  1       |  0       |  1        |  1        | 6
 
 
-password auth: 
-https://www.digitalocean.com/community/tutorials/how-to-set-up-password-authentication-with-nginx-on-ubuntu-14-04 
-nginx config edit: 
-sudo nano /etc/nginx/sites-enabled/default 
-nginx config: 
+password auth:
+https://www.digitalocean.com/community/tutorials/how-to-set-up-password-authentication-with-nginx-on-ubuntu-14-04
+nginx config edit:
+sudo nano /etc/nginx/sites-enabled/default
+nginx config:
 server {
     listen 80;
 
@@ -163,10 +167,10 @@ server {
     }
 }
 
-restart nginx: 
-sudo service nginx restart 
+restart nginx:
+sudo service nginx restart
 
-close ports: 
+close ports:
 iptables -A INPUT -p tcp --dport 3000 -s 192.168.0.0/24 -j ACCEPT
 iptables -A INPUT -p tcp --dport 3000 -s 127.0.0.0/8 -j ACCEPT
 iptables -A INPUT -p tcp --dport 3000 -j DROP
