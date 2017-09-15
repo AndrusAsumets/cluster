@@ -4,7 +4,7 @@ var PF = require('pathfinding')
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, isLinked, findOpenPath } from './util'
-import { createMatrix, ctx, line, rectangle, circle, dot, donut } from './draw'
+import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
 
 export function game() {
 	// gameplay
@@ -337,7 +337,7 @@ export function game() {
 			for (var building in defaultBuildings) {
 				rectangle({
 					ctx: canvas.menu,
-					shape: defaultShapes.dark,
+					shape: defaultShapes.light,
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
@@ -345,6 +345,7 @@ export function game() {
 					alpha: 0.1
 				})
 				
+				/*
 				donut({
 					ctx: canvas.menu,
 					shape: defaultShapes[building],
@@ -354,7 +355,20 @@ export function game() {
 					y2: blockHeight,
 					percentage: 100
 				})
+				*/
 				
+				image({
+					ctx: canvas.menu,
+					type: building,
+					file: defaultShapes[building].file,
+					x1: (xBlock + i) * blockWidth,
+					y1: yBlock * blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					percentage: 100,
+					type: building
+				})
+					
 				i++
 			}
 		}
@@ -372,6 +386,7 @@ export function game() {
 					alpha: 0.1
 				})
 				
+				/*
 				donut({
 					ctx: canvas.menu,
 					shape: defaultShapes[building],
@@ -379,6 +394,18 @@ export function game() {
 					y1: yBlock * blockHeight,
 					x2: blockWidth,
 					y2: blockHeight,
+					percentage: 100
+				})
+				*/
+				
+				image({
+					ctx: canvas.menu,
+					type: building,
+					file: defaultShapes[building].file,
+					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
+					y1: yBlock * blockHeight,
+					width: blockWidth,
+					height: blockHeight,
 					percentage: 100
 				})
 				
@@ -643,7 +670,7 @@ export function game() {
 				var y1 = projectiles[p].path[1][1]
 				
 				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
+					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage / 4
 					break
 				}
 			}
@@ -669,6 +696,7 @@ export function game() {
 				}
 			}
 			
+			/*
 			if (client) donut({
 				ctx: canvas[layer],
 				shape: defaultShapes[object.type],
@@ -676,6 +704,18 @@ export function game() {
 				y1: object.start[1] * blockHeight / gm,
 				x2: blockWidth,
 				y2: blockHeight,
+				percentage: object.charge
+			})
+			*/
+			
+			if (client) image({
+				ctx: canvas[layer],
+				type: object.type,
+				file: defaultShapes[object.type].file,
+				x1: object.start[0] * blockWidth / gm,
+				y1: object.start[1] * blockHeight / gm,
+				width: blockWidth,
+				height: blockHeight,
 				percentage: object.charge
 			})
 		}
@@ -687,8 +727,6 @@ export function game() {
 			if (key != r) {
 				var start = objects[p].start
 				var end = objects[p].end
-				
-				console.log('new element')
 				
 				//change direction to right
 				if (r == 'player2') end[0] = horizontal - gm
@@ -917,7 +955,6 @@ export function game() {
 	
 	function animate(key) {
 		charge('movement', 'buildings', key)
-		
 		if (client) {
 			move('movement', 'elements', key)
 			move('movement', 'projectiles', key)

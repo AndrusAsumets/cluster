@@ -3,13 +3,12 @@ cluster.game
 NOW:
 * game saving to file/database
 * unlinking
-* factory (trains elements -> walkers, flyers, kamikazes -> wind, fire, earth, water)
+* factory (trains elements -> walkers, flyers)
 * pointing for the kamikazes and flares
 * booster (decreases recharge time)
-* laser (defends agains elements)
-* radar (increases range on lasers and sends flares)
+* radar (increases range on lasers and sends flares)?
 * fog of war?
-* silo (element storage for queueing)
+* silo (element storage for queueing)?
 
 PHASE1:
 * store game data to file/database & playback

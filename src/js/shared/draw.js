@@ -68,78 +68,101 @@ export function rectangle(o) {
 
 var dots = []
 export function dot(o) {
-	var x = o.x2 / 2
-	var y = o.y2 / 2
+	var x = o.x1 + o.x2 / 2
+	var y = o.y1 + o.y2 / 2
 	var radius = Math.sqrt(o.x2 + o.y2)
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
 	
-	var cached = isCached(donuts, { type: 'dot', radians: radians, alpha: alpha, fillStyle: fillStyle })
-	if (cached) return o.ctx.drawImage(cached, o.x1, o.y1)
+	/*
+	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, alpha: alpha, fillStyle: fillStyle })
+	if (cacheIndex) {
+		o.ctx.drawImage(dots[cacheIndex].canvas, o.x1, o.y1)
+		return
+	}
 
 	var canvas = document.createElement('canvas')
 	var ctx = canvas.getContext('2d')
 	
 	canvas.width = o.x2
 	canvas.height = o.y2
+	*/
 
-	ctx.beginPath()
-	ctx.moveTo(x, y)
-	ctx.arc(x, y, radius / 2, 0, radians, false)
-	ctx.fillStyle = fillStyle
-	ctx.fill()
-	ctx.closePath()
+	o.ctx.beginPath()
+	o.ctx.moveTo(x, y)
+	o.ctx.arc(x, y, radius / 2, 0, radians, false)
+	o.ctx.fillStyle = fillStyle
+	o.ctx.fill()
+	o.ctx.closePath()
 	
-	dots.push({
-		type: 'dot',
-		canvas: ctx.canvas,
-		radians: radians,
-		alpha: alpha,
-		fillStyle: fillStyle
-	})
+	/*
+	var image = new Image()
+	image.onload = function() {
+		dots.push({
+			type: 'dot',
+			canvas: image,
+			radians: radians,
+			alpha: alpha,
+			fillStyle: fillStyle
+		})
+	}
+	image.src = ctx.canvas
 
 	o.ctx.drawImage(ctx.canvas, o.x1, o.y1)
+	*/
 }
 
 var donuts = []
 export function donut(o) {
-	var x = o.x2 / 2
-	var y = o.y2 / 2
+	var x = o.x1 + o.x2 / 2
+	var y = o.y1 + o.y2 / 2
 	var radius = Math.sqrt(o.x2 + o.y2)
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
 	
-	var cached = isCached(donuts, { type: 'donut', radians: radians, alpha: alpha, fillStyle: fillStyle })
-	if (cached) return o.ctx.drawImage(cached, o.x1, o.y1)
+	/*
+	var cacheIndex = isCached(donuts, { type: 'donut', radians: radians, alpha: alpha, fillStyle: fillStyle })
+	if (cacheIndex) {
+
+		o.ctx.drawImage(donuts[cacheIndex].canvas, o.x1, o.y1)
+		return
+	}
 
 	var canvas = document.createElement('canvas')
 	var ctx = canvas.getContext('2d')
 	
 	canvas.width = o.x2
 	canvas.height = o.y2
+	*/
 
-	ctx.beginPath()
-	ctx.moveTo(x, y)
-	ctx.arc(x, y, radius * 1.25, 0, 2 * Math.PI, false)
-	ctx.arc(x, y, radius * 1.1, 0, 2 * Math.PI, true)
-	ctx.arc(x, y, radius / 1.1, 0, radians, true)
-	ctx.fillStyle = fillStyle
-	ctx.fill()
-	ctx.closePath()
+	o.ctx.beginPath()
+	o.ctx.moveTo(x, y)
+	o.ctx.arc(x, y, radius * 1.25, 0, 2 * Math.PI, false)
+	o.ctx.arc(x, y, radius * 1.1, 0, 2 * Math.PI, true)
+	o.ctx.arc(x, y, radius / 1.1, 0, radians, true)
+	o.ctx.fillStyle = fillStyle
+	o.ctx.fill()
+	o.ctx.closePath()
 	
-	donuts.push({
-		type: 'donut',
-		canvas: ctx.canvas,
-		radians: radians,
-		alpha: alpha,
-		fillStyle: fillStyle
-	})
+	/*
+	var image = new Image()
+	image.onload = function() {
+		donuts.push({
+			type: 'donut',
+			canvas: image,
+			radians: radians,
+			alpha: alpha,
+			fillStyle: fillStyle
+		})
+	}
+	image.src = ctx.canvas
 
 	o.ctx.drawImage(ctx.canvas, o.x1, o.y1)
+	*/
 }
 
 export function circle(o) {
@@ -174,12 +197,21 @@ export function circle(o) {
 	o.ctx.closePath()
 }
 
+var images = []
 export function image(o) {
-	var img = new Image()
-	img.onload = function() {
-		o.ctx.drawImage(img, o.x1, o.y1, o.width, o.height)
+	var cacheIndex = isCached(images, { type: o.type })
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(images[cacheIndex].image, o.x1 + o.width / 8, o.y1 + o.height / 8, o.width - o.width / 4, o.height - o.height / 4)
+	
+	var image = new Image()
+	image.onload = function() {
+		o.ctx.drawImage(image, o.x1 + o.width / 8, o.y1 + o.height / 8, o.width - o.width / 4, o.height - o.height / 4)
+		
+		images.push({
+			type: o.type,
+			image: image
+		})
 	}
-	img.src = 'public/images/' + o.file
+	image.src = o.file
 }
 
 function degreesToRadians(degrees) {

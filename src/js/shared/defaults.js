@@ -19,17 +19,20 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' }
 	},
-	well: {
+	turbine: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' }
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/turbine.svg'
 	},
 	factory: {
 		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }
+		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
+		file: '/public/images/factory.svg'
 	},
 	laser: {
 		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }
+		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
+		file: '/public/images/laser.svg'
 	}
 }
 
@@ -46,7 +49,7 @@ export const defaultBuildings = {
 		offensive: false
 	},
 	*/
-	well: {
+	turbine: {
 		cost: 25,
 		linkable: true,
 		producer: true,

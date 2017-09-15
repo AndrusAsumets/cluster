@@ -26,6 +26,6 @@ export function isCached(objects, object) {
 			if (objects[i][key] == object[key]) found++
 		}
 
-		if (found == count) return objects[i].canvas
+		if (found == count) return i
 	}
 }

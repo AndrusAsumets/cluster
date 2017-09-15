@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const Koa = require('koa')
 const app = new Koa()
+const serve = require('koa-static')
 const IO = require('koa-socket')
 const io = new IO()
 import { game } from './src/js/shared/game'
@@ -20,6 +21,7 @@ io.on('message', (context, data) => {
 	io.broadcast('message', data)	
 })
 
+app.use(serve('./public'), { hidden: true })
 app.listen(PORT)
 
 global.window = null
