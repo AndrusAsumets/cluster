@@ -40,10 +40,12 @@ html, body {
     //transform: rotateX(30deg) rotateY(30deg) rotateZ(60deg);
 }
 
-.menu {
+.header {
 	display: flex;
 	height: 60px;
-	color: rgba(255, 255, 255, 0.5);
+	width: 100vw;
+	background-color: rgba(0, 0, 0, 0.1);
+	color: rgba(255, 255, 255, 1);
 }
 
 .container {
