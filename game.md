@@ -2,8 +2,6 @@ cluster.game
 
 
 NOW:
-* optimize engine
-* recharge circle for buildings
 * upgrades (also add a bar that displays upgrade level)
 * different sizes for the bubbles that correspond to strength/power
 * unlinking
@@ -25,6 +23,7 @@ PHASE1:
 * human testing
 
 PHASE2:
+* optimize engine
 * emit only to host option
 * menu & player switching for mobile
 * game modes (2 player, 4 player)

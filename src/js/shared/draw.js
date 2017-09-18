@@ -60,7 +60,7 @@ export function rectangle(o) {
 	var alpha = o.alpha ? o.alpha : 1
 
 	o.ctx.beginPath()
-	o.ctx.rect(o.x1, o.y1, o.x2, o.y2)
+	o.ctx.rect(o.x1, o.y1, o.width, o.height)
 	o.ctx.fillStyle = o.shape.fillStyle(alpha)
 	o.ctx.fill()
 	o.ctx.closePath()
@@ -187,13 +187,24 @@ export function circle(o) {
 
 var images = []
 export function image(o) {
-	const size = 3.5
 	var cacheIndex = isCached(images, { type: o.type })
-	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(images[cacheIndex].image, o.x1 + o.width / size, o.y1 + o.height / size, o.width - o.width / (size / 2), o.height - o.height / (size / 2))
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(
+		images[cacheIndex].image,
+		o.x1 + o.width / o.size,
+		o.y1 + o.height / o.size,
+		o.width - o.width / (o.size / 2),
+		o.height - o.height / (o.size / 2)
+	)
 
 	var image = new Image()
 	image.onload = function() {
-		o.ctx.drawImage(image, o.x1 + o.width / size, o.y1 + o.height / size, o.width - o.width / (size / 2), o.height - o.height / (size / 2))
+		o.ctx.drawImage(
+			image,
+			o.x1 + o.width / o.size,
+			o.y1 + o.height / o.size,
+			o.width - o.width / (o.size / 2),
+			o.height - o.height / (o.size / 2)
+		)
 
 		images.push({
 			type: o.type,

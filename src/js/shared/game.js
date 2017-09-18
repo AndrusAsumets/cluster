@@ -8,9 +8,9 @@ import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from '.
 
 export function game() {
 	// gameplay
-	const cycle = 1000 // how often should the events happen
-	const recharge = 15 * cycle // how often should the buildings create new elements
-	const fps = cycle / 60
+	const tick = 1000 // how often should the events happen
+	const cooldown = 15 * tick // how often should the buildings create new elements
+	const fps = tick / 60
 	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
@@ -270,8 +270,8 @@ export function game() {
 				shape: defaultShapes.light,
 				x1: xBlock * blockWidth,
 				y1: yBlock * blockHeight,
-				x2: blockWidth,
-				y2: blockHeight,
+				width: blockWidth,
+				height: blockHeight,
 				alpha: 0.1
 			})
 
@@ -294,6 +294,7 @@ export function game() {
 				y1: yBlock * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
+				size: 3.5,
 				percentage: 100
 			})
 		}
@@ -353,8 +354,8 @@ export function game() {
 					shape: defaultShapes.light,
 					x1: (xBlock + i) * blockWidth,
 					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
+					width: blockWidth,
+					height: blockHeight,
 					alpha: 0.1
 				})
 
@@ -378,6 +379,7 @@ export function game() {
 					y1: yBlock * blockHeight,
 					width: blockWidth,
 					height: blockHeight,
+					size: 3.5,
 					percentage: 100,
 					type: building
 				})
@@ -394,8 +396,8 @@ export function game() {
 					shape: defaultShapes.light,
 					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
 					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
+					width: blockWidth,
+					height: blockHeight,
 					alpha: 0.1
 				})
 
@@ -419,6 +421,7 @@ export function game() {
 					y1: yBlock * blockHeight,
 					width: blockWidth,
 					height: blockHeight,
+					size: 3.5,
 					percentage: 100
 				})
 
@@ -696,7 +699,7 @@ export function game() {
 			var object = objects[p]
 
 			if (object.charge < 100) {
-				object.charge = object.charge + convertRange(1 / fps, [0, recharge / cycle], [0, 100])
+				object.charge = object.charge + convertRange(1 / fps, [0, cooldown / tick], [0, 100])
 				objects[p].charge = object.charge
 			}
 
@@ -721,16 +724,38 @@ export function game() {
 			})
 			*/
 
-			if (client) image({
-				ctx: canvas[layer],
-				type: object.type,
-				file: defaultShapes[object.type].file,
-				x1: object.start[0] * blockWidth / gm,
-				y1: object.start[1] * blockHeight / gm,
-				width: blockWidth,
-				height: blockHeight,
-				percentage: object.charge
-			})
+			if (client) {
+				var size = 3.5
+				
+				image({
+					ctx: canvas[layer],
+					type: object.type,
+					file: defaultShapes[object.type].file,
+					x1: object.start[0] * blockWidth / gm,
+					y1: object.start[1] * blockHeight / gm,
+					width: blockWidth,
+					height: blockHeight,
+					size: size,
+					percentage: object.charge
+				})
+				
+				if (object.offensive) {
+					var marginY = blockHeight / size
+					var width = blockWidth / size / 3
+					var maxHeight = blockHeight - marginY * 2
+					var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
+					
+					rectangle({
+						ctx: canvas[layer],
+						shape: defaultShapes.light,
+						x1: object.start[0] * blockWidth / gm + width,
+						y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
+						width: width,
+						height: height,
+						alpha: 0.75
+					})
+				}
+			}
 		}
 	}
 
@@ -852,8 +877,8 @@ export function game() {
 			var x2 = object.path[1][0] * blockWidth / gm
 			var y2 = object.path[1][1] * blockHeight / gm
 			var dt = (new Date).getTime() - time
-			var dx = x1 - (x1 - x2) * dt / cycle
-			var dy = y1 - (y1 - y2) * dt / cycle
+			var dx = x1 - (x1 - x2) * dt / tick
+			var dy = y1 - (y1 - y2) * dt / tick
 
 			if (client) {
 				if (object.type) {
@@ -951,7 +976,7 @@ export function game() {
 		}
 
 		if (host && !gameOver) broadcastEnergy()
-	}, cycle)
+	}, tick)
 
 	if (host) {
 		setInterval(function() {
