@@ -1,6 +1,6 @@
-import { SET_SELL } from './actions'
+import { SET_UPGRADE, SET_SELL } from './actions'
 
-export const defaultEnergy = 100
+export const defaultEnergy = 1000
 export const defaultHealth = 100
 export const defaultDamage = 20
 export const defaultAbsorb = 20
@@ -40,6 +40,9 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
 	},
+	upgrade: {
+		file: '/public/images/upgrade.svg'
+	},
 	sell: {
 		file: '/public/images/sell.svg'
 	}
@@ -78,6 +81,9 @@ export const defaultBuildings = {
 }
 
 export const defaultOptions = {
+	upgrade: {
+		action: SET_UPGRADE
+	},
 	sell: {
 		action: SET_SELL
 	}

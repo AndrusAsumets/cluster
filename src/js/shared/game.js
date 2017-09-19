@@ -1,12 +1,12 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_SELL } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
-import { sell } from './dynamic'
+import { upgrade, sell } from './dynamic'
 
 export function game() {
 	// gameplay
@@ -208,6 +208,10 @@ export function game() {
 						else players[playerId].buildings[buildingIndex].charge = 0
 					}
 				}
+				break
+				
+			case SET_UPGRADE:
+				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
 				break
 			
 			case SET_SELL:

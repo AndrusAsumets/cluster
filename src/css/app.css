@@ -72,8 +72,6 @@ html, body {
 .score-player1,
 .container:nth-child(2) > .name {
 	margin-left: auto;
-	text-align: right;
-	justify-content: space-between;
 }
 
 .scorebar-player1,
