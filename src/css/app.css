@@ -49,23 +49,46 @@ html, body {
 }
 
 .container {
+	position: relative;
 	display: flex;
 	width: 50vw;
+	padding: 16px;
 }
 
 .container:nth-child(2) {
 	border-left: 2px solid rgba(0, 0, 0, 0.25);
 }
 
-.container > div {
-	padding: 16px;
+.container > .score-player1,
+.container > .score-player2 {
 	display: flex;
-	width: 25vw;
 }
 
-.container > div:nth-child(even) {
-	display: block;
+.container > .name {
+	display: flex;
+	align-items: center;
+}
+
+.score-player1,
+.container:nth-child(2) > .name {
+	margin-left: auto;
 	text-align: right;
+	justify-content: space-between;
+}
+
+.scorebar-player1,
+.scorebar-player2 {
+	position: absolute;
+	bottom: 0;
+	border-bottom: 1px solid rgba(0, 190, 229, 1);
+}
+
+.scorebar-player1 {
+	right: 0;
+}
+
+.scorebar-player2 {
+	left: 0;
 }
 
 .player {

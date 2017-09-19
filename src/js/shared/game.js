@@ -156,6 +156,7 @@ export function game() {
 
 						players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
+						document.getElementsByClassName('scorebar-' + key)[0].style.width = w / 2 * data[key].energyShare + 'px'
 					}
 				}
 				break
@@ -250,7 +251,8 @@ export function game() {
 		
 		// if a building was found on that block, show the options popup
 		else if (
-			buildingIsFound
+			buildingIsFound &&
+			!gameMenu.generic
 		) {
 			gameMenu.x = xBlock
 			gameMenu.y = yBlock
@@ -320,14 +322,8 @@ export function game() {
 			!gameMenu.x &&
 			!gameMenu.y
 		) {
-			if (position == 'left') {
-				buildGenericPopup(player, xBlock, yBlock, position)
-				gameMenu = { x: xBlock, y: yBlock}
-			}
-			else {
-				buildGenericPopup(player, xBlock, yBlock, position)
-				gameMenu = { x: xBlock, y: yBlock}
-			}
+			buildGenericPopup(player, xBlock, yBlock, position)
+			gameMenu = { x: xBlock, y: yBlock, generic: true }
 		}
 
 		// otherwise just clear the menu
@@ -989,6 +985,12 @@ export function game() {
 		for (var p in players) {
 			currentPlayer[p] = {}
 			currentPlayer[p].energy = players[p].energy
+			
+			for (var r in players) {
+				if (p == r) continue
+				
+				currentPlayer[p].energyShare = players[p].energy / players[r].energy
+			}
 		}
 
 		socket.emit('message', { action: SET_ENERGY, data: currentPlayer })
