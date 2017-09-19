@@ -245,7 +245,7 @@ export function game() {
 		if (
 			gameMenu.options
 		) {
-			gameMenu.direction = 'toRight'
+			gameMenu.direction = gameMenu.position == 'left' ? 'toRight' : 'toLeft'
 			selectFromOptionsPopup({
 				player: player,
 				gameMenu: gameMenu,
@@ -260,6 +260,7 @@ export function game() {
 			buildingIsFound &&
 			!gameMenu.generic
 		) {
+			gameMenu.position = position
 			gameMenu.x = xBlock
 			gameMenu.y = yBlock
 			gameMenu.fromBuilding = building
@@ -463,7 +464,7 @@ export function game() {
 		if (o.position == 'left') {
 			var i = 0
 
-			options.map(function (option, i) {
+			options.map(function(option, i) {
 				rectangle({
 					ctx: canvas.menu,
 					shape: defaultShapes.background,
@@ -498,6 +499,47 @@ export function game() {
 				i++
 			})
 		}
+
+		else if (o.position == 'right') {
+			var i = 0
+
+			var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
+
+			reversedOptions.map(function(option, i) {
+				rectangle({
+					ctx: canvas.menu,
+					shape: defaultShapes.background,
+					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 1
+				})
+
+				rectangle({
+					ctx: canvas.menu,
+					shape: defaultShapes.light,
+					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 0.25
+				})
+
+				image({
+					ctx: canvas.menu,
+					type: option,
+					file: defaultShapes[option].file,
+					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					size: 4
+				})
+
+				i++
+			})
+		}
 	}
 
 	function selectFromOptionsPopup(o) {
@@ -509,11 +551,11 @@ export function game() {
 			action = defaultOptions[key].action
 		}
 		else {
-			index = xBlock - gameMenu.x + Object.keys(defaultOptions).length - 1
-			type = Object.keys(defaultBuildings)[index]
-			id = player.elements.length
-			start = [gameMenu.x * gm, gameMenu.y * gm]
-			end = [0, gameMenu.y * gm]
+			var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
+			var index = o.xBlock - o.gameMenu.x + Object.keys(defaultOptions).length - 1
+			var key = reversedOptions[index]
+			if (!key) return console.log('no key found')
+			action = defaultOptions[key].action
 		}
 
 		var message = {
