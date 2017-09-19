@@ -7,7 +7,7 @@ export const defaultAbsorb = 20
 
 export const defaultShapes = {
 	background: {
-		fillStyle: function (alpha) { return 'rgba(25, 29, 49,' + alpha + ')' }
+		fillStyle: function (alpha) { return 'rgba(14, 10, 46,' + alpha + ')' }
 	},
 	dark: {
 		fillStyle: function (alpha) { return 'rgba(11, 7, 35,' + alpha + ')' },

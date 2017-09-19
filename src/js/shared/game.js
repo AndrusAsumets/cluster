@@ -156,7 +156,7 @@ export function game() {
 
 						players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
-						
+
 						var share = convertRange(data[key].energyShare, [0, 100], [0, w / 2])
 						document.getElementsByClassName('scorebar-' + key)[0].style.width = share + 'px'
 					}
@@ -209,11 +209,11 @@ export function game() {
 					}
 				}
 				break
-				
+
 			case SET_UPGRADE:
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
 				break
-			
+
 			case SET_SELL:
 				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
 				break
@@ -240,7 +240,7 @@ export function game() {
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
-		
+
 		// build options popup that goes to right
 		if (
 			gameMenu.options
@@ -248,13 +248,13 @@ export function game() {
 			gameMenu.direction = 'toRight'
 			selectFromOptionsPopup({
 				player: player,
-				gameMenu: gameMenu, 
+				gameMenu: gameMenu,
 				xBlock: xBlock,
 				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
 			})
 			gameMenu = {}
 		}
-		
+
 		// if a building was found on that block, show the options popup
 		else if (
 			buildingIsFound &&
@@ -265,7 +265,7 @@ export function game() {
 			gameMenu.fromBuilding = building
 			gameMenu.linking = true
 			gameMenu.options = true
-			
+
 			buildOptionsPopup({
 				player: player,
 				xBlock: xBlock,
@@ -275,7 +275,7 @@ export function game() {
 				building: building
 			})
 		}
-	
+
 		// if from and to buildings were found, then link
 		else if (
 			gameMenu.fromBuilding &&
@@ -434,10 +434,10 @@ export function game() {
 
 		socket.emit('message', message)
 	}
-	
+
 	function buildOptionsPopup(o) {
 		var options = Object.keys(defaultOptions)
-		
+
 		// make the building visually active
 		rectangle({
 			ctx: canvas.menu,
@@ -466,14 +466,14 @@ export function game() {
 			options.map(function (option, i) {
 				rectangle({
 					ctx: canvas.menu,
-					shape: defaultShapes.dark,
+					shape: defaultShapes.background,
 					x1: (o.xBlock + i) * blockWidth,
 					y1: o.yBlock * blockHeight - blockHeight,
 					width: blockWidth,
 					height: blockHeight,
 					alpha: 1
 				})
-				
+
 				rectangle({
 					ctx: canvas.menu,
 					shape: defaultShapes.light,
@@ -481,7 +481,7 @@ export function game() {
 					y1: o.yBlock * blockHeight - blockHeight,
 					width: blockWidth,
 					height: blockHeight,
-					alpha: 0.1
+					alpha: 0.25
 				})
 
 				image({
@@ -499,7 +499,7 @@ export function game() {
 			})
 		}
 	}
-	
+
 	function selectFromOptionsPopup(o) {
 		var action
 		if (o.gameMenu.direction == 'toRight') {
@@ -523,7 +523,7 @@ export function game() {
 
 		socket.emit('message', message)
 	}
-	
+
 
 	function link() {
 		canvas.link.clearRect(0, 0, w, h)
@@ -774,7 +774,7 @@ export function game() {
 
 			if (client) {
 				var size = 3.5
-				
+
 				image({
 					ctx: canvas[layer],
 					type: object.type,
@@ -786,13 +786,13 @@ export function game() {
 					size: size,
 					percentage: object.charge
 				})
-				
+
 				if (object.offensive) {
 					var marginY = blockHeight / size
 					var width = blockWidth / size / 3
 					var maxHeight = blockHeight - marginY * 2
 					var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
-					
+
 					rectangle({
 						ctx: canvas[layer],
 						shape: defaultShapes.light,
@@ -991,10 +991,10 @@ export function game() {
 		for (var p in players) {
 			currentPlayer[p] = {}
 			currentPlayer[p].energy = players[p].energy
-			
+
 			for (var r in players) {
 				if (p == r) continue
-				
+
 				currentPlayer[p].energyShare = players[p].energy / players[r].energy * 100
 			}
 		}
