@@ -156,7 +156,7 @@ export function game() {
 
 						players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
-						document.getElementsByClassName('scorebar-' + key)[0].style.width = w / 2 * data[key].energyShare + 'px'
+						document.getElementsByClassName('scorebar-' + key)[0].style.width = w / 4 * data[key].energyShare + 'px'
 					}
 				}
 				break
