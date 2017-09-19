@@ -53,6 +53,10 @@ html, body {
 	width: 50vw;
 }
 
+.container:nth-child(2) {
+	border-left: 2px solid rgba(0, 0, 0, 0.25);
+}
+
 .container > div {
 	padding: 16px;
 	display: flex;

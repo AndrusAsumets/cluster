@@ -1,3 +1,5 @@
+import { SET_SELL } from './actions'
+
 export const defaultEnergy = 10000
 export const defaultHealth = 100
 export const defaultDamage = 20
@@ -37,6 +39,9 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
+	},
+	sell: {
+		file: '/public/images/sell.svg'
 	}
 }
 
@@ -55,16 +60,25 @@ export const defaultBuildings = {
 	*/
 	turbine: {
 		cost: 25,
+		level: 1,
 		linkable: true,
 		producer: true,
 		income: 0.5
 	},
 	factory: {
 		cost: 50,
+		level: 1,
 		offensive: true
 	},
 	shield: {
 		cost: 50,
+		level: 1,
 		defensive: true
+	}
+}
+
+export const defaultOptions = {
+	sell: {
+		action: SET_SELL
 	}
 }

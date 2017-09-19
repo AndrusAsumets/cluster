@@ -1,28 +1,21 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_SELL } from './actions'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
-import { isNear, setWalkableAt, isLinked, findOpenPath } from './util'
+import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
+import { sell } from './dynamic'
 
 export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
-	const cooldown = 15 * tick // how often should the buildings create new elements
-	const fps = tick / 60
+	const cooldown = 10 // how often should the buildings create new elements
+	const fps = 60
 	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
-
-	// actions
-	const CONNECT = 'CONNECT'
-	const GET_STATE = 'GET_STATE'
-	const SET_STATE = 'SET_STATE'
-	const SET_ENERGY = 'SET_ENERGY'
-	const SET_ELEMENT = 'SET_ELEMENT'
-	const SET_BUILDING = 'SET_BUILDING'
-	const SET_LINK = 'SET_LINK'
 
 	// platform
 	const client = window ? true : false
@@ -175,7 +168,7 @@ export function game() {
 				if (player.energy - defaultBuildings[building.type].cost < 0) return
 
 				// check if there's an building on that location already
-				if (Object.keys(findBuilding(player.buildings, building)).length) return
+				if (Number.isInteger(findBuildingIndex(player.buildings, building))) return
 
 				// check for open paths
 				grid = setWalkableAt(grid, gm, building.start[0], building.start[1], false)
@@ -213,6 +206,10 @@ export function game() {
 					}
 				}
 				break
+			
+			case SET_SELL:
+				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				break
 		}
 	})
 
@@ -233,13 +230,49 @@ export function game() {
 		var position = me == 'player1' ? 'left' : 'right'
 		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
 		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
-		var building = findBuilding(player.buildings, { start: [xBlock * gm, yBlock * gm] })
-
-		// if from and to buildings were found
-		 if (
+		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
+		var building = player.buildings[buildingIndex]
+		var buildingIsFound = buildingIndex > -1
+		
+		// build options popup that goes to right
+		if (
+			gameMenu.options
+		) {
+			gameMenu.direction = 'toRight'
+			selectFromOptionsPopup({
+				player: player,
+				gameMenu: gameMenu, 
+				xBlock: xBlock,
+				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
+			})
+			gameMenu = {}
+		}
+		
+		// if a building was found on that block, show the options popup
+		else if (
+			buildingIsFound
+		) {
+			gameMenu.x = xBlock
+			gameMenu.y = yBlock
+			gameMenu.fromBuilding = building
+			gameMenu.linking = true
+			gameMenu.options = true
+			
+			buildOptionsPopup({
+				player: player,
+				xBlock: xBlock,
+				yBlock: yBlock,
+				position: position,
+				gameMenu: gameMenu,
+				building: building
+			})
+		}
+	
+		// if from and to buildings were found, then link
+		else if (
 			gameMenu.fromBuilding &&
 			Object.keys(gameMenu.fromBuilding).length > 0 &&
-			Object.keys(building).length > 0
+			buildingIsFound
 		) {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
@@ -258,48 +291,7 @@ export function game() {
 			gameMenu = {}
 		}
 
-		// if a building was found on that block
-		else if (
-			Object.keys(building).length > 0
-		) {
-			gameMenu.fromBuilding = building
-			gameMenu.linking = true
-
-			rectangle({
-				ctx: canvas.menu,
-				shape: defaultShapes.light,
-				x1: xBlock * blockWidth,
-				y1: yBlock * blockHeight,
-				width: blockWidth,
-				height: blockHeight,
-				alpha: 0.1
-			})
-
-			/*
-			donut({
-				ctx: canvas.menu,
-				shape: defaultShapes[gameMenu.fromBuilding.type],
-				x1: xBlock * blockWidth,
-				y1: yBlock * blockHeight,
-				x2: blockWidth,
-				y2: blockHeight
-			})
-			*/
-
-			image({
-				ctx: canvas.menu,
-				type: building,
-				file: defaultShapes[gameMenu.fromBuilding.type].file,
-				x1: xBlock * blockWidth,
-				y1: yBlock * blockHeight,
-				width: blockWidth,
-				height: blockHeight,
-				size: 3.5,
-				percentage: 100
-			})
-		}
-
-		// build options popup that goes to right
+		// build generic popup that goes to right
 		else if (
 			(position == 'left' && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
 			(position == 'left' && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
@@ -307,11 +299,11 @@ export function game() {
 			(position == 'left' && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
 		) {
 			gameMenu.direction = 'toRight'
-			selectFromPopup(player, gameMenu, xBlock)
+			selectFromGenericPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
 
-		// build options popup that goes to left
+		// build generic popup that goes to left
 		else if (
 			(position == 'right' && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
 			(position == 'right' && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
@@ -319,21 +311,21 @@ export function game() {
 			(position == 'right' && gameMenu.x     == xBlock && gameMenu.y == yBlock)
 		) {
 			gameMenu.direction = 'toLeft'
-			selectFromPopup(player, gameMenu, xBlock)
+			selectFromGenericPopup(player, gameMenu, xBlock)
 			gameMenu = {}
 		}
 
-		//build a menu if no options can't be found
+		//build a generic popup
 		else if (
 			!gameMenu.x &&
 			!gameMenu.y
 		) {
 			if (position == 'left') {
-				buildPopup(player, xBlock, yBlock, position)
+				buildGenericPopup(player, xBlock, yBlock, position)
 				gameMenu = { x: xBlock, y: yBlock}
 			}
 			else {
-				buildPopup(player, xBlock, yBlock, position)
+				buildGenericPopup(player, xBlock, yBlock, position)
 				gameMenu = { x: xBlock, y: yBlock}
 			}
 		}
@@ -344,7 +336,7 @@ export function game() {
 		}
 	}
 
-	function buildPopup(player, xBlock, yBlock, position) {
+	function buildGenericPopup(player, xBlock, yBlock, position) {
 		if (position == 'left') {
 			var i = 0
 
@@ -359,18 +351,6 @@ export function game() {
 					alpha: 0.1
 				})
 
-				/*
-				donut({
-					ctx: canvas.menu,
-					shape: defaultShapes[building],
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					percentage: 100
-				})
-				*/
-
 				image({
 					ctx: canvas.menu,
 					type: building,
@@ -380,8 +360,7 @@ export function game() {
 					width: blockWidth,
 					height: blockHeight,
 					size: 3.5,
-					percentage: 100,
-					type: building
+					percentage: 100
 				})
 
 				i++
@@ -401,18 +380,6 @@ export function game() {
 					alpha: 0.1
 				})
 
-				/*
-				donut({
-					ctx: canvas.menu,
-					shape: defaultShapes[building],
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					x2: blockWidth,
-					y2: blockHeight,
-					percentage: 100
-				})
-				*/
-
 				image({
 					ctx: canvas.menu,
 					type: building,
@@ -430,7 +397,7 @@ export function game() {
 		}
 	}
 
-	function selectFromPopup(player, gameMenu, xBlock) {
+	function selectFromGenericPopup(player, gameMenu, xBlock) {
 		var index, type, id, start, end
 		if (gameMenu.direction == 'toRight') {
 			index = xBlock - gameMenu.x
@@ -465,6 +432,96 @@ export function game() {
 
 		socket.emit('message', message)
 	}
+	
+	function buildOptionsPopup(o) {
+		var options = Object.keys(defaultOptions)
+		
+		// make the building visually active
+		rectangle({
+			ctx: canvas.menu,
+			shape: defaultShapes.light,
+			x1: o.xBlock * blockWidth,
+			y1: o.yBlock * blockHeight,
+			width: blockWidth,
+			height: blockHeight,
+			alpha: 0.1
+		})
+
+		image({
+			ctx: canvas.menu,
+			type: o.building.type,
+			file: defaultShapes[o.gameMenu.fromBuilding.type].file,
+			x1: o.xBlock * blockWidth,
+			y1: o.yBlock * blockHeight,
+			width: blockWidth,
+			height: blockHeight,
+			size: 3.5
+		})
+
+		if (o.position == 'left') {
+			var i = 0
+
+			options.map(function (option, i) {
+				rectangle({
+					ctx: canvas.menu,
+					shape: defaultShapes.dark,
+					x1: (o.xBlock + i) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 1
+				})
+				
+				rectangle({
+					ctx: canvas.menu,
+					shape: defaultShapes.light,
+					x1: (o.xBlock + i) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 0.1
+				})
+
+				image({
+					ctx: canvas.menu,
+					type: option,
+					file: defaultShapes[option].file,
+					x1: (o.xBlock + i) * blockWidth,
+					y1: o.yBlock * blockHeight - blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					size: 4
+				})
+
+				i++
+			})
+		}
+	}
+	
+	function selectFromOptionsPopup(o) {
+		var action
+		if (o.gameMenu.direction == 'toRight') {
+			var index = o.xBlock - o.gameMenu.x
+			var key = Object.keys(defaultOptions)[index]
+			if (!key) return
+			action = defaultOptions[key].action
+		}
+		else {
+			index = xBlock - gameMenu.x + Object.keys(defaultOptions).length - 1
+			type = Object.keys(defaultBuildings)[index]
+			id = player.elements.length
+			start = [gameMenu.x * gm, gameMenu.y * gm]
+			end = [0, gameMenu.y * gm]
+		}
+
+		var message = {
+			action: action,
+			data: { playerId: me, buildingIndex: o.buildingIndex }
+		}
+
+		socket.emit('message', message)
+	}
+	
 
 	function link() {
 		canvas.link.clearRect(0, 0, w, h)
@@ -520,17 +577,6 @@ export function game() {
 				}
 			}
 		}
-	}
-
-	function findBuilding(buildings, building) {
-		for (var p = 0; p < buildings.length; p++) {
-			if (
-				buildings[p].start[0] == building.start[0] &&
-				buildings[p].start[1] == building.start[1]
-			) return buildings[p]
-		}
-
-		return {}
 	}
 
 	function resetProjectiles(player) {
@@ -699,7 +745,7 @@ export function game() {
 			var object = objects[p]
 
 			if (object.charge < 100) {
-				object.charge = object.charge + convertRange(1 / fps, [0, cooldown / tick], [0, 100])
+				object.charge = object.charge + convertRange(1 / fps * cooldown, [0, fps], [0, 100])
 				objects[p].charge = object.charge
 			}
 
@@ -981,7 +1027,7 @@ export function game() {
 	if (host) {
 		setInterval(function() {
 			for (var p in players) animate(p)
-		}, fps)
+		}, tick / 60)
 	}
 
 	function animationFrame() {

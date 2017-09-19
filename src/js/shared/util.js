@@ -58,3 +58,12 @@ export function findOpenPath(o) {
 	
 	return []
 }
+
+export function findBuildingIndex(buildings, building) {
+	for (var p = 0; p < buildings.length; p++) {
+		if (
+			buildings[p].start[0] == building.start[0] &&
+			buildings[p].start[1] == building.start[1]
+		) return p
+	}
+}
