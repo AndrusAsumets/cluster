@@ -80,7 +80,7 @@ html, body {
 .scorebar-player2 {
 	position: absolute;
 	bottom: 0;
-	border-bottom: 8px solid rgba(0, 190, 229, 0.5);
+	border-bottom: 2px solid rgba(0, 190, 229, 0.5);
 }
 
 .scorebar-player1 {

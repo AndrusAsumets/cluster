@@ -156,7 +156,9 @@ export function game() {
 
 						players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
-						document.getElementsByClassName('scorebar-' + key)[0].style.width = w / 4 * data[key].energyShare + 'px'
+						
+						var share = convertRange(data[key].energyShare, [0, 100], [0, w / 2])
+						document.getElementsByClassName('scorebar-' + key)[0].style.width = share + 'px'
 					}
 				}
 				break
@@ -989,7 +991,7 @@ export function game() {
 			for (var r in players) {
 				if (p == r) continue
 				
-				currentPlayer[p].energyShare = players[p].energy / players[r].energy
+				currentPlayer[p].energyShare = players[p].energy / players[r].energy * 100
 			}
 		}
 

@@ -1,6 +1,6 @@
 import { SET_SELL } from './actions'
 
-export const defaultEnergy = 1000
+export const defaultEnergy = 100
 export const defaultHealth = 100
 export const defaultDamage = 20
 export const defaultAbsorb = 20
