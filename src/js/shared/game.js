@@ -1,9 +1,11 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
+var $ = require('jquery')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
+import { buildGenericPopup, selectFromGenericPopup, buildOptionsPopup, selectFromOptionsPopup } from './menu'
 import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
 import { upgrade, sell } from './dynamic'
@@ -20,6 +22,10 @@ export function game() {
 	// platform
 	const client = window ? true : false
 	const host = !window ? true : false
+	
+	//jquery
+	if (client) window.jQuery = $
+	if (client) window.$ = $
 
 	// window
 	const smallHorizontal = 14 // how many blocks to have on x scale
@@ -247,8 +253,12 @@ export function game() {
 		) {
 			gameMenu.direction = gameMenu.position == 'left' ? 'toRight' : 'toLeft'
 			selectFromOptionsPopup({
+				me: me,
 				player: player,
+				socket: socket,
 				gameMenu: gameMenu,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
 				xBlock: xBlock,
 				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
 			})
@@ -268,7 +278,10 @@ export function game() {
 			gameMenu.options = true
 
 			buildOptionsPopup({
+				canvas: canvas,
 				player: player,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
 				xBlock: xBlock,
 				yBlock: yBlock,
 				position: position,
@@ -308,7 +321,16 @@ export function game() {
 			(position == 'left' && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
 		) {
 			gameMenu.direction = 'toRight'
-			selectFromGenericPopup(player, gameMenu, xBlock)
+			
+			selectFromGenericPopup({
+				player: player,
+				socket: socket,
+				gameMenu: gameMenu,
+				xBlock: xBlock,
+				horizontal: horizontal,
+				gm: gm
+			})
+			
 			gameMenu = {}
 		}
 
@@ -320,7 +342,16 @@ export function game() {
 			(position == 'right' && gameMenu.x     == xBlock && gameMenu.y == yBlock)
 		) {
 			gameMenu.direction = 'toLeft'
-			selectFromGenericPopup(player, gameMenu, xBlock)
+			
+			selectFromGenericPopup({
+				player: player,
+				socket: socket,
+				gameMenu: gameMenu,
+				xBlock: xBlock,
+				horizontal: horizontal,
+				gm: gm
+			})
+			
 			gameMenu = {}
 		}
 
@@ -329,7 +360,15 @@ export function game() {
 			!gameMenu.x &&
 			!gameMenu.y
 		) {
-			buildGenericPopup(player, xBlock, yBlock, position)
+			buildGenericPopup({
+				canvas: canvas,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
+				xBlock: xBlock,
+				yBlock: yBlock,
+				position: position
+			})
+			
 			gameMenu = { x: xBlock, y: yBlock, generic: true }
 		}
 
@@ -338,234 +377,6 @@ export function game() {
 			gameMenu = {}
 		}
 	}
-
-	function buildGenericPopup(player, xBlock, yBlock, position) {
-		if (position == 'left') {
-			var i = 0
-
-			for (var building in defaultBuildings) {
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.light,
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 0.1
-				})
-
-				image({
-					ctx: canvas.menu,
-					type: building,
-					file: defaultShapes[building].file,
-					x1: (xBlock + i) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					size: 3.5,
-					percentage: 100
-				})
-
-				i++
-			}
-		}
-		else {
-			var reversedDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings))).reverse()
-			var i = 0
-			for (var building in defaultBuildings) {
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.light,
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 0.1
-				})
-
-				image({
-					ctx: canvas.menu,
-					type: building,
-					file: defaultShapes[building].file,
-					x1: (xBlock + i - reversedDefaultBuildings.length + 1) * blockWidth,
-					y1: yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					size: 3.5,
-					percentage: 100
-				})
-
-				i++
-			}
-		}
-	}
-
-	function selectFromGenericPopup(player, gameMenu, xBlock) {
-		var index, type, id, start, end
-		if (gameMenu.direction == 'toRight') {
-			index = xBlock - gameMenu.x
-			type = Object.keys(defaultBuildings)[index]
-			id = player.elements.length
-			start = [gameMenu.x * gm, gameMenu.y * gm]
-			end = [horizontal, gameMenu.y * gm]
-		}
-		else {
-			index = xBlock - gameMenu.x + Object.keys(defaultBuildings).length - 1
-			type = Object.keys(defaultBuildings)[index]
-			id = player.elements.length
-			start = [gameMenu.x * gm, gameMenu.y * gm]
-			end = [0, gameMenu.y * gm]
-		}
-
-		var building = {
-			playerId: player.id,
-			id: id,
-			type: type,
-			start: start,
-			end: end,
-			charge: 0,
-			dynamics: {}
-		}
-
-		var message = {
-			action: SET_BUILDING,
-			data: Object.assign({}, defaultBuildings[type], building),
-			playerId: me
-		}
-
-		socket.emit('message', message)
-	}
-
-	function buildOptionsPopup(o) {
-		var options = Object.keys(defaultOptions)
-
-		// make the building visually active
-		rectangle({
-			ctx: canvas.menu,
-			shape: defaultShapes.light,
-			x1: o.xBlock * blockWidth,
-			y1: o.yBlock * blockHeight,
-			width: blockWidth,
-			height: blockHeight,
-			alpha: 0.1
-		})
-
-		image({
-			ctx: canvas.menu,
-			type: o.building.type,
-			file: defaultShapes[o.gameMenu.fromBuilding.type].file,
-			x1: o.xBlock * blockWidth,
-			y1: o.yBlock * blockHeight,
-			width: blockWidth,
-			height: blockHeight,
-			size: 3.5
-		})
-
-		if (o.position == 'left') {
-			var i = 0
-
-			options.map(function(option, i) {
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.background,
-					x1: (o.xBlock + i) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 1
-				})
-
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.light,
-					x1: (o.xBlock + i) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 0.25
-				})
-
-				image({
-					ctx: canvas.menu,
-					type: option,
-					file: defaultShapes[option].file,
-					x1: (o.xBlock + i) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					size: 4
-				})
-
-				i++
-			})
-		}
-
-		else if (o.position == 'right') {
-			var i = 0
-
-			var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
-
-			reversedOptions.map(function(option, i) {
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.background,
-					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 1
-				})
-
-				rectangle({
-					ctx: canvas.menu,
-					shape: defaultShapes.light,
-					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 0.25
-				})
-
-				image({
-					ctx: canvas.menu,
-					type: option,
-					file: defaultShapes[option].file,
-					x1: (o.xBlock + i - reversedOptions.length + 1) * blockWidth,
-					y1: o.yBlock * blockHeight - blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					size: 4
-				})
-
-				i++
-			})
-		}
-	}
-
-	function selectFromOptionsPopup(o) {
-		var action
-		if (o.gameMenu.direction == 'toRight') {
-			var index = o.xBlock - o.gameMenu.x
-			var key = Object.keys(defaultOptions)[index]
-			if (!key) return
-			action = defaultOptions[key].action
-		}
-		else {
-			var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
-			var index = o.xBlock - o.gameMenu.x + Object.keys(defaultOptions).length - 1
-			var key = reversedOptions[index]
-			if (!key) return console.log('no key found')
-			action = defaultOptions[key].action
-		}
-
-		var message = {
-			action: action,
-			data: { playerId: me, buildingIndex: o.buildingIndex }
-		}
-
-		socket.emit('message', message)
-	}
-
 
 	function link() {
 		canvas.link.clearRect(0, 0, w, h)
@@ -1077,7 +888,7 @@ export function game() {
 	if (host) {
 		setInterval(function() {
 			for (var p in players) animate(p)
-		}, tick / 60)
+		}, tick / fps)
 	}
 
 	function animationFrame() {
