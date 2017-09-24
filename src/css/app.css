@@ -30,16 +30,9 @@ html, body {
 	height: 100vh;
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.header {
-	display: flex;
-	height: calc(100vh / 9);
-	width: 100vw;
-	background-color: rgba(0, 0, 0, 0.1);
-	color: rgba(255, 255, 255, 1);
-}
 
 .game {
-	top: calc(100vh / 9);
+	top: calc(100vh / 7);
 	position: absolute;
 	display: flex;
 	flex-wrap: wrap;
@@ -47,22 +40,24 @@ html, body {
     //transform: rotateX(30deg) rotateY(30deg) rotateZ(60deg);
 }
 
+.header {
+	display: flex;
+	height: calc(100vh / 7);
+	width: 100vw;
+	background-color: rgba(0, 0, 0, 0.1);
+	color: rgba(255, 255, 255, 1);
+}
+
 .container {
 	position: relative;
-	align-items: center;
 	display: flex;
+	align-items: center;
+	width: 50vw;
 	padding: 16px;
 }
 
-.container:nth-child(1) {
-	width: calc(50vw - 50vw / 8);
-	//border-right: 1px solid rgba(0, 0, 0, 0.15);
-}
-
 .container:nth-child(2) {
-	width: calc(50vw - 50vw / 8);
-	margin-left: calc(50vw / 4);
-	//border-left: 1px solid rgba(0, 0, 0, 0.15);
+	border-left: 2px solid rgba(0, 0, 0, 0.25);
 }
 
 .container > .score-player1,

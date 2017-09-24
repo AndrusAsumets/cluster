@@ -28,8 +28,8 @@ export function game() {
 	if (client) window.$ = $
 
 	// window
-	const smallHorizontal = 18 // how many blocks to have on x scale
-	const smallVertical = 8 // how many blocks to have on y scale
+	const smallHorizontal = 14 // how many blocks to have on x scale
+	const smallVertical = 7 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -68,21 +68,9 @@ export function game() {
 			movement: ctx(container, 'movement', w, h, 3, blockHeight),
 			menu: ctx(container, 'menu', w, h, 4, blockHeight)
 		}
-		
-		rectangle({
-			ctx: canvas.background,
-			shape: defaultShapes.dark,
-			x1: w / 2 - blockWidth,
-			y1: 0,
-			width: blockWidth * 2,
-			height: h,
-			alpha: 1 / 3
-		})
 
 		// create a visual UI grid
-		for (var i = 0; i < smallHorizontal + 1; i++) {
-			if (i == smallHorizontal / 2) continue
-			
+		for (var i = 0; i < smallHorizontal + 2; i++) {
 			line({
 				ctx: canvas.background,
 				shape: defaultShapes.light,
@@ -94,23 +82,13 @@ export function game() {
 			})
 		}
 
-		for (var i = 0; i < smallVertical + 1; i++) {
+		for (var i = 0; i < smallVertical + 2; i++) {
 			line({
 				ctx: canvas.background,
 				shape: defaultShapes.light,
 				x1: 0,
 				y1: blockHeight * i,
-				x2: w / 2 - blockWidth,
-				y2: blockHeight * i,
-				alpha: 0.075
-			})
-			
-			line({
-				ctx: canvas.background,
-				shape: defaultShapes.light,
-				x1: w / 2 + blockWidth,
-				y1: blockHeight * i,
-				x2: w / 2 + blockWidth + w / 2 - blockWidth,
+				x2: w,
 				y2: blockHeight * i,
 				alpha: 0.075
 			})
