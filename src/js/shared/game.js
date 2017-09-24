@@ -15,9 +15,12 @@ export function game() {
 	const tick = 1000 // how often should the events happen
 	const cooldown = 10 // how often should the buildings create new elements
 	const fps = 60
-	var gameOver = false
 	var time = (new Date).getTime()
-	var players = {}
+	var game = {
+		players: {},
+		isOver: false,
+		lastTick: time
+	}
 
 	// platform
 	const client = window ? true : false
@@ -28,8 +31,8 @@ export function game() {
 	if (client) window.$ = $
 
 	// window
-	const smallHorizontal = 18 // how many blocks to have on x scale
-	const smallVertical = 8 // how many blocks to have on y scale
+	const smallHorizontal = 17 // how many blocks to have on x scale
+	const smallVertical = 7 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -146,7 +149,7 @@ export function game() {
 
 				if (client) {
 					if (me == 'player1' || me == 'player2') {
-						players[me] = new Player({ id: me })
+						game.players[me] = new Player({ id: me })
 						socket.emit('message', { action: GET_STATE, data: me })
 					}
 				}
@@ -154,20 +157,20 @@ export function game() {
 
 			case GET_STATE:
 				if (host) {
-					if (!players[data]) players[data] = new Player({ id: data })
+					if (!game.players[data]) game.players[data] = new Player({ id: data })
 
-					socket.emit('message', { action: SET_STATE, data: players })
+					socket.emit('message', { action: SET_STATE, data: game.players })
 				}
 				break
 
 			case SET_STATE:
 				if (client) {
 					for (var key in data) {
-						if (!players[key]) players[key] = new Player({ id: key })
+						if (!game.players[key]) game.players[key] = new Player({ id: key })
 
-						players[key].buildings = data[key].buildings
-						players[key].elements = data[key].elements
-						players[key].links = data[key].links
+						game.players[key].buildings = data[key].buildings
+						game.players[key].elements = data[key].elements
+						game.players[key].links = data[key].links
 						link()
 
 						for (var i = 0; i < data[key].buildings.length; i++) {
@@ -180,9 +183,9 @@ export function game() {
 			case SET_ENERGY:
 				if (client) {
 					for (var key in data) {
-						if (!players[key]) continue
+						if (!game.players[key]) continue
 
-						players[key].energy = data[key].energy
+						game.players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
 
 						var share = convertRange(data[key].energyShare, [0, 100], [0, w / 2])
@@ -193,7 +196,7 @@ export function game() {
 
 			case SET_BUILDING:
 				var building = data
-				var player = players[building.playerId]
+				var player = game.players[building.playerId]
 
 				// if not sufficient energy
 				if (player.energy - defaultBuildings[building.type].cost < 0) return
@@ -214,14 +217,14 @@ export function game() {
 					return
 				}
 
-				decreaseEnergy(players[building.playerId], defaultBuildings[building.type].cost)
-				players[building.playerId].buildings.push(building)
-				for (var p in players) createPaths(players[p])
+				decreaseEnergy(game.players[building.playerId], defaultBuildings[building.type].cost)
+				game.players[building.playerId].buildings.push(building)
+				for (var p in game.players) createPaths(game.players[p])
 				if (client) link()
 				break
 
 			case SET_LINK:
-				players[data.playerId].links.push(data.link)
+				game.players[data.playerId].links.push(data.link)
 				if (client) link()
 				break
 
@@ -231,31 +234,31 @@ export function game() {
 					var playerId = element.playerId
 					var buildingIndex = data.buildingIndex
 
-					for (var key in players) {
-						if (key != playerId) players[key].elements.push(element)
-						else players[playerId].buildings[buildingIndex].charge = 0
+					for (var key in game.players) {
+						if (key != playerId) game.players[key].elements.push(element)
+						else game.players[playerId].buildings[buildingIndex].charge = 0
 					}
 				}
 				break
 
 			case SET_UPGRADE:
-				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				game.players[data.playerId] = upgrade({ player: game.players[data.playerId], buildingIndex: data.buildingIndex })
 				break
 
 			case SET_SELL:
-				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				game.players[data.playerId] = sell({ player: game.players[data.playerId], buildingIndex: data.buildingIndex })
 				break
 		}
 	})
 
 	var gameMenu = {}
 	function createMenu(event) {
-		if (gameOver) return
+		if (game.isOver) return
 
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
 
-		var player = players[me]
+		var player = game.players[me]
 		canvas.menu.clearRect(0, 0, w, h)
 
 		var x = event.clientX
@@ -321,7 +324,7 @@ export function game() {
 			var from = gameMenu.fromBuilding.start
 			var to = building.start
 
-			if (isLinked(players[me], from, to)) {
+			if (isLinked(game.players[me], from, to)) {
 				gameMenu = {}
 				return
 			}
@@ -403,8 +406,8 @@ export function game() {
 	function link() {
 		canvas.link.clearRect(0, 0, w, h)
 
-		for (var key in players) {
-			var player = players[key]
+		for (var key in game.players) {
+			var player = game.players[key]
 			var links = player.links
 
 			for (var l = 0; l < links.length; l++) {
@@ -457,20 +460,20 @@ export function game() {
 	}
 
 	function resetProjectiles(player) {
-		players[player.id].projectiles = []
-		players[player.id].deepProjectiles = []
+		game.players[player.id].projectiles = []
+		game.players[player.id].deepProjectiles = []
 
 		var buildings = player.buildings ? player.buildings : []
 		for (var r = 0; r < buildings.length; r++) {
 			if (!'fired' in buildings[r].dynamics) continue
-			players[player.id].buildings[r].dynamics.fired = 0
+			game.players[player.id].buildings[r].dynamics.fired = 0
 		}
 	}
 
 	function health(player) {
 		var elements = player.elements ? player.elements : []
 		for (var r = 0; r < elements.length; r++) {
-			if (elements[r].dynamics.health <= 0) players[player.id].elements.splice(r, 1)
+			if (elements[r].dynamics.health <= 0) game.players[player.id].elements.splice(r, 1)
 		}
 	}
 
@@ -486,9 +489,9 @@ export function game() {
 				!element.path[1].length
 			) {
 				decreaseEnergy(player, defaultAbsorb)
-				players[player.id].elements[p].inactive = true
+				game.players[player.id].elements[p].inactive = true
 			} else {
-				players[player.id].elements[p].path.shift()
+				game.players[player.id].elements[p].path.shift()
 			}
 		}
 	}
@@ -503,13 +506,13 @@ export function game() {
 				!element.path[0].length
 			) {
 				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
-				players[player.id].elements[p].path = path
+				game.players[player.id].elements[p].path = path
 			}
 		}
 	}
 
 	function collision(p) {
-		var player = players[p]
+		var player = game.players[p]
 		var a = 1
 		var b = 1
 
@@ -528,9 +531,9 @@ export function game() {
 			if (!positionA) continue
 			if (!positionA.length) continue
 
-			for (var p2 in players) {
+			for (var p2 in game.players) {
 				if (p == p2) continue
-				var anotherPlayer = players[p2]
+				var anotherPlayer = game.players[p2]
 
 				for (var r2 = 0; r2 < anotherPlayer.elements.length; r2++) {
 					if (
@@ -559,7 +562,7 @@ export function game() {
 							// make positions walkable again
 							grid = setWalkableAt(grid, gm, positionB[0], positionB[1], true)
 
-							if (path.length) players[p].elements[r].path = path
+							if (path.length) game.players[p].elements[r].path = path
 						} catch (err) { continue }
 
 
@@ -571,7 +574,7 @@ export function game() {
 							shape: defaultShapes[player.elements[r].type]
 						}
 
-						players[anotherPlayer.id].deepProjectiles.push(projectile)
+						game.players[anotherPlayer.id].deepProjectiles.push(projectile)
 
 						var projectile = {
 							path: [
@@ -581,7 +584,7 @@ export function game() {
 							shape: defaultShapes[anotherPlayer.elements[r2].type]
 						}
 
-						players[player.id].deepProjectiles.push(projectile)
+						game.players[player.id].deepProjectiles.push(projectile)
 
 						break
 					}
@@ -609,7 +612,7 @@ export function game() {
 				var y1 = projectiles[p].path[1][1]
 
 				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage / 4
+					game.players[player.id].elements[r].dynamics.health = game.players[player.id].elements[r].dynamics.health - defaultDamage / 4
 					break
 				}
 			}
@@ -617,20 +620,21 @@ export function game() {
 	}
 
 	function charge(layer, type, key) {
-		var objects = players[key][type] ? players[key][type] : []
+		var objects = game.players[key][type] ? game.players[key][type] : []
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 
 			if (object.charge < 100) {
+				// this is the bit that goes belly up when changing server to tick slower
 				object.charge = object.charge + convertRange(1 / fps * cooldown, [0, fps], [0, 100])
 				objects[p].charge = object.charge
 			}
 
 			else if (object.charge >= 100) {
-				players[key].buildings[p].built = true
+				game.players[key].buildings[p].built = true
 
 				if (object.offensive) {
-					players[key].buildings[p].charge = 0
+					game.players[key].buildings[p].charge = 0
 					if (host) newElement(objects, key, p)
 				}
 			}
@@ -684,7 +688,7 @@ export function game() {
 
 	function newElement(objects, key, p) {
 		var object = objects[p]
-		for (var r in players) {
+		for (var r in game.players) {
 			if (key != r) {
 				var start = objects[p].start
 				var end = objects[p].end
@@ -704,7 +708,7 @@ export function game() {
 				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
 
 				var element = {
-					id: players[r].elements.length,
+					id: game.players[r].elements.length,
 					playerId: key,
 					type: object.type,
 					start: start,
@@ -718,7 +722,7 @@ export function game() {
 
 				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: p } })
 
-				players[r].elements.push(element)
+				game.players[r].elements.push(element)
 			}
 		}
 	}
@@ -749,8 +753,8 @@ export function game() {
 					shape: defaultShapes[player.buildings[p].type]
 				}
 
-				players[player.id].projectiles.push(projectile)
-				players[player.id].buildings[p].dynamics.fired++
+				game.players[player.id].projectiles.push(projectile)
+				game.players[player.id].buildings[p].dynamics.fired++
 				break
 			}
 		}
@@ -775,7 +779,7 @@ export function game() {
 				var y2 = element.path[1][1]
 
 				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
+					game.players[player.id].elements[r].dynamics.health = game.players[player.id].elements[r].dynamics.health - defaultDamage
 					break
 				}
 			}
@@ -784,7 +788,7 @@ export function game() {
 
 	// move the elements according to their positions in space and time
 	function move(layer, type, key) {
-		var objects = players[key] && players[key][type] ? players[key][type] : []
+		var objects = game.players[key] && game.players[key][type] ? game.players[key][type] : []
 
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
@@ -803,7 +807,9 @@ export function game() {
 			var dx = x1 - (x1 - x2) * dt / tick
 			var dy = y1 - (y1 - y2) * dt / tick
 
+			// need better separation in calculations and visuals, this needs to move out
 			if (client) {
+				// what does this object.type mean here?
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
@@ -840,11 +846,11 @@ export function game() {
 	}
 
 	function increaseEnergy(player, amount = defaultBuildings.turbine.income) {
-		players[player.id].energy = players[player.id].energy + amount
+		game.players[player.id].energy = game.players[player.id].energy + amount
 	}
 
 	function decreaseEnergy(player, amount = 1) {
-		players[player.id].energy = players[player.id].energy - amount
+		game.players[player.id].energy = game.players[player.id].energy - amount
 	}
 
 	function energy(player) {
@@ -863,14 +869,14 @@ export function game() {
 	function broadcastEnergy() {
 		var currentPlayer = {}
 
-		for (var p in players) {
+		for (var p in game.players) {
 			currentPlayer[p] = {}
-			currentPlayer[p].energy = players[p].energy
+			currentPlayer[p].energy = game.players[p].energy
 
-			for (var r in players) {
+			for (var r in game.players) {
 				if (p == r) continue
 
-				currentPlayer[p].energyShare = players[p].energy / players[r].energy * 100
+				currentPlayer[p].energyShare = game.players[p].energy / game.players[r].energy * 100
 			}
 		}
 
@@ -878,46 +884,50 @@ export function game() {
 	}
 
 	function end(player) {
-		if (player.energy < 0) gameOver = true
+		if (player.energy < 0) game.isOver = true
 	}
 
+	// event loop, fires every second right now
 	setInterval(function() {
 		time = (new Date).getTime()
 
-		for (var p in players) {
-			walkBuildings(players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
-			hit(players[p])
-			deepHit(players[p])
-			health(players[p])
-			resetProjectiles(players[p])
-			shiftPaths(players[p])
+		for (var p in game.players) {
+			walkBuildings(game.players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
+			hit(game.players[p])
+			deepHit(game.players[p])
+			health(game.players[p])
+			resetProjectiles(game.players[p])
+			shiftPaths(game.players[p])
 		}
 
 		// then run the last part because deep projectiles couldn't be updated otherwise
-		for (var p in players) {
+		for (var p in game.players) {
 			collision(p)
-			attack(players[p])
+			attack(game.players[p])
 
-			if (!gameOver) {
-				energy(players[p])
-				end(players[p])
+			if (!game.isOver) {
+				energy(game.players[p])
+				end(game.players[p])
 			}
 		}
 
-		if (host && !gameOver) broadcastEnergy()
+		if (host && !game.isOver) broadcastEnergy()
 	}, tick)
 
+	// why do we set animation on host? dafuq?
 	if (host) {
 		setInterval(function() {
-			for (var p in players) animate(p)
-		}, tick / fps)
+			for (var p in game.players) animate(p)
+		}, tick) // should do way less ticks on the server
 	}
 
+	// this is the animation setInterval analogue for the client side
 	function animationFrame() {
 		requestAnimationFrame(animationFrame)
 		if (client) canvas.movement.clearRect(0, 0, w, h)
-		for (var p in players) animate(p)
+		for (var p in game.players) animate(p)
 	}
+
 	if (client) requestAnimationFrame(animationFrame)
 
 	function animate(key) {

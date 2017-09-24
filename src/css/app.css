@@ -32,14 +32,14 @@ html, body {
 }
 .header {
 	display: flex;
-	height: calc(100vh / 9);
+	height: calc(100vh / 8);
 	width: 100vw;
 	background-color: rgba(0, 0, 0, 0.1);
 	color: rgba(255, 255, 255, 1);
 }
 
 .game {
-	top: calc(100vh / 9);
+	top: calc(100vh / 8);
 	position: absolute;
 	display: flex;
 	flex-wrap: wrap;
