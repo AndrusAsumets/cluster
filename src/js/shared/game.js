@@ -33,8 +33,8 @@ export function game() {
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
-	const marginTop = 60 // height of the scoring menu in pixels
 	const sizes = client ? size() : { x: horizontal, y: vertical }
+	const marginTop = sizes.y / smallVertical + 1 // height of the scoring menu in pixels
 	const w = sizes.x
 	const h = sizes.y - marginTop
 	const blockWidth = w / smallHorizontal
@@ -76,7 +76,7 @@ export function game() {
 			y1: 0,
 			width: blockWidth * 2,
 			height: h,
-			alpha: 0.5
+			alpha: 1 / 3
 		})
 		
 		console.log((smallHorizontal / 2 - 1) - blockWidth)

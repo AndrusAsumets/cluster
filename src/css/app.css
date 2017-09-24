@@ -30,9 +30,16 @@ html, body {
 	height: 100vh;
 	border: 1px solid rgba(255, 255, 255, 0.1);
 }
+.header {
+	display: flex;
+	height: calc(100vh / 9);
+	width: 100vw;
+	background-color: rgba(0, 0, 0, 0.1);
+	color: rgba(255, 255, 255, 1);
+}
 
 .game {
-	top: 60px;
+	top: calc(100vh / 9);
 	position: absolute;
 	display: flex;
 	flex-wrap: wrap;
@@ -40,16 +47,9 @@ html, body {
     //transform: rotateX(30deg) rotateY(30deg) rotateZ(60deg);
 }
 
-.header {
-	display: flex;
-	height: 60px;
-	width: 100vw;
-	background-color: rgba(0, 0, 0, 0.1);
-	color: rgba(255, 255, 255, 1);
-}
-
 .container {
 	position: relative;
+	align-items: center;
 	display: flex;
 	padding: 16px;
 }
