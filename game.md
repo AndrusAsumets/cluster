@@ -3,16 +3,9 @@ cluster.game
 
 NOW:
 * upgrades (also add a bar that displays upgrade level)
-* different sizes for the bubbles that correspond to strength/power
+* different sizes for the bubbles that correspond to level
 * unlinking
-* selling
-* laboratory (train 4 types of skills)
-* airport
-* pointing attack for kamikazes, missiles and flares?
 * health bar
-* booster (decreases recharge time)
-* fog of war?
-* radar (increases range on lasers and sends flares?)
 
 PHASE1:
 * game balance & upgrades

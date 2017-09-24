@@ -22,8 +22,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 24 // how many blocks to have on x scale
-	const smallVertical = 14 // how many blocks to have on y scale
+	const smallHorizontal = 14 // how many blocks to have on x scale
+	const smallVertical = 7 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
