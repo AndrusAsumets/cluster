@@ -93,7 +93,8 @@ export function selectFromGenericPopup(o) {
 		data: Object.assign({}, defaultBuildings[type], building),
 		playerId: o.me
 	}
-
+	
+	//if (defaultBuildings[type].offensive) showPatterns({ socket: socket, message: message, building: building })
 	o.socket.emit('message', message)
 }
 
@@ -215,7 +216,7 @@ export function selectFromOptionsPopup(o) {
 		var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
 		var index = o.xBlock - o.gameMenu.x + Object.keys(defaultOptions).length - 1
 		var key = reversedOptions[index]
-		if (!key) return console.log('no key found')
+		if (!key) return
 		action = defaultOptions[key].action
 	}
 
@@ -225,4 +226,8 @@ export function selectFromOptionsPopup(o) {
 	}
 
 	o.socket.emit('message', message)
+}
+
+function showPatterns(o) {
+	
 }

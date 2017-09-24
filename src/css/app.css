@@ -51,12 +51,18 @@ html, body {
 .container {
 	position: relative;
 	display: flex;
-	width: 50vw;
 	padding: 16px;
 }
 
+.container:nth-child(1) {
+	width: calc(50vw - 50vw / 8 + 3px);
+	border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
 .container:nth-child(2) {
-	border-left: 2px solid rgba(0, 0, 0, 0.25);
+	width: calc(50vw - 50vw / 8);
+	margin-left: calc(50vw / 4 - 3px);
+	border-left: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .container > .score-player1,
@@ -101,24 +107,10 @@ html, body {
 	border: 1px solid rgba(0, 0, 0, 0.4);	
 }
 
-.elements {
-	width: 100%;
-	height: 100vh;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
+.name {
+	font-size: 14px;
 }
 
-.element {
-	width: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: calc(100vh / 6);
-	margin: 0.5vh 2vw;
-	box-sizing: border-box;
-	cursor: pointer;
-	font-size: 1em;
-	font-family: 'Helvetica Neue', 'sans';
+.score {
+	font-size: 18px;
 }

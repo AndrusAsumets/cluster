@@ -28,8 +28,8 @@ export function game() {
 	if (client) window.$ = $
 
 	// window
-	const smallHorizontal = 14 // how many blocks to have on x scale
-	const smallVertical = 7 // how many blocks to have on y scale
+	const smallHorizontal = 16 // how many blocks to have on x scale
+	const smallVertical = 8 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -68,6 +68,18 @@ export function game() {
 			movement: ctx(container, 'movement', w, h, 3, blockHeight),
 			menu: ctx(container, 'menu', w, h, 4, blockHeight)
 		}
+		
+		rectangle({
+			ctx: canvas.background,
+			shape: defaultShapes.dark,
+			x1: w / 2 - blockWidth,
+			y1: 0,
+			width: blockWidth * 2,
+			height: h,
+			alpha: 0.5
+		})
+		
+		console.log((smallHorizontal / 2 - 1) - blockWidth)
 
 		// create a visual UI grid
 		for (var i = 0; i < smallHorizontal + 1; i++) {
@@ -241,8 +253,8 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 - gm && !gameMenu.x) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 + gm && !gameMenu.x) return
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
