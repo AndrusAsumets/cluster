@@ -1,8 +1,10 @@
 import { SET_BUILDING } from './actions'
-import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
+import { defaultShapes, defaultBuildings, defaultOptions, defaultPatterns } from './defaults'
 import { line, rectangle, circle, dot, donut, image } from './draw'
 
 export function buildGenericPopup(o) {
+	//showPatterns()
+	
 	if (o.position == 'left') {
 		var i = 0
 
@@ -229,5 +231,36 @@ export function selectFromOptionsPopup(o) {
 }
 
 function showPatterns(o) {
+	var patterns = document.getElementsByClassName('patterns')[0]
+	patterns.style.opacity = 0.5
+	patterns.style.pointerEvents = 'auto'
 	
+	for (var i = 0; i < defaultPatterns.length; i++) {
+		var pattern = document.createElement('div')
+		pattern.className = 'pattern'
+		pattern.id = i
+		patterns.appendChild(pattern)
+		buildPattern({ pattern: defaultPatterns[i], index: i, container: pattern })
+	}
+}
+
+function buildPattern(o) {
+	var pattern = o.pattern
+	var index = o.index
+	var container = o.container
+	
+	for (var i = 0; i < pattern.length; i++) {
+		var patternVertical = pattern[i]
+		
+		for (var j = 0; j < patternVertical.length; j++) {
+			var patternHorizontal = pattern[i][j]
+			var element = document.createElement('div')
+			
+			if (patternHorizontal == 0) element.className = 'donut'
+			else if (patternHorizontal == 1) element.className = 'dot'
+			else element.className = 'stripe'
+			
+			container.appendChild(element)
+		}
+	}
 }

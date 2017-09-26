@@ -13,8 +13,9 @@ import { upgrade, sell } from './dynamic'
 export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
-	const cooldown = 10 // how often should the buildings create new elements
+	const cooldown = 2 // how often should the buildings create new elements
 	const fps = 60
+	const speed = 2
 	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
@@ -28,8 +29,8 @@ export function game() {
 	if (client) window.$ = $
 
 	// window
-	const smallHorizontal = 14 // how many blocks to have on x scale
-	const smallVertical = 7 // how many blocks to have on y scale
+	const smallHorizontal = 12 // how many blocks to have on x scale
+	const smallVertical = 6 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -44,6 +45,10 @@ export function game() {
 	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
 	var grid = new PF.Grid(matrix)
+	
+	//events
+	var gameMenu = {}
+	var touch = { delay: 0 }
 
 	// player
 	function Player (options) {
@@ -63,40 +68,55 @@ export function game() {
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
 		canvas = {
-			background: ctx(container, 'background', w, h, 1, blockHeight),
-			link: ctx(container, 'link', w, h, 2, blockHeight),
-			movement: ctx(container, 'movement', w, h, 3, blockHeight),
-			menu: ctx(container, 'menu', w, h, 4, blockHeight)
+			background: ctx(container, 'background-canvas', w, h, 1, blockHeight),
+			link: ctx(container, 'link-canvas', w, h, 2, blockHeight),
+			movement: ctx(container, 'movement-canvas', w, h, 3, blockHeight),
+			menu: ctx(container, 'menu-canvas', w, h, 4, blockHeight)
+		}
+		
+		for (var i = 0; i < smallHorizontal; i++) {
+			if (i % 2) {
+				for (var j = 0; j < smallVertical; j++) {
+					if (j % 2) {
+						rectangle({
+							ctx: canvas.background,
+							shape: defaultShapes.light,
+							x1: blockWidth * i,
+							y1: blockHeight * j,
+							width: blockWidth,
+							height: blockHeight,
+							alpha: 0.667
+						})
+					}
+					
+					else {
+						rectangle({
+							ctx: canvas.background,
+							shape: defaultShapes.light,
+							x1: blockWidth * (i - 1),
+							y1: blockHeight * j,
+							width: blockWidth,
+							height: blockHeight,
+							alpha: 0.667
+						})
+					}
+				}
+			}
 		}
 
-		// create a visual UI grid
-		for (var i = 0; i < smallHorizontal + 2; i++) {
-			line({
-				ctx: canvas.background,
-				shape: defaultShapes.light,
-				x1: blockWidth * i,
-				y1: 0,
-				x2: blockWidth * i,
-				y2: h,
-				alpha: 0.075
-			})
-		}
-
-		for (var i = 0; i < smallVertical + 2; i++) {
-			line({
-				ctx: canvas.background,
-				shape: defaultShapes.light,
-				x1: 0,
-				y1: blockHeight * i,
-				x2: w,
-				y2: blockHeight * i,
-				alpha: 0.075
-			})
-		}
-
-		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
-		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
+		document.getElementsByClassName(container.className)[0].addEventListener('touchmove', function(event) {
+			touch.delay += 100
+			createMenu(event)
+		})
+		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) {
+			createMenu(event)
+		})
 	}
+	
+	setInterval(function() {
+		touch.delay -= 1000
+		if (touch.delay < 0) touch.delay = 0
+	}, 100)
 
 	// networking
 	var me = client ? getUrlParams('me') : null
@@ -225,8 +245,7 @@ export function game() {
 				break
 		}
 	})
-
-	var gameMenu = {}
+	
 	function createMenu(event) {
 		if (gameOver) return
 
@@ -241,11 +260,18 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 - gm && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 + gm && !gameMenu.x) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
+		
+		// when dragging
+		if (touch.delay) {
+			console.log('dragging')
+			gameMenu = {}
+			return	
+		}
 
 		// build options popup that goes to right
 		if (
@@ -613,18 +639,6 @@ export function game() {
 				}
 			}
 
-			/*
-			if (client) donut({
-				ctx: canvas[layer],
-				shape: defaultShapes[object.type],
-				x1: object.start[0] * blockWidth / gm,
-				y1: object.start[1] * blockHeight / gm,
-				x2: blockWidth,
-				y2: blockHeight,
-				percentage: object.charge
-			})
-			*/
-
 			if (client) {
 				var size = 3.5
 
@@ -788,13 +802,13 @@ export function game() {
 
 					donut({
 						ctx: canvas[layer],
-						shape: defaultShapes[object.type],
+						shape: defaultShapes.shield,
 						percentage: percentage,
 						x1: dx,
 						y1: dy,
 						x2: blockWidth,
 						y2: blockHeight,
-						alpha: 0.55
+						alpha: 1
 					})
 				}
 				else {

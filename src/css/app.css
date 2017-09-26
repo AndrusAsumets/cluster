@@ -10,7 +10,8 @@
 	box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
 	position: relative;
 	margin: 0;
 	padding: 0;
@@ -32,7 +33,7 @@ html, body {
 }
 
 .game {
-	top: calc(100vh / 7);
+	top: calc(100vh / 6);
 	position: absolute;
 	display: flex;
 	flex-wrap: wrap;
@@ -42,7 +43,7 @@ html, body {
 
 .header {
 	display: flex;
-	height: calc(100vh / 7);
+	height: calc(100vh / 6);
 	width: 100vw;
 	background-color: rgba(0, 0, 0, 0.1);
 	color: rgba(255, 255, 255, 1);
@@ -79,7 +80,7 @@ html, body {
 .scorebar-player2 {
 	position: absolute;
 	bottom: 0;
-	border-bottom: 2px solid rgba(0, 190, 229, 0.5);
+	border-bottom: 8px solid rgba(255, 61, 177, 0.5);
 }
 
 .scorebar-player1 {
@@ -108,4 +109,64 @@ html, body {
 
 .score {
 	font-size: 18px;
+	margin-bottom: 8px;
+}
+
+.menu {
+	position: fixed;
+	left: 0;
+	top: 0;
+	z-index: 5;
+	width: 50vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+}
+
+.patterns {
+	display: flex;
+	flex-wrap: wrap;
+	background-color: rgba(14, 10, 46, 1);
+	border: 2px solid rgba(0, 0, 0, 1);
+	opacity: 0;
+}
+
+.pattern {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	width: 40vh;
+	margin: 4vh 0 4vh 0;
+}
+
+.dot,
+.donut,
+.stripe {
+	width: 6vh;
+	height: 6vh;
+	margin: 2vh;
+	border-radius: 100vh;
+}
+
+.dot {
+	background-color: white;
+}
+
+.donut {
+	border: 0.33vh solid white;
+	box-sizing: content-box;
+}
+
+.stripe {
+	border: 0.33vh solid white;
+	background: repeating-linear-gradient(
+		135deg,
+		transparent,
+		transparent 0.33vh,
+		rgba(255, 255, 255, 0.33) 0.33vh,
+		rgba(255, 255, 255, 0.33) 0.66vh
+	)
 }

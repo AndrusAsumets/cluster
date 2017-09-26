@@ -27,18 +27,22 @@ export const defaultShapes = {
 		file: '/public/images/turbine.svg'
 	},
 	factory: {
-		//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-		//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+		//fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		//strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/factory.svg'
 	},
 	shield: {
-		//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
-		//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
-		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
+		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
+		//fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		//strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
+	},
+	donut: {
+		fillStyle: function (alpha) { return 'rgba(255, 190, 61, ' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 190, 61,' + alpha + ')' }
 	},
 	upgrade: {
 		file: '/public/images/upgrade.svg'
@@ -88,3 +92,28 @@ export const defaultOptions = {
 		action: SET_SELL
 	}
 }
+
+export const defaultPatterns = [
+	[
+		[0, 1, 0],
+		[2, 0, 2],
+		[0, 0, 0]
+	],
+	/*
+	[
+		[0, 0, 0],
+		[2, 0, 2],
+		[0, 1, 0]
+	],
+	[
+		[2, 0, 0],
+		[0, 2, 0],
+		[0, 0, 1]
+	],
+	[
+		[0, 0, 1],
+		[0, 2, 0],
+		[2, 0, 0]
+	]
+	*/
+]
