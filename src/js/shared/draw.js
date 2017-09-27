@@ -1,7 +1,7 @@
 import { isCached } from './helpers'
 
 
-var PIXEL_RATIO = (function () {
+export const PIXEL_RATIO = (function () {
 	try {
 	    var ctx = document.createElement('canvas').getContext('2d'),
 	        dpr = window.devicePixelRatio || 1,
@@ -135,9 +135,8 @@ export function donut(o) {
 
 	ctx.beginPath()
 	ctx.moveTo(x, y)
-	ctx.arc(x, y, radius * 1.25, 0, 2 * Math.PI, false)
-	ctx.arc(x, y, radius * 1.1, 0, 2 * Math.PI, true)
-	ctx.arc(x, y, radius / 1.1, 0, radians, true)
+	ctx.arc(x, y, radius * 2.5, 0, 2 * Math.PI, false)
+	ctx.arc(x, y, radius / 2.2, 0, radians, true)
 	ctx.fillStyle = fillStyle
 	ctx.fill()
 	ctx.closePath()
@@ -154,9 +153,9 @@ export function donut(o) {
 }
 
 export function circle(o) {
-	var centerX = o.x1 + (o.x2 / 2)
-	var centerY = o.y1 + (o.y2 / 2)
-	var radius = Math.sqrt(o.x2 + o.y2)
+	var centerX = o.x1 + (o.width / 2)
+	var centerY = o.y1 + (o.height / 2)
+	var radius = Math.sqrt(o.width + o.height)
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var alpha = o.alpha ? o.alpha : 1
 

@@ -86,6 +86,7 @@ export function selectFromGenericPopup(o) {
 		type: type,
 		start: start,
 		end: end,
+		path: [start, start],
 		charge: 0,
 		dynamics: {}
 	}

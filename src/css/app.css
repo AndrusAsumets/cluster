@@ -33,7 +33,7 @@ body {
 }
 
 .game {
-	top: calc(100vh / 6);
+	top: calc(100vh / 5);
 	position: absolute;
 	display: flex;
 	flex-wrap: wrap;
@@ -43,9 +43,9 @@ body {
 
 .header {
 	display: flex;
-	height: calc(100vh / 6);
+	height: calc(100vh / 5);
 	width: 100vw;
-	background-color: rgba(0, 0, 0, 0.1);
+	background-color: #0E0A2E;
 	color: rgba(255, 255, 255, 1);
 }
 
@@ -80,7 +80,7 @@ body {
 .scorebar-player2 {
 	position: absolute;
 	bottom: 0;
-	border-bottom: 8px solid rgba(255, 61, 177, 0.5);
+	border-bottom: 8px solid rgba(255, 61, 177, 0.33);
 }
 
 .scorebar-player1 {

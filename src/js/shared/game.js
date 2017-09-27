@@ -1,12 +1,12 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
-var $ = require('jquery')
+var throttle = require('lodash.throttle')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL, SET_DRAG_START, SET_DRAG, SET_DRAG_END } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildGenericPopup, selectFromGenericPopup, buildOptionsPopup, selectFromOptionsPopup } from './menu'
-import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
+import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex, findBuildingsByIndex } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
 import { upgrade, sell } from './dynamic'
 
@@ -14,7 +14,7 @@ export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
 	const cooldown = 2 // how often should the buildings create new elements
-	const fps = 60
+	const fps = 30
 	const speed = 2
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -24,10 +24,6 @@ export function game() {
 	const client = window ? true : false
 	const host = !window ? true : false
 	
-	//jquery
-	if (client) window.jQuery = $
-	if (client) window.$ = $
-
 	// window
 	const smallHorizontal = 12 // how many blocks to have on x scale
 	const smallVertical = 6 // how many blocks to have on y scale
@@ -49,6 +45,7 @@ export function game() {
 	//events
 	var gameMenu = {}
 	var touch = { delay: 0 }
+	var touching = {}
 
 	// player
 	function Player (options) {
@@ -69,7 +66,7 @@ export function game() {
 		document.getElementsByClassName('game')[0].appendChild(container)
 		canvas = {
 			background: ctx(container, 'background-canvas', w, h, 1, blockHeight),
-			link: ctx(container, 'link-canvas', w, h, 2, blockHeight),
+			buildings: ctx(container, 'buildings-canvas', w, h, 2, blockHeight),
 			movement: ctx(container, 'movement-canvas', w, h, 3, blockHeight),
 			menu: ctx(container, 'menu-canvas', w, h, 4, blockHeight)
 		}
@@ -85,7 +82,7 @@ export function game() {
 							y1: blockHeight * j,
 							width: blockWidth,
 							height: blockHeight,
-							alpha: 0.667
+							alpha: 0.5
 						})
 					}
 					
@@ -97,26 +94,40 @@ export function game() {
 							y1: blockHeight * j,
 							width: blockWidth,
 							height: blockHeight,
-							alpha: 0.667
+							alpha: 0.5
 						})
 					}
 				}
 			}
 		}
-
-		document.getElementsByClassName(container.className)[0].addEventListener('touchmove', function(event) {
-			touch.delay += 100
-			createMenu(event)
+		
+		document.getElementsByClassName(container.className)[0].addEventListener('touchmove', throttle(onTouchMove, 20))
+		document.getElementsByClassName(container.className)[0].addEventListener('touchend', function(event) {
+			socket.emit('message', { action: SET_DRAG_END, data: { column: touch.column }})
+			touch.start = null
+			touch.column = null
 		})
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) {
 			createMenu(event)
 		})
+		
+		function onTouchMove(event) {
+			touch.delay += 100
+			createMenu(event)
+		}
 	}
 	
-	setInterval(function() {
-		touch.delay -= 1000
-		if (touch.delay < 0) touch.delay = 0
-	}, 100)
+	//env
+	var development = client
+		? getUrlParams('dev')
+			? true
+			: null
+		: null
+	var production = client
+		? !getUrlParams('dev')
+			? true
+			: null
+		: null
 
 	// networking
 	var me = client ? getUrlParams('me') : null
@@ -166,7 +177,7 @@ export function game() {
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
 						players[key].links = data[key].links
-						link()
+						//link()
 
 						for (var i = 0; i < data[key].buildings.length; i++) {
 							grid = setWalkableAt(grid, gm, data[key].buildings[i].start[0], data[key].buildings[i].start[1], false)
@@ -215,12 +226,12 @@ export function game() {
 				decreaseEnergy(players[building.playerId], defaultBuildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
 				for (var p in players) createPaths(players[p])
-				if (client) link()
+				//if (client) link()
 				break
 
 			case SET_LINK:
 				players[data.playerId].links.push(data.link)
-				if (client) link()
+				//if (client) link()
 				break
 
 			case SET_ELEMENT:
@@ -237,19 +248,66 @@ export function game() {
 				break
 
 			case SET_UPGRADE:
+				return
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
 				break
 
 			case SET_SELL:
+				return
 				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				break
+				
+			case SET_DRAG_START:
+				touching[data.column] = data.column
+				
+				break
+				
+			case SET_DRAG:
+				var foundBuildings = findBuildingsByIndex(players[data.playerId].buildings, data.column * gm)
+				
+				for (var i = 0; i < foundBuildings.length; i++) {
+					var start = convertRange(data.start, [0, 100], [0, h])
+					var end = convertRange(data.end, [0, 100], [0, h])
+					var startBlock = start / blockHeight * gm
+					var endBlock = end / blockHeight * gm
+					
+					players[data.playerId].buildings[foundBuildings[i]].path[1][1] = players[data.playerId].buildings[foundBuildings[i]].start[1] + endBlock - startBlock
+				}
+				
+				break
+				
+			case SET_DRAG_END:
+				touching[data.column] = null
+				
 				break
 		}
 	})
 	
+	function shiftBuildingPaths(player) {
+		var elements = player.buildings ? player.buildings : []
+		for (var p = 0; p < elements.length; p++) {
+			var element = player.buildings[p]
+
+			if (
+				!element.path ||
+				!element.path[1] ||
+				!element.path[1].length
+			) {
+				decreaseEnergy(player, defaultAbsorb)
+			} else {
+				if (touching[players[player.id].buildings[p].start[0] / gm]) continue
+				
+				if (players[player.id].buildings[p]) players[player.id].buildings[p].start[1] = Math.floor(players[player.id].buildings[p].path[1][1])
+				
+				if (players[player.id].buildings[p]) players[player.id].buildings[p].path[0] = players[player.id].buildings[p].path[1]
+			}
+		}
+	}
+
+	
 	function createMenu(event) {
 		if (gameOver) return
 
-		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
 
 		var player = players[me]
@@ -260,21 +318,39 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x && production) return true
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x && production) return true
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		
 		// when dragging
 		if (touch.delay) {
-			console.log('dragging')
+			var end = convertRange(y, [0, h], [0, 100])
+			
+			if (!touch.start) {
+				touch.column = xBlock
+				touch.start = convertRange(y, [0, h], [0, 100])
+				
+				socket.emit('message', { action: SET_DRAG_START, data: { column: xBlock }})
+			}
+			
+			// make sure we emit only after block change
+			if ('last' in touch)  {
+				var a = Math.floor(convertRange(touch.last, [0, 100], [0, vertical * gm]))
+				var b = Math.floor(convertRange(end - touch.start, [0, 100], [0, vertical * gm]))
+				if (a == b) return
+			}
+			
+			touch.last = end - touch.start
+			
+			socket.emit('message', { action: SET_DRAG, data: { playerId: me, column: touch.column, start: touch.start, end: end }})
+			
 			gameMenu = {}
-			return	
 		}
 
 		// build options popup that goes to right
-		if (
+		else if (
 			gameMenu.options
 		) {
 			gameMenu.direction = gameMenu.position == 'left' ? 'toRight' : 'toLeft'
@@ -334,7 +410,7 @@ export function game() {
 			if (from == to) return
 
 			socket.emit('message', { action: SET_LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
-			link()
+			//link()
 
 			gameMenu = {}
 		}
@@ -800,14 +876,14 @@ export function game() {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
 
-					donut({
+					circle({
 						ctx: canvas[layer],
-						shape: defaultShapes.shield,
+						shape: defaultShapes.donut,
 						percentage: percentage,
 						x1: dx,
 						y1: dy,
-						x2: blockWidth,
-						y2: blockHeight,
+						width: blockWidth,
+						height: blockHeight,
 						alpha: 1
 					})
 				}
@@ -872,27 +948,33 @@ export function game() {
 	function end(player) {
 		if (player.energy < 0) gameOver = true
 	}
-
+	
+	setInterval(function() {
+		touch.delay -= 1000
+		if (touch.delay < 0) touch.delay = 0
+	}, 100)
+	
 	setInterval(function() {
 		time = (new Date).getTime()
 
 		for (var p in players) {
-			walkBuildings(players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
-			hit(players[p])
-			deepHit(players[p])
-			health(players[p])
-			resetProjectiles(players[p])
-			shiftPaths(players[p])
+			//walkBuildings(players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
+			//hit(players[p])
+			//deepHit(players[p])
+			//health(players[p])
+			//resetProjectiles(players[p])
+			//shiftPaths(players[p])
+			shiftBuildingPaths(players[p])
 		}
 
 		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
-			collision(p)
-			attack(players[p])
+			//collision(p)
+			//attack(players[p])
 
 			if (!gameOver) {
-				energy(players[p])
-				end(players[p])
+				//energy(players[p])
+				//end(players[p])
 			}
 		}
 
@@ -913,8 +995,9 @@ export function game() {
 	if (client) requestAnimationFrame(animationFrame)
 
 	function animate(key) {
-		charge('movement', 'buildings', key)
+		//charge('movement', 'buildings', key)
 		if (client) {
+			move('movement', 'buildings', key)
 			move('movement', 'elements', key)
 			move('movement', 'projectiles', key)
 			move('movement', 'deepProjectiles', key)

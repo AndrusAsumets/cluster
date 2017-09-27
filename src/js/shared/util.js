@@ -10,6 +10,8 @@ export function isNear(gm, positionA, positionB) {
 }
 
 export function setWalkableAt(grid, gm, x, y, walkable) {
+	//x = Math.floor(x)
+	//y = Math.floor(y)
 	var m = Math.abs(gm / 3)
 	x = x <= m ? m : x
 	y = y <= m ? m : y
@@ -66,4 +68,14 @@ export function findBuildingIndex(buildings, building) {
 			buildings[p].start[1] == building.start[1]
 		) return p
 	}
+}
+
+export function findBuildingsByIndex(buildings, column) {
+	var response = []
+	for (var p = 0; p < buildings.length; p++) {
+		if (
+			buildings[p].start[0] === column
+		) response.push(p)
+	}
+	return response
 }
