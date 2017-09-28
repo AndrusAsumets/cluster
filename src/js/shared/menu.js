@@ -67,6 +67,7 @@ export function selectFromGenericPopup(o) {
 		index = o.xBlock - o.gameMenu.x
 		type = Object.keys(defaultBuildings)[index]
 		id = o.player.elements.length
+		level = defaultBuildings[type].level
 		start = [o.gameMenu.x * o.gm, o.gameMenu.y * o.gm]
 		end = [o.horizontal, o.gameMenu.y * o.gm]
 	}
@@ -74,6 +75,7 @@ export function selectFromGenericPopup(o) {
 		index = o.xBlock - o.gameMenu.x + Object.keys(defaultBuildings).length - 1
 		type = Object.keys(defaultBuildings)[index]
 		id = o.player.elements.length
+		level = defaultBuildings[type].level
 		start = [o.gameMenu.x * o.gm, o.gameMenu.y * o.gm]
 		end = [0, o.gameMenu.y * o.gm]
 	}
@@ -95,7 +97,6 @@ export function selectFromGenericPopup(o) {
 		playerId: o.me
 	}
 	
-	//if (defaultBuildings[type].offensive) showPatterns({ socket: socket, message: message, building: building })
 	o.socket.emit('message', message)
 }
 
