@@ -25,8 +25,8 @@ export function game() {
 	const host = !window ? true : false
 	
 	// window
-	const smallHorizontal = 12 // how many blocks to have on x scale
-	const smallVertical = 6 // how many blocks to have on y scale
+	const smallHorizontal = 10 // how many blocks to have on x scale
+	const smallVertical = 5 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -263,6 +263,9 @@ export function game() {
 				break
 				
 			case SET_DRAG:
+				if (touching[data.column] > data.time) return console.log('older event')
+				touching[data.column] = data.time
+				
 				var foundBuildings = findBuildingsByIndex(players[data.playerId].buildings, data.column * gm)
 				
 				for (var i = 0; i < foundBuildings.length; i++) {
@@ -273,6 +276,8 @@ export function game() {
 					
 					players[data.playerId].buildings[foundBuildings[i]].path[1][1] = players[data.playerId].buildings[foundBuildings[i]].start[1] + endBlock - startBlock
 				}
+				
+				if (host) touch.update = time
 				
 				break
 				
@@ -336,7 +341,7 @@ export function game() {
 			}
 			
 			// make sure we emit only after block change
-			if ('last' in touch)  {
+			if ('last' in touch) {
 				var a = Math.floor(convertRange(touch.last, [0, 100], [0, vertical * gm]))
 				var b = Math.floor(convertRange(end - touch.start, [0, 100], [0, vertical * gm]))
 				if (a == b) return
@@ -344,7 +349,7 @@ export function game() {
 			
 			touch.last = end - touch.start
 			
-			socket.emit('message', { action: SET_DRAG, data: { playerId: me, column: touch.column, start: touch.start, end: end }})
+			socket.emit('message', { action: SET_DRAG, data: { playerId: me, column: touch.column, start: touch.start, end: end, time: time }})
 			
 			gameMenu = {}
 		}
@@ -875,7 +880,8 @@ export function game() {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-
+					
+					/*
 					circle({
 						ctx: canvas[layer],
 						shape: defaultShapes.donut,
@@ -885,6 +891,17 @@ export function game() {
 						width: blockWidth,
 						height: blockHeight,
 						alpha: 1
+					})
+					*/
+					
+					rectangle({
+						ctx: canvas[layer],
+						shape: defaultShapes.factory,
+						x1: dx,
+						y1: dy,
+						width: blockWidth,
+						height: blockHeight,
+						alpha: 0.9
 					})
 				}
 				else {

@@ -6,4 +6,4 @@ require('./src/css/app.css')
 
 game()
 
-disableScroll.on()
+//disableScroll.on()
