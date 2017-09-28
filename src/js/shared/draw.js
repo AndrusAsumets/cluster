@@ -68,13 +68,14 @@ export function rectangle(o) {
 
 var dots = []
 export function dot(o) {
-	var x = o.x1 + o.x2 / 2
-	var y = o.y1 + o.y2 / 2
-	var radius = Math.sqrt(o.x2 + o.y2)
+	var x = o.x1 + o.width / 2
+	var y = o.y1 + o.height / 2
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
+	var size = o.size ? o.size / 3 / 0.66 : 1 / 0.66
+	var radius = Math.sqrt((o.width + o.height) * size)
 
 	/*
 	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, alpha: alpha, fillStyle: fillStyle })
@@ -116,22 +117,23 @@ export function dot(o) {
 
 var donuts = []
 export function donut(o) {
-	var x = o.x2 / 2
-	var y = o.y2 / 2
-	var radius = Math.sqrt(o.x2 + o.y2)
+	var x = o.width / 2
+	var y = o.height / 2
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
+	var size = o.size ? o.size / 3 / 0.66 : 1 / 0.66
+	var radius = Math.sqrt((o.width + o.height) * size)
 
-	var cacheIndex = isCached(donuts, { type: 'donut', radians: radians, alpha: alpha, fillStyle: fillStyle })
+	var cacheIndex = isCached(donuts, { type: 'donut', radians: radians, radius: radius, alpha: alpha, fillStyle: fillStyle })
 	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(donuts[cacheIndex].canvas, o.x1, o.y1)
 
 	var canvas = document.createElement('canvas')
 	var ctx = canvas.getContext('2d')
 
-	canvas.width = o.x2
-	canvas.height = o.y2
+	canvas.width = o.width
+	canvas.height = o.height
 
 	ctx.beginPath()
 	ctx.moveTo(x, y)
@@ -146,6 +148,7 @@ export function donut(o) {
 		type: 'donut',
 		canvas: canvas,
 		radians: radians,
+		radius: radius,
 		alpha: alpha,
 		fillStyle: fillStyle
 	})

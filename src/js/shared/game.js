@@ -262,6 +262,7 @@ export function game() {
 				xBlock: xBlock,
 				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
 			})
+			
 			gameMenu = {}
 		}
 
@@ -463,7 +464,7 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				decreaseEnergy(player, defaultAbsorb)
+				decreaseEnergy(player, defaultAbsorb * players[player.id].elements[p].level)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
@@ -546,7 +547,8 @@ export function game() {
 								player.elements[r].path[a - 1],
 								anotherPlayer.elements[r2].path[b]
 							],
-							shape: defaultShapes[player.elements[r].type]
+							shape: defaultShapes[player.elements[r].type],
+							level: player.elements[r].level
 						}
 
 						players[anotherPlayer.id].deepProjectiles.push(projectile)
@@ -556,39 +558,14 @@ export function game() {
 								anotherPlayer.elements[r2].path[a - 1],
 								player.elements[r].path[b]
 							],
-							shape: defaultShapes[anotherPlayer.elements[r2].type]
+							shape: defaultShapes[anotherPlayer.elements[r2].type],
+							level: anotherPlayer.elements[r2].level
 						}
 
 						players[player.id].deepProjectiles.push(projectile)
 
 						break
 					}
-				}
-			}
-		}
-	}
-
-	function deepHit(player) {
-		for (var r = 0; r < player.elements.length; r++) {
-			var element = player.elements[r]
-
-			if (
-				!element.path ||
-				!element.path[1] ||
-				!element.path[1].length
-			) continue
-
-			var x2 = element.path[1][0]
-			var y2 = element.path[1][1]
-
-			var projectiles = player.deepProjectiles
-			for (var p = 0; p < projectiles.length; p++) {
-				var x1 = projectiles[p].path[1][0]
-				var y1 = projectiles[p].path[1][1]
-
-				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage / 4
-					break
 				}
 			}
 		}
@@ -612,18 +589,6 @@ export function game() {
 					if (host) newElement(objects, key, p)
 				}
 			}
-
-			/*
-			if (client) donut({
-				ctx: canvas[layer],
-				shape: defaultShapes[object.type],
-				x1: object.start[0] * blockWidth / gm,
-				y1: object.start[1] * blockHeight / gm,
-				x2: blockWidth,
-				y2: blockHeight,
-				percentage: object.charge
-			})
-			*/
 
 			if (client) {
 				var size = 3.5
@@ -688,9 +653,10 @@ export function game() {
 					start: start,
 					end: end,
 					path: path,
+					level: object.level,
 					dynamics: {
-						totalHealth: defaultHealth,
-						health: defaultHealth
+						totalHealth: defaultHealth * object.level,
+						health: defaultHealth * object.level
 					}
 				}
 
@@ -724,7 +690,8 @@ export function game() {
 						player.buildings[p].start,
 						player.elements[r].path[1]
 					],
-					shape: defaultShapes[player.buildings[p].type]
+					shape: defaultShapes[player.buildings[p].type],
+					level: player.buildings[p].level
 				}
 
 				players[player.id].projectiles.push(projectile)
@@ -753,7 +720,38 @@ export function game() {
 				var y2 = element.path[1][1]
 
 				if (x1 == x2 && y1 == y2) {
-					players[player.id].elements[r].dynamics.health = players[player.id].elements[r].dynamics.health - defaultDamage
+					var health = players[player.id].elements[r].dynamics.health
+					var damage = defaultDamage * projectiles[p].level
+					players[player.id].elements[r].dynamics.health = health - damage
+					break
+				}
+			}
+		}
+	}
+	
+	function deepHit(player) {
+		for (var r = 0; r < player.elements.length; r++) {
+			var element = player.elements[r]
+
+			if (
+				!element.path ||
+				!element.path[1] ||
+				!element.path[1].length
+			) continue
+
+			var x2 = element.path[1][0]
+			var y2 = element.path[1][1]
+
+			var projectiles = player.deepProjectiles
+			for (var p = 0; p < projectiles.length; p++) {
+				var x1 = projectiles[p].path[1][0]
+				var y1 = projectiles[p].path[1][1]
+
+				if (x1 == x2 && y1 == y2) {
+					console.log(players[player.id].elements[r].level, projectiles[p].level)
+					var health = players[player.id].elements[r].dynamics.health
+					var damage = (defaultDamage * projectiles[p].level) / 3
+					players[player.id].elements[r].dynamics.health = health - damage
 					break
 				}
 			}
@@ -792,9 +790,10 @@ export function game() {
 						percentage: percentage,
 						x1: dx,
 						y1: dy,
-						x2: blockWidth,
-						y2: blockHeight,
-						alpha: 0.55
+						width: blockWidth,
+						height: blockHeight,
+						alpha: 0.66,
+						size: object.level
 					})
 				}
 				else {
@@ -803,8 +802,9 @@ export function game() {
 						shape: object.shape,
 						x1: dx,
 						y1: dy,
-						x2: blockWidth,
-						y2: blockHeight
+						width: blockWidth,
+						height: blockHeight,
+						size: object.level
 					})
 				}
 			}

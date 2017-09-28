@@ -8,7 +8,8 @@ export function upgrade(o) {
 	var cost = building.cost
 	var total = level * cost
 	
-	if (energy - total < 0) return
+	if (level > 3) return player
+	if (energy - total < 0) return player
 	
 	player.energy = energy - total
 	player.buildings[buildingIndex].level = level
