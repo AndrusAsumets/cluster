@@ -604,6 +604,27 @@ export function game() {
 					size: size,
 					percentage: object.charge
 				})
+				
+				for (var i = 0; i < object.level; i++) {
+					var level = object.level
+					var marginX = blockWidth / size
+					var marginY = blockHeight / size
+					var width = blockWidth / size / 3
+					var maxWidth = blockWidth - marginX * 2
+					var maxHeight = blockHeight - marginY * 2
+					var spacing = i * (width * 2)
+					
+					dot({
+						ctx: canvas[layer],
+						shape: defaultShapes.light,
+						x1: object.start[0] * blockWidth / gm + width + spacing,
+						y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
+						width: maxWidth,
+						height: maxHeight,
+						size: 1,
+						alpha: 0.75
+					})
+				}
 
 				if (object.offensive) {
 					var marginY = blockHeight / size
@@ -832,7 +853,7 @@ export function game() {
 				building.producer == true &&
 				building.built == true
 			) {
-				increaseEnergy(player)
+				increaseEnergy(player, building.level)
 			}
 		}
 	}
