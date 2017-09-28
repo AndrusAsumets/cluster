@@ -79,8 +79,6 @@ export function selectFromGenericPopup(o) {
 		start = [o.gameMenu.x * o.gm, o.gameMenu.y * o.gm]
 		end = [0, o.gameMenu.y * o.gm]
 	}
-	
-	console.log(level)
 
 	var building = {
 		playerId: o.player.id,

@@ -748,7 +748,6 @@ export function game() {
 				var y1 = projectiles[p].path[1][1]
 
 				if (x1 == x2 && y1 == y2) {
-					console.log(players[player.id].elements[r].level, projectiles[p].level)
 					var health = players[player.id].elements[r].dynamics.health
 					var damage = (defaultDamage * projectiles[p].level) / 3
 					players[player.id].elements[r].dynamics.health = health - damage
