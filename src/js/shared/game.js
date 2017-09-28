@@ -241,8 +241,8 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 - gm && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 + gm && !gameMenu.x) return
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
