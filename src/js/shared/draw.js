@@ -27,7 +27,7 @@ export function createMatrix(vertical, horizontal) {
 	return matrix
 }
 
-export function ctx(container, className, w, h, z, top) {
+export function ctx(container, className, w, h, z) {
 	var ratio = PIXEL_RATIO
 	var canvas = document.createElement('canvas')
 	canvas.className = className
@@ -68,8 +68,8 @@ export function rectangle(o) {
 
 var dots = []
 export function dot(o) {
-	var x = o.x1 + o.width / 2
-	var y = o.y1 + o.height / 2
+	var x = o.width / 2
+	var y = o.height / 2
 	var degrees = o.percentage ? o.percentage * 3.6 : 360
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
@@ -77,42 +77,31 @@ export function dot(o) {
 	var size = o.size ? o.size / 3 / 0.66 : 1 / 0.66
 	var radius = Math.sqrt((o.width + o.height) * size)
 
-	/*
-	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, alpha: alpha, fillStyle: fillStyle })
-	if (cacheIndex) {
-		o.ctx.drawImage(dots[cacheIndex].canvas, o.x1, o.y1)
-		return
-	}
+	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, radius: radius, alpha: alpha, fillStyle: fillStyle })
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(dots[cacheIndex].canvas, o.x1, o.y1, dots[cacheIndex].width, dots[cacheIndex].height)
 
-	var canvas = document.createElement('canvas')
-	var ctx = canvas.getContext('2d')
+	var container = document.createElement('div')
+	var c = ctx(container, '', o.width, o.height)
 
-	canvas.width = o.x2
-	canvas.height = o.y2
-	*/
+	c.beginPath()
+	c.moveTo(x, y)
+	c.arc(x, y, radius / 2, 0, radians, false)
+	c.fillStyle = fillStyle
+	c.fill()
+	c.closePath()
 
-	o.ctx.beginPath()
-	o.ctx.moveTo(x, y)
-	o.ctx.arc(x, y, radius / 2, 0, radians, false)
-	o.ctx.fillStyle = fillStyle
-	o.ctx.fill()
-	o.ctx.closePath()
+	dots.push({
+		type: 'dot',
+		canvas: c.canvas,
+		width: o.width,
+		height: o.height,
+		radians: radians,
+		radius: radius,
+		alpha: alpha,
+		fillStyle: fillStyle
+	})
 
-	/*
-	var image = new Image()
-	image.onload = function() {
-		dots.push({
-			type: 'dot',
-			canvas: image,
-			radians: radians,
-			alpha: alpha,
-			fillStyle: fillStyle
-		})
-	}
-	image.src = ctx.canvas
-
-	o.ctx.drawImage(ctx.canvas, o.x1, o.y1)
-	*/
+	o.ctx.drawImage(c.canvas, o.x1, o.y1, o.width, o.height)
 }
 
 var donuts = []
@@ -127,33 +116,32 @@ export function donut(o) {
 	var radius = Math.sqrt((o.width + o.height) * size)
 
 	var cacheIndex = isCached(donuts, { type: 'donut', radians: radians, radius: radius, alpha: alpha, fillStyle: fillStyle })
-	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(donuts[cacheIndex].canvas, o.x1, o.y1)
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(donuts[cacheIndex].canvas, o.x1, o.y1, donuts[cacheIndex].width, donuts[cacheIndex].height)
 
-	var canvas = document.createElement('canvas')
-	var ctx = canvas.getContext('2d')
+	var container = document.createElement('div')
+	var c = ctx(container, '', o.width, o.height)
 
-	canvas.width = o.width
-	canvas.height = o.height
-
-	ctx.beginPath()
-	ctx.moveTo(x, y)
-	ctx.arc(x, y, radius * 1.25, 0, 2 * Math.PI, false)
-	ctx.arc(x, y, radius * 1.1, 0, 2 * Math.PI, true)
-	ctx.arc(x, y, radius / 1.1, 0, radians, true)
-	ctx.fillStyle = fillStyle
-	ctx.fill()
-	ctx.closePath()
+	c.beginPath()
+	c.moveTo(x, y)
+	c.arc(x, y, radius * 1.25, 0, 2 * Math.PI, false)
+	c.arc(x, y, radius * 1.1, 0, 2 * Math.PI, true)
+	c.arc(x, y, radius / 1.1, 0, radians, true)
+	c.fillStyle = fillStyle
+	c.fill()
+	c.closePath()
 
 	donuts.push({
 		type: 'donut',
-		canvas: canvas,
+		canvas: c.canvas,
+		width: o.width,
+		height: o.height,
 		radians: radians,
 		radius: radius,
 		alpha: alpha,
 		fillStyle: fillStyle
 	})
 
-	o.ctx.drawImage(ctx.canvas, o.x1, o.y1)
+	o.ctx.drawImage(c.canvas, o.x1, o.y1, o.width, o.height)
 }
 
 export function circle(o) {

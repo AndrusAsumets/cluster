@@ -63,10 +63,10 @@ export function game() {
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
 		canvas = {
-			background: ctx(container, 'background', w, h, 1, blockHeight),
-			link: ctx(container, 'link', w, h, 2, blockHeight),
-			movement: ctx(container, 'movement', w, h, 3, blockHeight),
-			menu: ctx(container, 'menu', w, h, 4, blockHeight)
+			background: ctx(container, 'background', w, h, 1),
+			link: ctx(container, 'link', w, h, 2),
+			movement: ctx(container, 'movement', w, h, 3),
+			menu: ctx(container, 'menu', w, h, 4)
 		}
 
 		// create a visual UI grid
