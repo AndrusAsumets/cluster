@@ -283,8 +283,8 @@ export function game() {
 			!gameMenu.generic
 		) {
 			gameMenu.position = position
-			gameMenu.x = xBlock
-			gameMenu.y = yBlock
+			gameMenu.xBlock = xBlock
+			gameMenu.yBlock = yBlock
 			gameMenu.fromBuilding = building
 			gameMenu.options = true
 
@@ -324,7 +324,8 @@ export function game() {
 		//build a generic popup
 		else if (
 			!gameMenu.xBlock &&
-			!gameMenu.yBlock
+			!gameMenu.yBlock &&
+			yBlock < smallVertical
 		) {
 			buildGenericPopup({
 				canvas: canvas,

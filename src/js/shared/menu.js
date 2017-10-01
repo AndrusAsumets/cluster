@@ -71,7 +71,6 @@ export function selectFromGenericPopup(o) {
 	index = o.position == 'left' ? index : Math.floor(index - total / 2)
 	index = index < 0 ? 0 : index
 	index = index > buildings.length - 1 ? index - 2 : index
-	console.log(index)
 	var type = buildings[index]
 	if (!type) return
 	var id = o.player.elements.length
@@ -208,14 +207,14 @@ export function buildOptionsPopup(o) {
 export function selectFromOptionsPopup(o) {
 	var action
 	if (o.gameMenu.direction == 'toRight') {
-		var index = o.xBlock - o.gameMenu.x
+		var index = o.xBlock - o.gameMenu.xBlock
 		var key = Object.keys(defaultOptions)[index]
 		if (!key) return
 		action = defaultOptions[key].action
 	}
 	else {
 		var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
-		var index = o.xBlock - o.gameMenu.x + Object.keys(defaultOptions).length - 1
+		var index = o.xBlock - o.gameMenu.xBlock + Object.keys(defaultOptions).length - 1
 		var key = reversedOptions[index]
 		if (!key) return
 		action = defaultOptions[key].action
