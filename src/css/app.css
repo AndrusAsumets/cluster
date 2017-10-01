@@ -24,26 +24,24 @@ html, body {
 	color: white;
 }
 
-.separator {
-	position: fixed;
-	left: 50vw;
-	height: 100vh;
-	border: 1px solid rgba(255, 255, 255, 0.1);
+.background,
+.movement {
+	position: absolute;
+	left: 0;
+	top: 0;
 }
 
-.game {
-	top: calc(100vh / 7);
-	position: absolute;
-	display: flex;
-	flex-wrap: wrap;
-    //transform: rotateX(45deg) rotateZ(45deg);
-    //transform: rotateX(30deg) rotateY(30deg) rotateZ(60deg);
+.header,
+.menu {
+	position: fixed;
+	height: calc(100vh / 7);
+	width: 100vw;
+	left: 0;
+	bottom: 0;
 }
 
 .header {
 	display: flex;
-	height: calc(100vh / 7);
-	width: 100vw;
 	background-color: rgba(0, 0, 0, 0.1);
 	color: rgba(255, 255, 255, 1);
 }
@@ -54,10 +52,6 @@ html, body {
 	align-items: center;
 	width: 50vw;
 	padding: 16px;
-}
-
-.container:nth-child(2) {
-	border-left: 2px solid rgba(0, 0, 0, 0.25);
 }
 
 .container > .score-player1,
@@ -71,15 +65,19 @@ html, body {
 }
 
 .score-player1,
-.container:nth-child(2) > .name {
+.container:nth-child(4) > .name {
 	margin-left: auto;
+}
+
+.scorebar {
+	display: flex;
 }
 
 .scorebar-player1,
 .scorebar-player2 {
 	position: absolute;
-	bottom: 0;
-	border-bottom: 2px solid rgba(0, 190, 229, 0.5);
+	top: 0;
+	border-top: 4px solid rgba(0, 190, 229, 0.5);
 }
 
 .scorebar-player1 {
@@ -91,15 +89,7 @@ html, body {
 }
 
 .player {
-	position: absolute;
-	left: 0;
-	top: 0;
-	height: 100vh;
-	width: 100vw;
-}
-
-.player {
-	border: 1px solid rgba(0, 0, 0, 0.4);	
+	position: relative;
 }
 
 .name {
@@ -108,4 +98,14 @@ html, body {
 
 .score {
 	font-size: 18px;
+}
+
+.burger {
+	width: calc(100vh / 7);
+	height: calc(100vh / 7);
+	background-size: calc(100vh / 14) calc(100vh / 14);
+	background-image: url(/public/images/burger.svg);
+	background-repeat: no-repeat;
+	background-position: center center;
+	opacity: 0.5;	
 }

@@ -2,9 +2,16 @@ cluster.game
 
 
 NOW:
-* upgrades (also add a bar that displays upgrade level)
-* different sizes for the bubbles that correspond to level
-* unlinking
+* separate tick from fps
+* patterns
+* turns
+
+- pattern tornid: ratsu, siinuslaine
+- booster:	
+- stellaris
+- pane tähele kontrolloreid
+
+PHASE0:
 * health bar
 
 PHASE1:

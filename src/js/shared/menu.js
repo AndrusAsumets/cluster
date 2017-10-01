@@ -3,82 +3,77 @@ import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { line, rectangle, circle, dot, donut, image } from './draw'
 
 export function buildGenericPopup(o) {
-	if (o.position == 'left') {
-		var i = 0
+	var extra = o.position == 'left' ? 0 : o.width / 2
+	var reverseExtra = o.position == 'right' ? 0 : o.width / 2
+	
+	// background bar that takes the half of the width
+	rectangle({
+		ctx: o.canvas.menu,
+		shape: defaultShapes.background,
+		x1: reverseExtra,
+		y1: 0,
+		width: o.width / 2,
+		height: o.height
+	})
+	
+	rectangle({
+		ctx: o.canvas.menu,
+		shape: defaultShapes.dark,
+		x1: extra,
+		y1: 0,
+		width: o.width / 2,
+		height: o.height
+	})
+	
+	// a small horizontal separator for the top
+	rectangle({
+		ctx: o.canvas.menu,
+		shape: defaultShapes.light,
+		x1: 0,
+		y1: 0,
+		width: o.width,
+		height: 4,
+		alpha: 0.5
+	})
 
-		for (var building in defaultBuildings) {
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.light,
-				x1: (o.xBlock + i) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 0.1
-			})
-
-			image({
-				ctx: o.canvas.menu,
-				type: building,
-				file: defaultShapes[building].file,
-				x1: (o.xBlock + i) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				size: 3.5
-			})
-
-			i++
-		}
-	}
-	else {
-		var reversedDefaultBuildings = JSON.parse(JSON.stringify(Object.keys(defaultBuildings))).reverse()
-		var i = 0
-		for (var building in defaultBuildings) {
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.light,
-				x1: (o.xBlock + i - reversedDefaultBuildings.length + 1) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 0.1
-			})
-
-			image({
-				ctx: o.canvas.menu,
-				type: building,
-				file: defaultShapes[building].file,
-				x1: (o.xBlock + i - reversedDefaultBuildings.length + 1) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				size: 3.5
-			})
-
-			i++
-		}
+	var i = 0
+	for (var building in defaultBuildings) {
+		image({
+			ctx: o.canvas.menu,
+			type: building,
+			file: defaultShapes[building].file,
+			x1: extra + i * o.height,
+			y1: 0,
+			width: o.height,
+			height: o.height,
+			size: 3.5
+		})
+		
+		// a tiny vertical separator
+		line({
+			ctx: o.canvas.menu,
+			shape: defaultShapes.light,
+			x1: extra + o.height + o.height * i,
+			y1: 4,
+			x2: extra + o.height + o.height * i,
+			y2: o.height,
+			alpha: 0.075
+		})
+		
+		i++
 	}
 }
 
 export function selectFromGenericPopup(o) {
-	var index, type, id, level, start, end
-	if (o.gameMenu.direction == 'toRight') {
-		index = o.xBlock - o.gameMenu.x
-		type = Object.keys(defaultBuildings)[index]
-		id = o.player.elements.length
-		level = defaultBuildings[type].level
-		start = [o.gameMenu.x * o.gm, o.gameMenu.y * o.gm]
-		end = [o.horizontal, o.gameMenu.y * o.gm]
-	}
-	else {
-		index = o.xBlock - o.gameMenu.x + Object.keys(defaultBuildings).length - 1
-		type = Object.keys(defaultBuildings)[index]
-		id = o.player.elements.length
-		level = defaultBuildings[type].level
-		start = [o.gameMenu.x * o.gm, o.gameMenu.y * o.gm]
-		end = [0, o.gameMenu.y * o.gm]
-	}
+	var index = o.menuXBlock
+	var total = o.w / o.blockHeight
+	index = o.position == 'left' ? index : Math.floor(index - total / 2)
+	var type = Object.keys(defaultBuildings)[index]
+	if (!type) return
+	var id = o.player.elements.length
+	var level = defaultBuildings[type].level
+	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
+	var end = o.position == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
 	var building = {
 		playerId: o.player.id,

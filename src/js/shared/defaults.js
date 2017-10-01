@@ -1,6 +1,6 @@
 import { SET_UPGRADE, SET_SELL } from './actions'
 
-export const defaultEnergy = 1000
+export const defaultEnergy = 10000
 export const defaultHealth = 30
 export const defaultDamage = 10
 export const defaultAbsorb = 10
@@ -49,18 +49,11 @@ export const defaultShapes = {
 }
 
 export const defaultBuildings = {
-	/*
-	earth: {
-		cost: 250,
-		linkable: false,
-		offensive: false
+	factory: {
+		cost: 50,
+		level: 1,
+		offensive: true
 	},
-	water: {
-		cost: 25,
-		linkable: true,
-		offensive: false
-	},
-	*/
 	turbine: {
 		cost: 25,
 		level: 1,
@@ -68,10 +61,40 @@ export const defaultBuildings = {
 		producer: true,
 		income: 0.5
 	},
+	shield: {
+		cost: 50,
+		level: 1,
+		defensive: true
+	},
+	
 	factory: {
 		cost: 50,
 		level: 1,
 		offensive: true
+	},
+	turbine: {
+		cost: 25,
+		level: 1,
+		linkable: true,
+		producer: true,
+		income: 0.5
+	},
+	shield: {
+		cost: 50,
+		level: 1,
+		defensive: true
+	},
+	factory: {
+		cost: 50,
+		level: 1,
+		offensive: true
+	},
+	turbine: {
+		cost: 25,
+		level: 1,
+		linkable: true,
+		producer: true,
+		income: 0.5
 	},
 	shield: {
 		cost: 50,

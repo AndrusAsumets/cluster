@@ -34,9 +34,9 @@ export function game() {
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
 	const sizes = client ? size() : { x: horizontal, y: vertical }
-	const marginTop = sizes.y / smallVertical + 1 // height of the scoring menu in pixels
+	const marginBottom = sizes.y / smallVertical + 1 // height of the scoring menu in pixels
 	const w = sizes.x
-	const h = sizes.y - marginTop
+	const h = sizes.y - marginBottom
 	const blockWidth = w / smallHorizontal
 	const blockHeight = h / smallVertical
 
@@ -66,7 +66,7 @@ export function game() {
 			background: ctx(container, 'background', w, h, 1),
 			link: ctx(container, 'link', w, h, 2),
 			movement: ctx(container, 'movement', w, h, 3),
-			menu: ctx(container, 'menu', w, h, 4)
+			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 4)
 		}
 
 		// create a visual UI grid
@@ -93,6 +93,16 @@ export function game() {
 				alpha: 0.075
 			})
 		}
+		
+		line({
+			ctx: canvas.background,
+			shape: defaultShapes.dark,
+			x1: w / 2,
+			y1: 0,
+			x2: w / 2,
+			y2: h,
+			alpha: 0.75
+		})
 
 		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
@@ -237,9 +247,10 @@ export function game() {
 		canvas.menu.clearRect(0, 0, w, h)
 
 		var x = event.clientX
-		var y = event.clientY - marginTop
+		var y = event.clientY 
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
+		var menuXBlock = Math.floor(x / blockHeight)
 		var position = me == 'player1' ? 'left' : 'right'
 		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
 		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
@@ -275,7 +286,6 @@ export function game() {
 			gameMenu.x = xBlock
 			gameMenu.y = yBlock
 			gameMenu.fromBuilding = building
-			gameMenu.linking = true
 			gameMenu.options = true
 
 			buildOptionsPopup({
@@ -291,66 +301,21 @@ export function game() {
 			})
 		}
 
-		// if from and to buildings were found, then link
+		// select from the first menu
 		else if (
-			gameMenu.fromBuilding &&
-			Object.keys(gameMenu.fromBuilding).length > 0 &&
-			buildingIsFound
+			(yBlock == 7 && 'xBlock' + gameMenu && 'yBlock' in gameMenu)
 		) {
-			var from = gameMenu.fromBuilding.start
-			var to = building.start
-
-			if (isLinked(players[me], from, to)) {
-				gameMenu = {}
-				return
-			}
-
-			// disablelinking to the same building
-			if (from == to) return
-
-			socket.emit('message', { action: SET_LINK, data: { link: { from: from, to: to, type: gameMenu.fromBuilding.type }, playerId: me }})
-			link()
-
-			gameMenu = {}
-		}
-
-		// build generic popup that goes to right
-		else if (
-			(position == 'left' && gameMenu.x     == xBlock && gameMenu.y == yBlock) ||
-			(position == 'left' && gameMenu.x + 1 == xBlock && gameMenu.y == yBlock) ||
-			(position == 'left' && gameMenu.x + 2 == xBlock && gameMenu.y == yBlock) ||
-			(position == 'left' && gameMenu.x + 3 == xBlock && gameMenu.y == yBlock)
-		) {
-			gameMenu.direction = 'toRight'
-			
 			selectFromGenericPopup({
 				player: player,
 				socket: socket,
 				gameMenu: gameMenu,
-				xBlock: xBlock,
+				position: position,
+				menuXBlock: menuXBlock,
 				horizontal: horizontal,
-				gm: gm
-			})
-			
-			gameMenu = {}
-		}
-
-		// build generic popup that goes to left
-		else if (
-			(position == 'right' && gameMenu.x - 3 == xBlock && gameMenu.y == yBlock) ||
-			(position == 'right' && gameMenu.x - 2 == xBlock && gameMenu.y == yBlock) ||
-			(position == 'right' && gameMenu.x - 1 == xBlock && gameMenu.y == yBlock) ||
-			(position == 'right' && gameMenu.x     == xBlock && gameMenu.y == yBlock)
-		) {
-			gameMenu.direction = 'toLeft'
-			
-			selectFromGenericPopup({
-				player: player,
-				socket: socket,
-				gameMenu: gameMenu,
-				xBlock: xBlock,
-				horizontal: horizontal,
-				gm: gm
+				gm: gm,
+				position: position,
+				w: w,
+				blockHeight: blockHeight
 			})
 			
 			gameMenu = {}
@@ -358,8 +323,8 @@ export function game() {
 
 		//build a generic popup
 		else if (
-			!gameMenu.x &&
-			!gameMenu.y
+			!gameMenu.xBlock &&
+			!gameMenu.yBlock
 		) {
 			buildGenericPopup({
 				canvas: canvas,
@@ -367,10 +332,12 @@ export function game() {
 				blockHeight: blockHeight,
 				xBlock: xBlock,
 				yBlock: yBlock,
-				position: position
+				position: position,
+				width: w,
+				height: (h + marginBottom) / smallVertical
 			})
 			
-			gameMenu = { x: xBlock, y: yBlock, generic: true }
+			gameMenu = { xBlock: xBlock, yBlock: yBlock, generic: true }
 		}
 
 		// otherwise just clear the menu

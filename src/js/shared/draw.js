@@ -33,8 +33,6 @@ export function ctx(container, className, w, h, z) {
 	canvas.className = className
 	canvas.width = w * ratio
 	canvas.height = h * ratio
-	canvas.style.position = 'absolute'
-	canvas.style.top = 0
 	canvas.style.width = w + 'px'
 	canvas.style.height = h + 'px'
 	canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
