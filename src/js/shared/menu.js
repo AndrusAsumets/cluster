@@ -65,11 +65,14 @@ export function buildGenericPopup(o) {
 }
 
 export function selectFromGenericPopup(o) {
+	var buildings = Object.keys(defaultBuildings)
 	var index = o.menuXBlock
 	var total = o.w / o.blockHeight
 	index = o.position == 'left' ? index : Math.floor(index - total / 2)
 	index = index < 0 ? 0 : index
-	var type = Object.keys(defaultBuildings)[index]
+	index = index > buildings.length - 1 ? index - 2 : index
+	console.log(index)
+	var type = buildings[index]
 	if (!type) return
 	var id = o.player.elements.length
 	var level = defaultBuildings[type].level
