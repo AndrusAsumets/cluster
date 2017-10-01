@@ -66,21 +66,21 @@ export function buildGenericPopup(o) {
 
 export function selectFromGenericPopup(o) {
 	var buildings = Object.keys(defaultBuildings)
-	var index = o.menuXBlock
 	var total = o.w / o.blockHeight
+	var index = o.menuXBlock
 	index = o.position == 'left' ? index : Math.floor(index - total / 2)
 	index = index < 0 ? 0 : index
-	index = index > buildings.length - 1 ? index - 2 : index
+	if (index > buildings.length - 1) return
+	
 	var type = buildings[index]
 	if (!type) return
-	var id = o.player.elements.length
+	
 	var level = defaultBuildings[type].level
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.position == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
 	var building = {
 		playerId: o.player.id,
-		id: id,
 		level: level,
 		type: type,
 		start: start,
