@@ -68,6 +68,7 @@ export function selectFromGenericPopup(o) {
 	var index = o.menuXBlock
 	var total = o.w / o.blockHeight
 	index = o.position == 'left' ? index : Math.floor(index - total / 2)
+	index = index < 0 ? 0 : index
 	var type = Object.keys(defaultBuildings)[index]
 	if (!type) return
 	var id = o.player.elements.length
