@@ -5,7 +5,7 @@ import { line, rectangle, circle, dot, donut, image } from './draw'
 export function buildGenericPopup(o) {
 	var extra = o.position == 'left' ? 0 : o.width / 2
 	var reverseExtra = o.position == 'right' ? 0 : o.width / 2
-	
+
 	// background bar that takes the half of the width
 	rectangle({
 		ctx: o.canvas.menu,
@@ -15,7 +15,7 @@ export function buildGenericPopup(o) {
 		width: o.width / 2,
 		height: o.height
 	})
-	
+
 	rectangle({
 		ctx: o.canvas.menu,
 		shape: defaultShapes.dark,
@@ -24,7 +24,7 @@ export function buildGenericPopup(o) {
 		width: o.width / 2,
 		height: o.height
 	})
-	
+
 	// a small horizontal separator for the top
 	rectangle({
 		ctx: o.canvas.menu,
@@ -37,7 +37,7 @@ export function buildGenericPopup(o) {
 	})
 
 	var i = 0
-	for (var building in defaultBuildings) {
+	for (var building in o.buildings) {
 		image({
 			ctx: o.canvas.menu,
 			type: building,
@@ -48,7 +48,7 @@ export function buildGenericPopup(o) {
 			height: o.height,
 			size: 3.5
 		})
-		
+
 		// a tiny vertical separator
 		line({
 			ctx: o.canvas.menu,
@@ -59,24 +59,20 @@ export function buildGenericPopup(o) {
 			y2: o.height,
 			alpha: 0.075
 		})
-		
+
 		i++
 	}
 }
 
 export function selectFromGenericPopup(o) {
-	var buildings = Object.keys(defaultBuildings)
-	var type = buildings[o.xBlock]
-	if (!type) return
-	
-	var level = defaultBuildings[type].level
+	var level = defaultBuildings[o.type].level
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.position == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
 	var building = {
 		playerId: o.player.id,
 		level: level,
-		type: type,
+		type: o.type,
 		start: start,
 		end: end,
 		charge: 0,
@@ -85,10 +81,10 @@ export function selectFromGenericPopup(o) {
 
 	var message = {
 		action: SET_BUILDING,
-		data: Object.assign({}, defaultBuildings[type], building),
+		data: Object.assign({}, defaultBuildings[o.type], building),
 		playerId: o.me
 	}
-	
+
 	o.socket.emit('message', message)
 }
 
@@ -223,5 +219,5 @@ export function selectFromOptionsPopup(o) {
 }
 
 function showPatterns(o) {
-	
+
 }
