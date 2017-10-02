@@ -21,7 +21,7 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' }
 	},
-	turbine: {
+	mine: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/turbine.svg'
@@ -31,7 +31,7 @@ export const defaultShapes = {
 		//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		file: '/public/images/factory.svg'
+		file: '/public/images/pattern.svg'
 	},
 	shield: {
 		//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
@@ -39,6 +39,11 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
+	},
+	booster: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/booster.svg'
 	},
 	upgrade: {
 		file: '/public/images/upgrade.svg'
@@ -54,17 +59,28 @@ export const defaultBuildings = {
 		level: 1,
 		offensive: true
 	},
-	turbine: {
+	shield: {
+		cost: 50,
+		level: 1,
+		defensive: true
+	},
+	mine: {
 		cost: 25,
 		level: 1,
 		linkable: true,
 		producer: true,
 		income: 0.5
 	},
-	shield: {
-		cost: 50,
+	mine: {
+		cost: 25,
 		level: 1,
-		defensive: true
+		linkable: true,
+		producer: true,
+		income: 0.5
+	},
+	booster: {
+		cost: 25,
+		level: 1
 	}
 }
 
