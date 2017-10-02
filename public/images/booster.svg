@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="15px" height="17px" viewBox="0 0 15 17" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 46.2 (44496) - http://www.bohemiancoding.com/sketch -->
+    <title>booster</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="booster" transform="translate(0.000000, -1.000000)" stroke="#FFFFFF" stroke-width="0.5">
+            <g id="Group" transform="translate(0.000000, 0.458350)">
+                <polygon id="Shape" stroke-linecap="round" stroke-linejoin="round" points="3.2604167 0.83332 0.6145838 0.83332 0.6145838 3.47915 11.197917 3.47915 11.197917 0.83332"></polygon>
+                <polygon id="Shape" stroke-linecap="round" stroke-linejoin="round" points="3.2604167 4.53748 0.6145837 4.53748 0.6145837 7.18331 11.197917 7.18331 11.197917 4.53748"></polygon>
+                <path d="M1.9375004,4.53749 L1.9375004,3.47915" id="Shape"></path>
+                <path d="M9.875001,3.47915 L9.875001,4.53749" id="Shape"></path>
+                <path d="M1.9375004,8.24166 L1.9375004,7.18332" id="Shape"></path>
+                <path d="M9.875001,7.18332 L9.875001,8.24166" id="Shape"></path>
+                <path d="M1.9375,11.94583 L1.9375,10.88749" id="Shape"></path>
+                <circle id="Oval" opacity="0.95899999" cx="10.087612" cy="13.11755" r="3.96875"></circle>
+                <polyline id="Shape" stroke-linecap="square" stroke-linejoin="round" points="11.197917 8.50624 11.197917 8.24166 0.6145836 8.24166 0.6145836 10.88749 5.906251 10.88749 5.906251 10.88749"></polyline>
+                <polyline id="Shape" stroke-linejoin="round" points="5.641667 11.94582 0.6145836 11.94582 0.6145836 14.32707 5.641667 14.32707"></polyline>
+                <polyline id="Shape" stroke-linecap="round" stroke-linejoin="round" points="7.229167 13.00415 8.2875 13.00415 9.345833 10.88748 10.139583 14.59165 11.197916 11.94582 11.727083 13.00415 13.05 13.00415"></polyline>
+            </g>
+        </g>
+    </g>
+</svg>
