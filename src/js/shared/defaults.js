@@ -33,6 +33,16 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/pattern.svg'
 	},
+	patternA: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/patternA.svg'
+	},
+	patternB: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/patternB.svg'
+	},
 	shield: {
 		//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
 		//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
@@ -53,11 +63,16 @@ export const defaultShapes = {
 	}
 }
 
+const defaultPatterns = {
+	patternA: {},
+	patternB: {}
+}
 export const defaultBuildings = {
 	pattern: {
 		cost: 50,
 		level: 1,
-		offensive: true
+		offensive: true,
+		children: defaultPatterns
 	},
 	shield: {
 		cost: 50,
@@ -80,7 +95,8 @@ export const defaultBuildings = {
 	},
 	booster: {
 		cost: 25,
-		level: 1
+		level: 1,
+		children: true
 	}
 }
 

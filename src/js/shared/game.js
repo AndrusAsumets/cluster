@@ -1,6 +1,5 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
-var $ = require('jquery')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
@@ -22,10 +21,6 @@ export function game() {
 	// platform
 	const client = window ? true : false
 	const host = !window ? true : false
-	
-	//jquery
-	if (client) window.jQuery = $
-	if (client) window.$ = $
 
 	// window
 	const smallHorizontal = 14 // how many blocks to have on x scale
@@ -93,7 +88,7 @@ export function game() {
 				alpha: 0.075
 			})
 		}
-		
+
 		line({
 			ctx: canvas.background,
 			shape: defaultShapes.dark,
@@ -245,12 +240,15 @@ export function game() {
 
 		var player = players[me]
 		canvas.menu.clearRect(0, 0, w, h)
-	
+
 		var position = me == 'player1' ? 'left' : 'right'
 		var x = event.clientX
 		var y = event.clientY
 		var yBlock = Math.floor(y / blockHeight)
 		var xBlock = Math.floor(x / blockWidth)
+		var menuXBlock = position == 'left'
+			? Math.floor(x / (h / (smallVertical - 1)))
+			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
@@ -275,52 +273,50 @@ export function game() {
 				xBlock: xBlock,
 				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
 			})
-			
+
 			gameMenu = {}
 		}
 
-		// if a building was found on that block, show the options popup
-		else if (
-			buildingIsFound &&
-			!gameMenu.menu
-		) {
-			gameMenu.position = position
-			gameMenu.xBlock = xBlock
-			gameMenu.yBlock = yBlock
-			gameMenu.fromBuilding = building
-			gameMenu.options = true
+		// select from the first level menu, and assuming a pattern or a booster had been selected, then show relevant sub menus
 
-			buildOptionsPopup({
-				canvas: canvas,
-				player: player,
-				blockWidth: blockWidth,
-				blockHeight: blockHeight,
-				xBlock: xBlock,
-				yBlock: yBlock,
-				position: position,
-				gameMenu: gameMenu,
-				building: building
-			})
-		}
-
-		// select from the first menu
 		else if (
-			(yBlock >= 7 && 'xBlock' + gameMenu && 'yBlock' in gameMenu)
+			('xBlock' in gameMenu && 'yBlock' in gameMenu && yBlock >= 7)
 		) {
-			selectFromGenericPopup({
-				player: player,
-				socket: socket,
-				gameMenu: gameMenu,
-				xBlock: position == 'left'
-					? Math.floor(x / (h / (smallVertical - 1)))
-					: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1))),
-				gm: gm,
-			})
-			
+			var buildings = Object.keys(defaultBuildings)
+			var type = buildings[menuXBlock]
+			if (!type) return
+			var building = defaultBuildings[type]
+
+			// if a building has no options
+			if (!building.children) {
+				selectFromGenericPopup({
+					player: player,
+					socket: socket,
+					gameMenu: gameMenu,
+					xBlock: menuXBlock,
+					gm: gm,
+					type: type
+				})
+			}
+
+			else {
+				buildGenericPopup({
+					canvas: canvas,
+					buildings: building.children,
+					blockWidth: blockWidth,
+					blockHeight: blockHeight,
+					xBlock: xBlock,
+					yBlock: yBlock,
+					position: position,
+					width: w,
+					height: (h + marginBottom) / smallVertical
+				})
+			}
+
 			gameMenu = {}
 		}
 
-		//build a generic popup
+		//build a first level generic popup
 		else if (
 			!gameMenu.xBlock &&
 			!gameMenu.yBlock &&
@@ -328,6 +324,7 @@ export function game() {
 		) {
 			buildGenericPopup({
 				canvas: canvas,
+				buildings: defaultBuildings,
 				blockWidth: blockWidth,
 				blockHeight: blockHeight,
 				xBlock: xBlock,
@@ -336,7 +333,7 @@ export function game() {
 				width: w,
 				height: (h + marginBottom) / smallVertical
 			})
-			
+
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
 		}
 
@@ -571,7 +568,7 @@ export function game() {
 					size: size,
 					percentage: object.charge
 				})
-				
+
 				for (var i = 0; i < object.level; i++) {
 					var level = object.level
 					var marginX = blockWidth / size
@@ -580,7 +577,7 @@ export function game() {
 					var maxWidth = blockWidth - marginX * 2
 					var maxHeight = blockHeight - marginY * 2
 					var spacing = i * (width * 2)
-					
+
 					dot({
 						ctx: canvas[layer],
 						shape: defaultShapes.light,
@@ -716,7 +713,7 @@ export function game() {
 			}
 		}
 	}
-	
+
 	function deepHit(player) {
 		for (var r = 0; r < player.elements.length; r++) {
 			var element = player.elements[r]
