@@ -254,6 +254,11 @@ export function game() {
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
+		
+		
+		// disallow for clicking on the opposite side
+		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
+		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
 
 		// build options popup that goes to right
 		if (

@@ -26,7 +26,7 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/turbine.svg'
 	},
-	factory: {
+	pattern: {
 		//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
 		//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
@@ -49,7 +49,7 @@ export const defaultShapes = {
 }
 
 export const defaultBuildings = {
-	factory: {
+	pattern: {
 		cost: 50,
 		level: 1,
 		offensive: true
