@@ -245,15 +245,12 @@ export function game() {
 
 		var player = players[me]
 		canvas.menu.clearRect(0, 0, w, h)
-
-		var x = event.clientX
-		var y = event.clientY 
-		var xBlock = Math.floor(x / blockWidth)
-		var yBlock = Math.floor(y / blockHeight)
-		var menuXBlock = Math.floor(x / blockHeight)
+	
 		var position = me == 'player1' ? 'left' : 'right'
-		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
+		var x = event.clientX
+		var y = event.clientY
+		var yBlock = Math.floor(y / blockHeight)
+		var xBlock = Math.floor(x / blockWidth)
 		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
@@ -280,7 +277,7 @@ export function game() {
 		// if a building was found on that block, show the options popup
 		else if (
 			buildingIsFound &&
-			!gameMenu.generic
+			!gameMenu.menu
 		) {
 			gameMenu.position = position
 			gameMenu.xBlock = xBlock
@@ -303,19 +300,16 @@ export function game() {
 
 		// select from the first menu
 		else if (
-			(yBlock == 7 && 'xBlock' + gameMenu && 'yBlock' in gameMenu)
+			(yBlock >= 7 && 'xBlock' + gameMenu && 'yBlock' in gameMenu)
 		) {
 			selectFromGenericPopup({
 				player: player,
 				socket: socket,
 				gameMenu: gameMenu,
-				position: position,
-				menuXBlock: menuXBlock,
-				horizontal: horizontal,
+				xBlock: position == 'left'
+					? Math.floor(x / (h / (smallVertical - 1)))
+					: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1))),
 				gm: gm,
-				position: position,
-				w: w,
-				blockHeight: blockHeight
 			})
 			
 			gameMenu = {}
@@ -338,7 +332,7 @@ export function game() {
 				height: (h + marginBottom) / smallVertical
 			})
 			
-			gameMenu = { xBlock: xBlock, yBlock: yBlock, generic: true }
+			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
 		}
 
 		// otherwise just clear the menu

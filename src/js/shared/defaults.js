@@ -65,41 +65,6 @@ export const defaultBuildings = {
 		cost: 50,
 		level: 1,
 		defensive: true
-	},
-	
-	factory: {
-		cost: 50,
-		level: 1,
-		offensive: true
-	},
-	turbine: {
-		cost: 25,
-		level: 1,
-		linkable: true,
-		producer: true,
-		income: 0.5
-	},
-	shield: {
-		cost: 50,
-		level: 1,
-		defensive: true
-	},
-	factory: {
-		cost: 50,
-		level: 1,
-		offensive: true
-	},
-	turbine: {
-		cost: 25,
-		level: 1,
-		linkable: true,
-		producer: true,
-		income: 0.5
-	},
-	shield: {
-		cost: 50,
-		level: 1,
-		defensive: true
 	}
 }
 
