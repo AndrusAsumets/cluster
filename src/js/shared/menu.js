@@ -2,9 +2,20 @@ import { SET_BUILDING } from './actions'
 import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { line, rectangle, circle, dot, donut, image } from './draw'
 
-export function buildGenericPopup(o) {
+export function buildPopup(o) {
 	var extra = o.position == 'left' ? 0 : o.width / 2
 	var reverseExtra = o.position == 'right' ? 0 : o.width / 2
+	
+	//highlight the selected building block
+	rectangle({
+		ctx: o.canvas.selection,
+		shape: defaultShapes.light,
+		x1: o.xBlock * o.blockWidth,
+		y1: o.yBlock * o.blockHeight,
+		width: o.blockWidth,
+		height: o.blockHeight,
+		alpha: 0.1
+	})
 
 	// background bar that takes the half of the width
 	rectangle({
@@ -35,6 +46,17 @@ export function buildGenericPopup(o) {
 		height: 4,
 		alpha: 0.5
 	})
+	
+	// a tiny separator for the beginning
+	line({
+		ctx: o.canvas.menu,
+		shape: defaultShapes.light,
+		x1: extra,
+		y1: 4,
+		x2: extra,
+		y2: o.height,
+		alpha: 0.075
+	})
 
 	var i = 0
 	for (var building in o.buildings) {
@@ -64,8 +86,8 @@ export function buildGenericPopup(o) {
 	}
 }
 
-export function selectFromGenericPopup(o) {
-	var level = defaultBuildings[o.type].level
+export function selectFromPopup(o) {
+	var level = o.buildings[o.type].level
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.position == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
@@ -78,141 +100,14 @@ export function selectFromGenericPopup(o) {
 		charge: 0,
 		dynamics: {}
 	}
+	
+	var data = Object.assign({}, o.buildings[o.type], building)
+	data.buildings = o.buildings
 
 	var message = {
 		action: SET_BUILDING,
-		data: Object.assign({}, defaultBuildings[o.type], building),
+		data: data,
 		playerId: o.me
-	}
-
-	o.socket.emit('message', message)
-}
-
-export function buildOptionsPopup(o) {
-	var options = Object.keys(defaultOptions)
-
-	// make the building visually active
-	rectangle({
-		ctx: o.canvas.menu,
-		shape: defaultShapes.light,
-		x1: o.xBlock * o.blockWidth,
-		y1: o.yBlock * o.blockHeight,
-		width: o.blockWidth,
-		height: o.blockHeight,
-		alpha: 0.1
-	})
-
-	image({
-		ctx: o.canvas.menu,
-		type: o.building.type,
-		file: defaultShapes[o.gameMenu.fromBuilding.type].file,
-		x1: o.xBlock * o.blockWidth,
-		y1: o.yBlock * o.blockHeight,
-		width: o.blockWidth,
-		height: o.blockHeight,
-		size: 3.5
-	})
-
-	if (o.position == 'left') {
-		var i = 0
-
-		options.map(function(option) {
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.background,
-				x1: (o.xBlock + i) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 1
-			})
-
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.light,
-				x1: (o.xBlock + i) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 0.25
-			})
-
-			image({
-				ctx: o.canvas.menu,
-				type: option,
-				file: defaultShapes[option].file,
-				x1: (o.xBlock + i) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				size: 4
-			})
-
-			i++
-		})
-	}
-
-	else if (o.position == 'right') {
-		var i = 0
-
-		var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
-
-		reversedOptions.map(function(option) {
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.background,
-				x1: (o.xBlock + i - reversedOptions.length + 1) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 1
-			})
-
-			rectangle({
-				ctx: o.canvas.menu,
-				shape: defaultShapes.light,
-				x1: (o.xBlock + i - reversedOptions.length + 1) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				alpha: 0.25
-			})
-
-			image({
-				ctx: o.canvas.menu,
-				type: option,
-				file: defaultShapes[option].file,
-				x1: (o.xBlock + i - reversedOptions.length + 1) * o.blockWidth,
-				y1: o.yBlock * o.blockHeight - o.blockHeight,
-				width: o.blockWidth,
-				height: o.blockHeight,
-				size: 4
-			})
-
-			i++
-		})
-	}
-}
-
-export function selectFromOptionsPopup(o) {
-	var action
-	if (o.gameMenu.direction == 'toRight') {
-		var index = o.xBlock - o.gameMenu.xBlock
-		var key = Object.keys(defaultOptions)[index]
-		if (!key) return
-		action = defaultOptions[key].action
-	}
-	else {
-		var reversedOptions = JSON.parse(JSON.stringify(Object.keys(defaultOptions))).reverse()
-		var index = o.xBlock - o.gameMenu.xBlock + Object.keys(defaultOptions).length - 1
-		var key = reversedOptions[index]
-		if (!key) return
-		action = defaultOptions[key].action
-	}
-
-	var message = {
-		action: action,
-		data: { playerId: o.me, buildingIndex: o.buildingIndex }
 	}
 
 	o.socket.emit('message', message)

@@ -2,9 +2,9 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
-import { buildGenericPopup, selectFromGenericPopup, buildOptionsPopup, selectFromOptionsPopup } from './menu'
+import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
 import { upgrade, sell } from './dynamic'
@@ -59,8 +59,8 @@ export function game() {
 		document.getElementsByClassName('game')[0].appendChild(container)
 		canvas = {
 			background: ctx(container, 'background', w, h, 1),
-			link: ctx(container, 'link', w, h, 2),
-			movement: ctx(container, 'movement', w, h, 3),
+			movement: ctx(container, 'movement', w, h, 2),
+			selection: ctx(container, 'selection', w, h, 3),
 			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 4)
 		}
 
@@ -179,7 +179,7 @@ export function game() {
 				var player = players[building.playerId]
 
 				// if not sufficient energy
-				if (player.energy - defaultBuildings[building.type].cost < 0) return
+				if (player.energy - data.buildings[building.type].cost < 0) return
 
 				// check if there's an building on that location already
 				if (Number.isInteger(findBuildingIndex(player.buildings, building))) return
@@ -197,10 +197,9 @@ export function game() {
 					return
 				}
 
-				decreaseEnergy(players[building.playerId], defaultBuildings[building.type].cost)
+				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
 				for (var p in players) createPaths(players[p])
-				if (client) link()
 				break
 
 			case SET_LINK:
@@ -249,60 +248,97 @@ export function game() {
 		var menuXBlock = position == 'left'
 			? Math.floor(x / (h / (smallVertical - 1)))
 			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
-		var buildingIndex = findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })
+		var buildingIndex = findBuildingIndex(player.buildings, { 
+			start: gameMenu.xBlock && gameMenu.yBlock
+				? [gameMenu.xBlock * gm, gameMenu.yBlock * gm]
+				: [xBlock * gm, yBlock * gm]
+		})
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		
-		
 		// disallow for clicking on the opposite side
-		if (position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) return
-		if (position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x) return
-
-		// build options popup that goes to right
 		if (
-			gameMenu.options
+			(position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) ||
+			(position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x)
 		) {
-			gameMenu.direction = gameMenu.position == 'left' ? 'toRight' : 'toLeft'
-			selectFromOptionsPopup({
-				me: me,
-				player: player,
-				socket: socket,
-				gameMenu: gameMenu,
-				blockWidth: blockWidth,
-				blockHeight: blockHeight,
-				xBlock: xBlock,
-				buildingIndex: findBuildingIndex(player.buildings, { start: gameMenu.fromBuilding.start })
-			})
-
 			gameMenu = {}
+			canvas.selection.clearRect(0, 0, w, h)
+			return
 		}
-
-		// select from the first level menu, and assuming a pattern or a booster had been selected, then show relevant sub menus
-
+			
 		else if (
 			('xBlock' in gameMenu && 'yBlock' in gameMenu && yBlock >= 7)
 		) {
-			var buildings = Object.keys(defaultBuildings)
+			var buildings = Object.keys(gameMenu.children ? gameMenu.children : defaultBuildings)
 			var type = buildings[menuXBlock]
-			if (!type) return
-			var building = defaultBuildings[type]
+			if (!type) return gameMenu = {}
+			var children = defaultBuildings[type] ? defaultBuildings[type].children : {}
+			
+			// choose from the options (upgrade, sell, etc.)
+			if (gameMenu.options) {				
+				var optionType = Object.keys(defaultOptions)[menuXBlock]
+				
+				var message = {
+					action: defaultOptions[optionType].action,
+					data: { playerId: me, buildingIndex: buildingIndex }
+				}
+			
+				socket.emit('message', message)
+				gameMenu = {}
+				canvas.selection.clearRect(0, 0, w, h)
+			}
 
-			// if a building has no options
-			if (!building.children) {
-				selectFromGenericPopup({
+			// choose from a second level popup
+			else if (gameMenu.children) {
+				selectFromPopup({
 					player: player,
+					buildings: gameMenu.children,
 					socket: socket,
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
 					gm: gm,
 					type: type
 				})
+				
+				gameMenu = {}
+				canvas.selection.clearRect(0, 0, w, h)
+			}
+
+			// if a building has no options
+			else if (!children) {
+				// select from the first level popup
+				selectFromPopup({
+					player: player,
+					buildings: defaultBuildings,
+					socket: socket,
+					gameMenu: gameMenu,
+					xBlock: menuXBlock,
+					gm: gm,
+					type: type
+				})
+				
+				gameMenu = {}
+				canvas.selection.clearRect(0, 0, w, h)
 			}
 
 			else {
-				buildGenericPopup({
+				canvas.selection.clearRect(0, 0, w, h)
+
+				//highlight the selected building block
+				rectangle({
+					ctx: canvas.selection,
+					shape: defaultShapes.light,
+					x1: gameMenu.xBlock * blockWidth,
+					y1: gameMenu.yBlock * blockHeight,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 0.1
+				})
+
+				// build a second level popup
+				buildPopup({
 					canvas: canvas,
-					buildings: building.children,
+					buildings: children,
 					blockWidth: blockWidth,
 					blockHeight: blockHeight,
 					xBlock: xBlock,
@@ -311,9 +347,29 @@ export function game() {
 					width: w,
 					height: (h + marginBottom) / smallVertical
 				})
+				
+				gameMenu.children = children
 			}
-
-			gameMenu = {}
+		}
+		
+		// menu for upgrade, sell etc.
+		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
+			canvas.selection.clearRect(0, 0, w, h)
+			
+			// build a second level generic popup
+			buildPopup({
+				canvas: canvas,
+				buildings: defaultOptions,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
+				xBlock: xBlock,
+				yBlock: yBlock,
+				position: position,
+				width: w,
+				height: (h + marginBottom) / smallVertical
+			})
+			
+			gameMenu = { xBlock: xBlock, yBlock: yBlock, options: true }
 		}
 
 		//build a first level generic popup
@@ -322,8 +378,11 @@ export function game() {
 			!gameMenu.yBlock &&
 			yBlock < smallVertical
 		) {
-			buildGenericPopup({
+			canvas.selection.clearRect(0, 0, w, h)
+			
+			buildPopup({
 				canvas: canvas,
+				building: building,
 				buildings: defaultBuildings,
 				blockWidth: blockWidth,
 				blockHeight: blockHeight,
@@ -340,12 +399,11 @@ export function game() {
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
+			canvas.selection.clearRect(0, 0, w, h)
 		}
 	}
 
 	function link() {
-		canvas.link.clearRect(0, 0, w, h)
-
 		for (var key in players) {
 			var player = players[key]
 			var links = player.links

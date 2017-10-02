@@ -25,6 +25,7 @@ html, body {
 }
 
 .background,
+.selection,
 .movement {
 	position: absolute;
 	left: 0;
@@ -107,5 +108,5 @@ html, body {
 	background-image: url(/public/images/burger.svg);
 	background-repeat: no-repeat;
 	background-position: center center;
-	opacity: 0.5;	
+	opacity: 0.75;	
 }

@@ -1,3 +1,8 @@
+//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
+//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
+//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
+
 import { SET_UPGRADE, SET_SELL } from './actions'
 
 export const defaultEnergy = 10000
@@ -27,10 +32,6 @@ export const defaultShapes = {
 		file: '/public/images/turbine.svg'
 	},
 	pattern: {
-		//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-		//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/pattern.svg'
 	},
 	patternA: {
@@ -44,16 +45,22 @@ export const defaultShapes = {
 		file: '/public/images/patternB.svg'
 	},
 	shield: {
-		//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
-		//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
 	},
 	booster: {
+		file: '/public/images/booster.svg'
+	},
+	boosterA: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
-		file: '/public/images/booster.svg'
+		file: '/public/images/speed.svg'
+	},
+	boosterB: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/fire.svg'
 	},
 	upgrade: {
 		file: '/public/images/upgrade.svg'
@@ -64,14 +71,31 @@ export const defaultShapes = {
 }
 
 const defaultPatterns = {
-	patternA: {},
-	patternB: {}
-}
-export const defaultBuildings = {
-	pattern: {
+	patternA: {
 		cost: 50,
 		level: 1,
 		offensive: true,
+	},
+	patternB: {
+		cost: 50,
+		level: 1,
+		offensive: true,		
+	}
+}
+
+const defaultBoosters = {
+	boosterA: {
+		cost: 50,
+		level: 1
+	},
+	boosterB: {
+		cost: 50,
+		level: 1		
+	}
+}
+
+export const defaultBuildings = {
+	pattern: {
 		children: defaultPatterns
 	},
 	shield: {
@@ -86,25 +110,16 @@ export const defaultBuildings = {
 		producer: true,
 		income: 0.5
 	},
-	mine: {
-		cost: 25,
-		level: 1,
-		linkable: true,
-		producer: true,
-		income: 0.5
-	},
 	booster: {
-		cost: 25,
-		level: 1,
-		children: true
+		children: defaultBoosters
 	}
 }
 
 export const defaultOptions = {
-	upgrade: {
-		action: SET_UPGRADE
-	},
 	sell: {
 		action: SET_SELL
+	},
+	upgrade: {
+		action: SET_UPGRADE
 	}
 }
