@@ -1,12 +1,12 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_LINK, SET_UPGRADE, SET_SELL } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, isLinked, findOpenPath, findBuildingIndex } from './util'
-import { createMatrix, ctx, line, rectangle, circle, dot, donut, image } from './draw'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
+import { createMatrix, ctx, line, rectangle, circle, dot, donut, image, drawBoundaries } from './draw'
 import { upgrade, sell } from './dynamic'
 
 export function game() {
@@ -47,8 +47,8 @@ export function game() {
 		this.elements = []
 		this.projectiles = []
 		this.deepProjectiles = []
-		this.links = []
 		this.energy = defaultEnergy
+		this.boundaries = []
 	}
 
 	var canvas = {}
@@ -60,8 +60,10 @@ export function game() {
 		canvas = {
 			background: ctx(container, 'background', w, h, 1),
 			movement: ctx(container, 'movement', w, h, 2),
-			selection: ctx(container, 'selection', w, h, 3),
-			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 4)
+			boundaries: ctx(container, 'boundaries', w, h, 3),
+			start: ctx(container, 'start', w, h, 4),
+			selection: ctx(container, 'selection', w, h, 5),
+			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 6)
 		}
 
 		// create a visual UI grid
@@ -150,12 +152,13 @@ export function game() {
 
 						players[key].buildings = data[key].buildings
 						players[key].elements = data[key].elements
-						players[key].links = data[key].links
-						link()
+						boundaries({ playerId: key })
 
 						for (var i = 0; i < data[key].buildings.length; i++) {
 							grid = setWalkableAt(grid, gm, data[key].buildings[i].start[0], data[key].buildings[i].start[1], false)
 						}
+						
+						if (key == me) showStartingPosition()
 					}
 				}
 				break
@@ -200,11 +203,10 @@ export function game() {
 				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
 				for (var p in players) createPaths(players[p])
-				break
-
-			case SET_LINK:
-				players[data.playerId].links.push(data.link)
-				if (client) link()
+				
+				// find boundaries where the player would be able to build
+				boundaries({ playerId: building.playerId })
+				
 				break
 
 			case SET_ELEMENT:
@@ -226,6 +228,10 @@ export function game() {
 
 			case SET_SELL:
 				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				
+				// find boundaries where the player would be able to build
+				boundaries({ playerId: data.playerId })
+				
 				break
 		}
 	})
@@ -239,6 +245,8 @@ export function game() {
 
 		var player = players[me]
 		canvas.menu.clearRect(0, 0, w, h)
+		
+		showStartingPosition()
 
 		var position = me == 'player1' ? 'left' : 'right'
 		var x = event.clientX
@@ -267,7 +275,7 @@ export function game() {
 		}
 			
 		else if (
-			('xBlock' in gameMenu && 'yBlock' in gameMenu && yBlock >= 7)
+			('xBlock' in gameMenu && 'yBlock' in gameMenu && yBlock >= smallVertical)
 		) {
 			var buildings = Object.keys(gameMenu.children ? gameMenu.children : defaultBuildings)
 			var type = buildings[menuXBlock]
@@ -380,6 +388,21 @@ export function game() {
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
 			
+			if (
+				!findBoundary(players[me].boundaries, { x: xBlock * gm, y: yBlock * gm }) &&
+				!(
+					me == 'player1' &&
+					xBlock == Math.floor(smallHorizontal / 4) &&
+					yBlock == Math.floor(smallVertical / 2)
+				)
+				&&
+				!(
+					me == 'player2' &&
+					xBlock == Math.floor(smallHorizontal * 3 / 4) &&
+					yBlock == Math.floor(smallVertical / 2)
+				)
+			) return
+			
 			buildPopup({
 				canvas: canvas,
 				building: building,
@@ -400,60 +423,6 @@ export function game() {
 		else {
 			gameMenu = {}
 			canvas.selection.clearRect(0, 0, w, h)
-		}
-	}
-
-	function link() {
-		for (var key in players) {
-			var player = players[key]
-			var links = player.links
-
-			for (var l = 0; l < links.length; l++) {
-				var from = links[l].from
-				var to = links[l].to
-				var type = links[l].type
-
-				// make positions temporarily walkable
-				grid = setWalkableAt(grid, gm, from[0], from[1], true)
-				grid = setWalkableAt(grid, gm, to[0], to[1], true)
-
-				// find a path between the buildings
-				var path = finder.findPath(from[0], from[1], to[0], to[1], grid.clone())
-
-				// make positions unwalkable again
-				grid = setWalkableAt(grid, gm, from[0], from[1], false)
-				grid = setWalkableAt(grid, gm, to[0], to[1], false)
-
-				if (!path.length) continue
-
-				var width = blockWidth / gm
-				var height = blockHeight / gm
-
-				var last = [
-					path[0][0] * width + (width * gm / 2),
-					path[0][1] * height + (height * gm / 2)
-				]
-
-				for (var i = 0; i < path.length ; i++) {
-					var x1 = last[0]
-					var y1 = last[1]
-					var x2 = path[i][0] * width + (width * gm / 2)
-					var y2 = path[i][1] * height + (height * gm / 2)
-
-					line({
-						ctx: canvas.link,
-						shape: defaultShapes[type],
-						x1: x1,
-						y1: y1,
-						x2: x2,
-						y2: y2,
-						lineWidth: 2,
-						lineDash: [8, 24],
-						alpha: 0.5
-					})
-					last = [x2, y2]
-				}
-			}
 		}
 	}
 
@@ -896,9 +865,35 @@ export function game() {
 
 		socket.emit('message', { action: SET_ENERGY, data: currentPlayer })
 	}
-
+	
 	function end(player) {
 		if (player.energy < 0) gameOver = true
+	}
+
+	function showStartingPosition() {
+		canvas.start.clearRect(0, 0, w, h)
+		
+		if (!players[me].buildings.length) {
+			var position = me == 'player1'
+				? [Math.floor(smallHorizontal / 4), Math.floor(smallVertical / 2)]
+				: [Math.floor(smallHorizontal * 3 / 4), Math.floor(smallVertical / 2)]
+
+			rectangle({
+				ctx: canvas.start,
+				shape: defaultShapes.light,
+				x1: position[0] * blockWidth,
+				y1: position[1] * blockHeight,
+				width: blockWidth,
+				height: blockHeight,
+				alpha: 0.05
+			})
+		}
+	}
+	
+	function boundaries(o) {
+		var side = getSide(o.playerId)
+		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
+		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}
 
 	setInterval(function() {

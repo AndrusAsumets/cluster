@@ -25,21 +25,6 @@ export function setWalkableAt(grid, gm, x, y, walkable) {
 	return grid
 }
 
-export function isLinked(player, from, to) {
-	var links = player.links
-	
-	for (var i = 0; i < links.length; i++) {
-		if (
-			links[i].from[0] == from[0] &&
-			links[i].from[1] == from[1] &&
-			links[i].to[0] == to[0] &&
-			links[i].to[1] == to[1]
-		) return true
-	}
-	
-	return false
-}
-
 export function isPathOpen(o) {
 	for (var i = 0; i < o.bVertical - o.gm; i++) {
 		//1: moves from left to right
@@ -66,4 +51,61 @@ export function findBuildingIndex(buildings, building) {
 			buildings[p].start[1] == building.start[1]
 		) return p
 	}
+}
+
+export function createBoundaries(o) {
+	var side = o.side
+	var buildings = o.buildings
+	var gm = o.gm
+	var width = side == 'left' ? Math.floor((o.width + gm) / 2) : o.width + gm
+	var height = o.height
+	var results = []
+	
+	for (var i = 0; i < buildings.length; i++) {
+		var start = buildings[i].start
+		var x1 = start[0]
+		var y1 = start[1]
+		
+		if (
+			x1 - gm > -gm &&
+			!Number.isInteger(findBuildingIndex(buildings, { start: [x1 - gm, y1] })) &&
+			!findBoundary(results, { x: x1 - gm, y: y1 }) &&
+			(side == 'left' ? true : x1 > Math.floor(o.width / 2) + 1)
+		) results.push({ x: x1 - gm, y: y1 })
+		if (
+			y1 - gm > -gm &&
+			!Number.isInteger(findBuildingIndex(buildings, { start: [x1, y1 - gm] })) &&
+			!findBoundary(results, { x: x1, y: y1 - gm })
+		) results.push({ x: x1, y: y1 - gm })
+		if (
+			x1 + gm < width - 1 &&
+			!Number.isInteger(findBuildingIndex(buildings, { start: [x1 + gm, y1] })) &&
+			!findBoundary(results, { x: x1 + gm, y: y1 })
+		) results.push({ x: x1 + gm, y: y1 })
+		if (
+			y1 + gm < height - 1 &&
+			!Number.isInteger(findBuildingIndex(buildings, { start: [x1, y1 + gm] })) &&
+			!findBoundary(results, { x: x1, y: y1 + gm })
+		) results.push({ x: x1, y: y1 + gm })
+	}
+	
+	return results
+}
+
+export function findBoundary(results, position) {
+	var x1 = position.x
+	var y1 = position.y
+	
+	for (var j = 0; j < results.length; j++) {
+		var x2 = results[j].x
+		var y2 = results[j].y
+
+		if (x1 == x2 && y1 == y2) return true
+	}
+	
+	return false
+}
+
+export function getSide(playerId) {
+	return playerId == 'player1' ? 'left' : 'right'
 }

@@ -24,9 +24,7 @@ html, body {
 	color: white;
 }
 
-.background,
-.selection,
-.movement {
+canvas {
 	position: absolute;
 	left: 0;
 	top: 0;
@@ -38,6 +36,7 @@ html, body {
 	height: calc(100vh / 7);
 	width: 100vw;
 	left: 0;
+	top: auto;
 	bottom: 0;
 }
 

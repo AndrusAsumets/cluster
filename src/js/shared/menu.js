@@ -57,6 +57,17 @@ export function buildPopup(o) {
 		y2: o.height,
 		alpha: 0.075
 	})
+	
+	// a tiny separator for the end
+	line({
+		ctx: o.canvas.menu,
+		shape: defaultShapes.light,
+		x1: o.width / 2 + extra,
+		y1: 4,
+		x2: o.width / 2 + extra,
+		y2: o.height,
+		alpha: 0.075
+	})
 
 	var i = 0
 	for (var building in o.buildings) {
