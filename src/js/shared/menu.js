@@ -70,11 +70,19 @@ export function buildPopup(o) {
 	})
 
 	var i = 0
-	for (var building in o.buildings) {
+	for (var key in o.buildings) {
+		var building = o.buildings[key]
+		var level = building.level
+		var cost = building.cost
+		
+		// don't show buildings that have reached the maximum level
+		if (key == 'upgrade' && level > 2) return
+		
+		// generic icon
 		image({
 			ctx: o.canvas.menu,
-			type: building,
-			file: defaultShapes[building].file,
+			type: key,
+			file: defaultShapes[key].file,
 			x1: extra + i * o.height,
 			y1: 0,
 			width: o.height,
@@ -82,16 +90,67 @@ export function buildPopup(o) {
 			size: 3.5
 		})
 		
-		//label
+		// cost label
+		if (cost) {
+			label({
+				ctx: o.canvas.menu,
+				string: Math.floor(cost),
+				shape: defaultShapes.light,
+				x1: extra + i * o.height,
+				baseHeight: o.height,
+				vertical: o.vertical,
+				height: o.height / 6.5,
+				size: 10,
+				center: true
+			})		
+		}
+		
+		/*
+		if (upgrade) {
+			label({
+				ctx: o.canvas.menu,
+				string: upgrade,
+				shape: defaultShapes.light,
+				x1: extra + i * o.height,
+				baseHeight: o.height,
+				vertical: o.vertical,
+				height: o.height / 6.5,
+				size: 10,
+				center: true
+			})
+
+			var level = object.level
+			var marginX = blockWidth / size
+			var marginY = blockHeight / size
+			var width = blockWidth / size / 3
+			var maxWidth = blockWidth - marginX * 2
+			var maxHeight = blockHeight - marginY * 2
+				
+			dotGroup({
+				count: object.level,
+				ctx: canvas[layer],
+				shape: defaultShapes.light,
+				width: width,
+				x1: object.start[0] * blockWidth / gm + width,
+				y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
+				maxWidth: maxWidth,
+				maxHeight: maxHeight,
+				size: 1,
+				alpha: 0.75
+			})
+		}
+		*/
+		
+		// name label
 		label({
 			ctx: o.canvas.menu,
-			string: building.toUpperCase(),
+			string: key.toUpperCase(),
 			shape: defaultShapes.light,
 			x1: extra + i * o.height,
 			baseHeight: o.height,
 			vertical: o.vertical,
 			height: o.blockHeight,
-			size: 9,
+			size: 10,
 			center: true
 		})
 

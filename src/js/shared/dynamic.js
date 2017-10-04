@@ -5,15 +5,23 @@ export function upgrade(o) {
 	var building = buildings[buildingIndex]
 	var energy = player.energy
 	var level = building.level + 1
-	var cost = building.cost
-	var total = level * cost
+	var cost = upgradeCost(Object.assign({}, o, { building: building }))
 	
-	if (level > 3) return player
-	if (energy - total < 0) return player
+	if (!cost) return player
+	if (energy - cost < 0) return player
 	
-	player.energy = energy - total
+	player.energy = energy - cost
 	if (player.buildings[buildingIndex]) player.buildings[buildingIndex].level = level
 	return player
+}
+
+export function upgradeCost(o) {
+	var building = o.building
+	var level = building.level + 1
+	if (level > 3) return false
+	var cost = building.cost
+	var total = level * cost
+	return total
 }
 
 export function sell(o) {
@@ -22,18 +30,23 @@ export function sell(o) {
 	var buildings = player.buildings
 	var building = buildings[buildingIndex]
 	if (!building) return player
+	
+	var total = sellBackValue({ building: building })
+	player.energy += total
+	player.buildings.splice(buildingIndex, 1)
+	return player
+}
+
+export function sellBackValue(o) {
+	var building = o.building
 	var level = building.level
 	var cost = building.cost
-	
 	var total = 0
 	var index = level
+	
 	while(index > 0) {
 		total += index * cost
 		index--
 	}
-	
-	var sellBackValue = total / 2
-	player.energy += sellBackValue
-	player.buildings.splice(buildingIndex, 1)
-	return player
+	return total / 2
 }

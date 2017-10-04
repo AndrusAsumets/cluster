@@ -7,7 +7,8 @@ import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
 import { createMatrix, ctx, line, rectangle, circle, dot, donut, image, drawBoundaries } from './draw'
-import { upgrade, sell } from './dynamic'
+import { dotGroup } from './draw/dot-group'
+import { upgrade, sell, upgradeCost, sellBackValue } from './dynamic'
 
 export function game() {
 	// gameplay
@@ -330,6 +331,7 @@ export function game() {
 				selectFromPopup({
 					player: player,
 					buildings: gameMenu.children,
+					building: building,
 					socket: socket,
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
@@ -394,11 +396,21 @@ export function game() {
 		// menu for upgrade, sell etc.
 		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
 			canvas.selection.clearRect(0, 0, w, h)
+
+			var sell = defaultOptions.sell
+			var upgrade = defaultOptions.upgrade
+			var cost = building.cost
+			var level = building.level
 			
-			// build a second level generic popup
+			sell.cost = building.level ? sellBackValue({ building: building }) : false
+			sell.level = level
+			upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
+			upgrade.level = level
+			
+			// build a second level popup
 			buildPopup({
 				canvas: canvas,
-				buildings: defaultOptions,
+				buildings: { sell: sell, upgrade: upgrade },
 				blockWidth: blockWidth,
 				blockHeight: blockHeight,
 				xBlock: xBlock,
@@ -618,27 +630,26 @@ export function game() {
 					size: size,
 					percentage: object.charge
 				})
-
-				for (var i = 0; i < object.level; i++) {
-					var level = object.level
-					var marginX = blockWidth / size
-					var marginY = blockHeight / size
-					var width = blockWidth / size / 3
-					var maxWidth = blockWidth - marginX * 2
-					var maxHeight = blockHeight - marginY * 2
-					var spacing = i * (width * 2)
-
-					dot({
-						ctx: canvas[layer],
-						shape: defaultShapes.light,
-						x1: object.start[0] * blockWidth / gm + width + spacing,
-						y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
-						width: maxWidth,
-						height: maxHeight,
-						size: 1,
-						alpha: 0.75
-					})
-				}
+				
+				var level = object.level
+				var marginX = blockWidth / size
+				var marginY = blockHeight / size
+				var width = blockWidth / size / 3
+				var maxWidth = blockWidth - marginX * 2
+				var maxHeight = blockHeight - marginY * 2
+					
+				dotGroup({
+					count: object.level,
+					ctx: canvas[layer],
+					shape: defaultShapes.light,
+					width: width,
+					x1: object.start[0] * blockWidth / gm + width,
+					y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
+					maxWidth: maxWidth,
+					maxHeight: maxHeight,
+					size: 1,
+					alpha: 0.75
+				})
 
 				if (object.offensive) {
 					var marginY = blockHeight / size

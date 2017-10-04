@@ -1,5 +1,6 @@
 import { isCached } from './helpers'
 import { defaultShapes } from './defaults'
+import { upgradeCost, sellValue } from './dynamic'
 
 var PIXEL_RATIO = (function () {
 	try {
@@ -224,7 +225,7 @@ export function label(o) {
 	
 	var stringWidth = canvas.measureText(string).width
 	var stringHeight = canvas.measureText('M').width
-	var blockWidth = baseHeight / (vertical) | 0
+	var blockWidth = baseHeight / vertical | 0
 	var extra = center ? (blockWidth - stringWidth) / 2 : 0
 
 	canvas.fillText(string, x1 + extra, height + stringHeight / 2)
