@@ -232,6 +232,7 @@ export function game() {
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: data.playerId })
 				
+				 
 				if (client) {
 					if (data.playerId == me) canvas.selection.clearRect(0, 0, w, h)
 					if (!players[data.playerId].buildings.length) showStartingPosition()
@@ -382,7 +383,8 @@ export function game() {
 					yBlock: yBlock,
 					side: side,
 					width: w,
-					height: (h + marginBottom) / smallVertical
+					height: (h + marginBottom) / smallVertical,
+					vertical: vertical
 				})
 
 				gameMenu.children = children
@@ -403,7 +405,8 @@ export function game() {
 				yBlock: yBlock,
 				side: side,
 				width: w,
-				height: (h + marginBottom) / smallVertical
+				height: (h + marginBottom) / smallVertical,
+				vertical: vertical
 			})
 			
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, options: true }
@@ -432,7 +435,8 @@ export function game() {
 				yBlock: yBlock,
 				side: side,
 				width: w,
-				height: (h + marginBottom) / smallVertical
+				height: (h + marginBottom) / smallVertical,
+				vertical: vertical
 			})
 
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }

@@ -1,6 +1,6 @@
 import { SET_BUILDING } from './actions'
 import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
-import { line, rectangle, circle, dot, donut, image } from './draw'
+import { line, rectangle, circle, dot, donut, image, label } from './draw'
 
 export function buildPopup(o) {
 	var extra = o.side == 'left' ? 0 : o.width / 2
@@ -80,6 +80,19 @@ export function buildPopup(o) {
 			width: o.height,
 			height: o.height,
 			size: 3.5
+		})
+		
+		//label
+		label({
+			ctx: o.canvas.menu,
+			string: building.toUpperCase(),
+			shape: defaultShapes.light,
+			x1: extra + i * o.height,
+			baseHeight: o.height,
+			vertical: o.vertical,
+			height: o.blockHeight,
+			size: 9,
+			center: true
 		})
 
 		// a tiny vertical separator

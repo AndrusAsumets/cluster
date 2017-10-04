@@ -203,6 +203,39 @@ export function image(o) {
 	image.src = o.file
 }
 
+export function label(o) {
+	var canvas = o.ctx
+	var string = o.string
+	var vertical = o.vertical | 0
+	var baseHeight = o.baseHeight * vertical | 0
+	var height = o.height
+	var size = o.size | 16
+	var x1 = o.x1
+	var alpha = o.alpha | 1
+	var fillStyle = o.shape.fillStyle(alpha)
+	var fontSize = getFontSize({ canvas: canvas.canvas, size: size, base: baseHeight })
+	var font = o.size + 'px Helvetica'
+	var center = o.center | false
+	var extra = 0
+	
+	canvas.fillStyle = fillStyle
+	canvas.strokeStyle = fillStyle
+	canvas.font = font
+	
+	var stringWidth = canvas.measureText(string).width
+	var stringHeight = canvas.measureText('M').width
+	var blockWidth = baseHeight / (vertical) | 0
+	var extra = center ? (blockWidth - stringWidth) / 2 : 0
+
+	canvas.fillText(string, x1 + extra, height + stringHeight / 2)
+}
+
+function getFontSize(o) {
+    var ratio = o.size / o.base
+    var size = o.canvas.width / ratio
+    return size
+}
+
 function degreesToRadians(degrees) {
     return (degrees * Math.PI) / 180
 }
