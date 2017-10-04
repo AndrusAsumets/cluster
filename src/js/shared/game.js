@@ -249,6 +249,8 @@ export function game() {
 
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
+		
+		canvas.menu.clearRect(0, 0, w, h)
 
 		var player = players[me]
 		
@@ -303,10 +305,10 @@ export function game() {
 				yBlock >= smallVertical
 			)
 		) {
-			var buildings = Object.keys(gameMenu.children ? gameMenu.children : defaultBuildings)
+			var buildings = Object.keys(gameMenu.submenu ? gameMenu.submenu : defaultBuildings)
 			var type = buildings[menuXBlock]
 			if (!type) return gameMenu = {}
-			var children = defaultBuildings[type] ? defaultBuildings[type].children : {} // submenu
+			var submenu = defaultBuildings[type] ? defaultBuildings[type].submenu : {} // submenu
 			
 			// choose from the options (upgrade, sell, etc.)
 			if (gameMenu.options) {				
@@ -330,10 +332,10 @@ export function game() {
 			}
 
 			// choose from a second level popup
-			else if (gameMenu.children) {
+			else if (gameMenu.submenu) {
 				selectFromPopup({
 					player: player,
-					buildings: gameMenu.children,
+					buildings: gameMenu.submenu,
 					building: building,
 					socket: socket,
 					gameMenu: gameMenu,
@@ -347,7 +349,7 @@ export function game() {
 			}
 
 			// if a building has no options
-			else if (!children) {
+			else if (!submenu) {
 				
 				// select from the first level popup
 				selectFromPopup({
@@ -381,7 +383,7 @@ export function game() {
 				// build a second level popup
 				buildPopup({
 					canvas: canvas,
-					buildings: children,
+					buildings: submenu,
 					blockWidth: blockWidth,
 					blockHeight: blockHeight,
 					xBlock: xBlock,
@@ -392,7 +394,7 @@ export function game() {
 					vertical: vertical
 				})
 
-				gameMenu.children = children
+				gameMenu.submenu = submenu
 			}
 		}
 		

@@ -96,7 +96,7 @@ const defaultBoosters = {
 
 export const defaultBuildings = {
 	pattern: {
-		children: defaultPatterns
+		submenu: defaultPatterns
 	},
 	shield: {
 		cost: 50,
@@ -111,7 +111,7 @@ export const defaultBuildings = {
 		income: 0.5
 	},
 	booster: {
-		children: defaultBoosters
+		submenu: defaultBoosters
 	}
 }
 
