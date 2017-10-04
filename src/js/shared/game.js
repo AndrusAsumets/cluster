@@ -244,13 +244,13 @@ export function game() {
 
 	var gameMenu = {}
 	function createMenu(event) {
+		console.log('menu')
 		if (gameOver) return
 
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
 
 		var player = players[me]
-		canvas.menu.clearRect(0, 0, w, h)
 		
 		showStartingPosition()
 
@@ -320,9 +320,12 @@ export function game() {
 				socket.emit('message', message)
 				
 				// leave the menu open if there are more upgrades left
-				if (building.level > 1) {
+				if (building.level > 2) {
 					gameMenu = {}
 					canvas.selection.clearRect(0, 0, w, h)
+				}
+				else {
+					gameMenu.upgrading = true
 				}
 			}
 

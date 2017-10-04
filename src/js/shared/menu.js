@@ -99,7 +99,7 @@ export function buildPopup(o) {
 				x1: extra + i * o.height,
 				baseHeight: o.height,
 				vertical: o.vertical,
-				height: o.height / 6.5,
+				height: o.height / 6.25,
 				size: 10,
 				center: true
 			})		
