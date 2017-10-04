@@ -3,8 +3,8 @@ import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { line, rectangle, circle, dot, donut, image } from './draw'
 
 export function buildPopup(o) {
-	var extra = o.position == 'left' ? 0 : o.width / 2
-	var reverseExtra = o.position == 'right' ? 0 : o.width / 2
+	var extra = o.side == 'left' ? 0 : o.width / 2
+	var reverseExtra = o.side == 'right' ? 0 : o.width / 2
 	
 	//highlight the selected building block
 	rectangle({
@@ -100,7 +100,7 @@ export function buildPopup(o) {
 export function selectFromPopup(o) {
 	var level = o.buildings[o.type].level
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
-	var end = o.position == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
+	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
 	var building = {
 		playerId: o.player.id,

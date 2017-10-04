@@ -248,12 +248,12 @@ export function game() {
 		
 		showStartingPosition()
 
-		var position = me == 'player1' ? 'left' : 'right'
+		var side = getSide(me)
 		var x = event.clientX
 		var y = event.clientY
 		var yBlock = Math.floor(y / blockHeight)
 		var xBlock = Math.floor(x / blockWidth)
-		var menuXBlock = position == 'left'
+		var menuXBlock = side == 'left'
 			? Math.floor(x / (h / (smallVertical - 1)))
 			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
 		var buildingIndex = findBuildingIndex(player.buildings, { 
@@ -272,6 +272,7 @@ export function game() {
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
+		
 		else if (
 			me == 'player2' &&
 			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
@@ -281,8 +282,8 @@ export function game() {
 		
 		// disallow for clicking on the opposite side
 		if (
-			(position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) ||
-			(position == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x)
+			(side == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) ||
+			(side == 'right' && xBlock * gm < horizontal / 2 && !gameMenu.x)
 		) {
 			gameMenu = {}
 			canvas.selection.clearRect(0, 0, w, h)
@@ -370,7 +371,7 @@ export function game() {
 					blockHeight: blockHeight,
 					xBlock: xBlock,
 					yBlock: yBlock,
-					position: position,
+					side: side,
 					width: w,
 					height: (h + marginBottom) / smallVertical
 				})
@@ -391,7 +392,7 @@ export function game() {
 				blockHeight: blockHeight,
 				xBlock: xBlock,
 				yBlock: yBlock,
-				position: position,
+				side: side,
 				width: w,
 				height: (h + marginBottom) / smallVertical
 			})
@@ -422,7 +423,7 @@ export function game() {
 				blockHeight: blockHeight,
 				xBlock: xBlock,
 				yBlock: yBlock,
-				position: position,
+				side: side,
 				width: w,
 				height: (h + marginBottom) / smallVertical
 			})
