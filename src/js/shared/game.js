@@ -231,7 +231,6 @@ export function game() {
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: data.playerId })
-				
 				break
 		}
 	})
@@ -300,7 +299,7 @@ export function game() {
 			var buildings = Object.keys(gameMenu.children ? gameMenu.children : defaultBuildings)
 			var type = buildings[menuXBlock]
 			if (!type) return gameMenu = {}
-			var children = defaultBuildings[type] ? defaultBuildings[type].children : {}
+			var children = defaultBuildings[type] ? defaultBuildings[type].children : {} // submenu
 			
 			// choose from the options (upgrade, sell, etc.)
 			if (gameMenu.options) {				
@@ -312,8 +311,12 @@ export function game() {
 				}
 			
 				socket.emit('message', message)
-				gameMenu = {}
-				canvas.selection.clearRect(0, 0, w, h)
+				
+				// leave the menu open if there are more upgrades left
+				if (building.level > 1) {
+					gameMenu = {}
+					canvas.selection.clearRect(0, 0, w, h)
+				}
 			}
 
 			// choose from a second level popup
@@ -334,6 +337,7 @@ export function game() {
 
 			// if a building has no options
 			else if (!children) {
+				
 				// select from the first level popup
 				selectFromPopup({
 					player: player,
@@ -375,7 +379,7 @@ export function game() {
 					width: w,
 					height: (h + marginBottom) / smallVertical
 				})
-				
+
 				gameMenu.children = children
 			}
 		}
@@ -412,8 +416,6 @@ export function game() {
 			inBounds
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
-			
-			//but disallow showing 
 			
 			buildPopup({
 				canvas: canvas,

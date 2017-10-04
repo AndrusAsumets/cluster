@@ -2,7 +2,6 @@ cluster.game
 
 
 NOW:
-* leave menu open when clicked on boundaries
 * don't close upgrades
 * add text for upgrades
 * patterns
