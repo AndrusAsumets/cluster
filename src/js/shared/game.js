@@ -231,6 +231,11 @@ export function game() {
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: data.playerId })
+				
+				if (client) {
+					if (data.playerId == me) canvas.selection.clearRect(0, 0, w, h)
+					if (!players[data.playerId].buildings.length) showStartingPosition()
+				}
 				break
 		}
 	})
