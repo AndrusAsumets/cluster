@@ -76,7 +76,7 @@ export function buildPopup(o) {
 		var cost = building.cost
 		
 		// don't show buildings that have reached the maximum level
-		if (key == 'upgrade' && level > 2) return
+		if (key == 'upgrade' && level > 2) continue
 		
 		// generic icon
 		image({
@@ -91,7 +91,11 @@ export function buildPopup(o) {
 		})
 		
 		// cost label
-		if (cost) {
+		if (
+			(cost && level < 3)
+			||
+			key == 'sell'
+		) {
 			label({
 				ctx: o.canvas.menu,
 				string: Math.floor(cost),
@@ -99,7 +103,7 @@ export function buildPopup(o) {
 				x1: extra + i * o.height,
 				baseHeight: o.height,
 				vertical: o.vertical,
-				height: o.height / 6.25,
+				height: o.height / 6.2,
 				size: 10,
 				center: true
 			})		

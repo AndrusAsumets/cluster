@@ -244,7 +244,6 @@ export function game() {
 
 	var gameMenu = {}
 	function createMenu(event) {
-		console.log('menu')
 		if (gameOver) return
 
 		event.preventDefault()
@@ -402,6 +401,10 @@ export function game() {
 		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
 			canvas.selection.clearRect(0, 0, w, h)
 			
+			// make sure we're working with the current building
+			building = player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]
+			
+			var buildings = {}
 			var sell = defaultOptions.sell
 			var upgrade = defaultOptions.upgrade
 			
@@ -409,16 +412,18 @@ export function game() {
 				var cost = building.cost
 				var level = building.level
 				
-				sell.cost = building.level ? sellBackValue({ building: building }) : false
-				sell.level = level
-				upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
-				upgrade.level = level
+				buildings.sell = {}
+				buildings.sell.cost = building.level ? sellBackValue({ building: building }) : false
+				buildings.sell.level = level
+				buildings.upgrade = {}
+				buildings.upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
+				buildings.upgrade.level = level
 			}
 			
 			// build a second level popup
 			buildPopup({
 				canvas: canvas,
-				buildings: { sell: sell, upgrade: upgrade },
+				buildings: buildings,
 				blockWidth: blockWidth,
 				blockHeight: blockHeight,
 				xBlock: xBlock,
