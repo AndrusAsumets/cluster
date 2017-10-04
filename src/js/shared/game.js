@@ -265,6 +265,20 @@ export function game() {
 		var buildingIsFound = buildingIndex > -1
 		var inBounds = findBoundary(players[me].boundaries, { x: xBlock * gm, y: yBlock * gm })
 		
+		var inCenter
+		if (
+			me == 'player1' &&
+			xBlock == Math.floor(smallHorizontal / 4) &&
+			yBlock == Math.floor(smallVertical / 2) &&
+			!buildingIsFound
+		) inCenter = true
+		else if (
+			me == 'player2' &&
+			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
+			yBlock == Math.floor(smallVertical / 2) &&
+			!buildingIsFound
+		) inCenter = true
+		
 		// disallow for clicking on the opposite side
 		if (
 			(position == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) ||
@@ -390,29 +404,15 @@ export function game() {
 			(
 				!gameMenu.xBlock &&
 				!gameMenu.yBlock &&
-				yBlock < smallVertical
+				yBlock < smallVertical &&
+				inCenter
 			)
 			||
 			inBounds
-			
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
-
-			if (
-				(
-					inBounds &&
-					me == 'player1' &&
-					xBlock == Math.floor(smallHorizontal / 4) &&
-					yBlock == Math.floor(smallVertical / 2)
-				)
-				||
-				(
-					inBounds &&
-					me == 'player2' &&
-					xBlock == Math.floor(smallHorizontal * 3 / 4) &&
-					yBlock == Math.floor(smallVertical / 2)
-				)
-			) return
+			
+			//but disallow showing 
 			
 			buildPopup({
 				canvas: canvas,
