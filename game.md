@@ -2,7 +2,6 @@ cluster.game
 
 
 NOW:
-* don't close upgrades
 * add text for upgrades
 * patterns
 * get rid of grid for the bubbles

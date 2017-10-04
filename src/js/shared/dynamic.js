@@ -21,6 +21,7 @@ export function sell(o) {
 	var buildingIndex = o.buildingIndex
 	var buildings = player.buildings
 	var building = buildings[buildingIndex]
+	if (!building) return
 	var level = building.level
 	var cost = building.cost
 	
