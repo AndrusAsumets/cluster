@@ -12,7 +12,7 @@ export function upgrade(o) {
 	if (energy - total < 0) return player
 	
 	player.energy = energy - total
-	player.buildings[buildingIndex].level = level
+	if (player.buildings[buildingIndex]) player.buildings[buildingIndex].level = level
 	return player
 }
 

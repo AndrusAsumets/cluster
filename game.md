@@ -2,8 +2,14 @@ cluster.game
 
 
 NOW:
-* separate tick from fps
+* leave menu open when clicked on boundaries
+* don't close upgrades
+* add text for upgrades
 * patterns
+* get rid of grid for the bubbles
+* pattern damage and damage bar
+* health and health bar
+* separate tick from fps
 * turns
 
 - pattern tornid: ratsu, siinuslaine
@@ -43,63 +49,6 @@ PEOPLE:
 * illustrations -> Ingmar Järve (ingmarjarve.tumblr.com)
 * story > who?
 * moneying model > bootstrappig/funding?
-
---
-base energy: 100
-costs:
-power plant - 25
-laboratory - 50
-
---
-laboratory: generates 1 energy per second / 60 energy per minute
-upgrade cost: base 2
-
-if (energy)
-	- factory (research buildings, components using energy)
-
-	if (researched)
-		buildings:
-			- power plant (recharge energy)
-			- laboratory
-				research elements:
-					- earth
-					- water
-					- wind
-					- fire
-			- airport, barracks
-				(if element)
-					components:
-						- earth > strength
-						- water > move speed
-						- wind  > split
-						- fire  > damage
-			- tower
-				(if element)
-					components:
-						- earth > strength
-						- water > slow
-						- wind  > attack speed
-						- fire  > damage
-			- radar (extends towers range)
-
-* airport, barracks > if (energy) > grid of components > if (materials) > choose components
-* repair link: click on a power plant > repair > click on building > (if path) create path for a link
-* bubble inner size radius: strength
-* bubble size: damage
-* split: 1 > 2 > 4 > 8
-* laboratory: recharge time, upgrade materials
-
-
-UI:
-- round:
-	barracks
-- round w/ wings:
-	airport
-- triangular
-	tower
-- rectangular w/ an icon:
-	factory, power plant, laboratory, airport, barracks, radar
-
 
 bubble:
 water (blue): speed

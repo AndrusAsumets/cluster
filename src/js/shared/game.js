@@ -263,6 +263,7 @@ export function game() {
 		})
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
+		var inBounds = findBoundary(players[me].boundaries, { x: xBlock * gm, y: yBlock * gm })
 		
 		// disallow for clicking on the opposite side
 		if (
@@ -275,7 +276,11 @@ export function game() {
 		}
 			
 		else if (
-			('xBlock' in gameMenu && 'yBlock' in gameMenu && yBlock >= smallVertical)
+			(
+				'xBlock' in gameMenu &&
+				'yBlock' in gameMenu &&
+				yBlock >= smallVertical
+			)
 		) {
 			var buildings = Object.keys(gameMenu.children ? gameMenu.children : defaultBuildings)
 			var type = buildings[menuXBlock]
@@ -382,21 +387,27 @@ export function game() {
 
 		//build a first level generic popup
 		else if (
-			!gameMenu.xBlock &&
-			!gameMenu.yBlock &&
-			yBlock < smallVertical
+			(
+				!gameMenu.xBlock &&
+				!gameMenu.yBlock &&
+				yBlock < smallVertical
+			)
+			||
+			inBounds
+			
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
-			
+
 			if (
-				!findBoundary(players[me].boundaries, { x: xBlock * gm, y: yBlock * gm }) &&
-				!(
+				(
+					inBounds &&
 					me == 'player1' &&
 					xBlock == Math.floor(smallHorizontal / 4) &&
 					yBlock == Math.floor(smallVertical / 2)
 				)
-				&&
-				!(
+				||
+				(
+					inBounds &&
 					me == 'player2' &&
 					xBlock == Math.floor(smallHorizontal * 3 / 4) &&
 					yBlock == Math.floor(smallVertical / 2)
@@ -418,7 +429,7 @@ export function game() {
 
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
 		}
-
+		
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
