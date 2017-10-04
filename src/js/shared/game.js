@@ -396,16 +396,19 @@ export function game() {
 		// menu for upgrade, sell etc.
 		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
 			canvas.selection.clearRect(0, 0, w, h)
-
+			
 			var sell = defaultOptions.sell
 			var upgrade = defaultOptions.upgrade
-			var cost = building.cost
-			var level = building.level
 			
-			sell.cost = building.level ? sellBackValue({ building: building }) : false
-			sell.level = level
-			upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
-			upgrade.level = level
+			if (building) {
+				var cost = building.cost
+				var level = building.level
+				
+				sell.cost = building.level ? sellBackValue({ building: building }) : false
+				sell.level = level
+				upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
+				upgrade.level = level
+			}
 			
 			// build a second level popup
 			buildPopup({
