@@ -977,14 +977,11 @@ export function game() {
 	function alterStep(step, pattern, lastColumn) {
 		var extra = -gm - 1
 		
-		for (var column = extra; column < pattern.length + extra; column++) {
-			for (var row = 0; row < pattern.length; row++) {
-				var block = pattern[row][lastColumn]
-				
-				if (block > 0) return [step[0], step[1] + row + extra]
-			}
+		for (var row = 0; row < pattern.length; row++) {
+			var block = pattern[row][lastColumn]
+			
+			if (block > 0) return [step[0], step[1] + row + extra]
 		}
-
 	}
 
 	setInterval(function() {
