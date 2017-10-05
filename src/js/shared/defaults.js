@@ -44,6 +44,11 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/patternB.svg'
 	},
+	patternC: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/patternB.svg'
+	},
 	shield: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
@@ -75,11 +80,50 @@ const defaultPatterns = {
 		cost: 50,
 		level: 1,
 		offensive: true,
+		pattern: [
+			[1,0,0,0,0,0,0,0,0],
+			[0,1,0,0,0,0,0,0,0],
+			[0,0,1,0,0,0,0,0,0],
+			[0,0,0,1,0,0,0,0,0],
+			[0,0,0,0,2,0,0,0,0],
+			[0,0,0,0,0,1,0,0,0],
+			[0,0,0,0,0,0,1,0,0],
+			[0,0,0,0,0,0,0,1,0],
+			[0,0,0,0,0,0,0,0,1]
+		]	
 	},
 	patternB: {
 		cost: 50,
 		level: 1,
-		offensive: true,		
+		offensive: true,
+		pattern: [
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[1,1,1,1,2,1,1,1,1],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0]
+
+		]	
+	},
+	patternC: {
+		cost: 50,
+		level: 1,
+		offensive: true,
+		pattern: [
+			[1,0,0,0,0,0,0,0,1],
+			[0,1,0,0,0,0,0,1,0],
+			[0,0,1,0,0,0,1,0,0],
+			[0,0,0,1,0,1,0,0,0],
+			[0,0,0,0,2,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+		]	
 	}
 }
 

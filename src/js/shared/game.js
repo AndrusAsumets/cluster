@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_DAMAGE_BUILDING } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
@@ -13,7 +13,7 @@ import { upgrade, sell, upgradeCost, sellBackValue } from './dynamic'
 export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
-	const cooldown = 10 // how often should the buildings create new elements
+	const cooldown = 5 // how often should the buildings create new elements
 	const fps = 60
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -188,19 +188,6 @@ export function game() {
 				// check if there's an building on that location already
 				if (Number.isInteger(findBuildingIndex(player.buildings, building))) return
 
-				// check for open paths
-				grid = setWalkableAt(grid, gm, building.start[0], building.start[1], false)
-
-				var found = false
-				for (var i = 0; i < vertical - gm; i++) {
-					if (finder.findPath(0, i, horizontal - gm, vertical - gm - i, grid.clone()).length) found = true
-				}
-
-				if (!found) {
-					grid = setWalkableAt(grid, gm, building.start[0], building.start[1], true)
-					return
-				}
-
 				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
 				for (var p in players) createPaths(players[p])
@@ -208,6 +195,15 @@ export function game() {
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
 				
+				break
+			
+			case SET_DAMAGE_BUILDING:
+				var playerId = data.playerId
+				var buildingIndex = data.buildingIndex
+				players[playerId].buildings.splice(buildingIndex, 1)
+				
+				// find boundaries where the player would be able to build
+				boundaries({ playerId: playerId })
 				break
 
 			case SET_ELEMENT:
@@ -526,7 +522,7 @@ export function game() {
 		}
 	}
 
-	function collision(p) {
+	function elementCollision(p) {
 		var player = players[p]
 		var a = 1
 		var b = 1
@@ -565,22 +561,7 @@ export function game() {
 					if (!positionB) continue
 					if (!positionB.length) continue
 
-					if (isNear(gm, positionA, positionB)) {
-						var path = []
-						try {
-							// make positions unwalkable
-							grid = setWalkableAt(grid, gm, positionB[0], positionB[1], false)
-
-							// find a path between the buildings
-							var path = finder.findPath(player.elements[r].path[0][0], player.elements[r].path[0][1], player.elements[r].end[0], player.elements[r].end[1], grid.clone())
-
-							// make positions walkable again
-							grid = setWalkableAt(grid, gm, positionB[0], positionB[1], true)
-
-							if (path.length) players[p].elements[r].path = path
-						} catch (err) { continue }
-
-
+					if (isNear(1, positionA, positionB)) {
 						var projectile = {
 							path: [
 								player.elements[r].path[a - 1],
@@ -603,6 +584,47 @@ export function game() {
 
 						players[player.id].deepProjectiles.push(projectile)
 
+						break
+					}
+				}
+			}
+		}
+	}
+	
+	function buildingCollision(p) {
+		var player = players[p]
+		var a = 0
+		var b = 0
+
+		for (var r = 0; r < player.elements.length; r++) {
+			if (
+				!player.elements &&
+				!player.elements.length &&
+				!player.elements[r] &&
+				!player.elements[r].length &&
+				!player.elements[r].path &&
+				!player.elements[r].path[a] &&
+				!player.elements[r].path[a].length
+			) continue
+
+			var positionA = player.elements[r].path[a]
+			if (!positionA) continue
+			if (!positionA.length) continue
+
+			for (var p2 in players) {
+				if (p == p2) continue
+				
+				var anotherPlayer = players[p]
+
+				for (var r2 = 0; r2 < anotherPlayer.buildings.length; r2++) {
+					var positionB = anotherPlayer.buildings[r2].start
+					
+					if (!positionB) continue
+					if (!positionB.length) continue
+
+					if (isNear(1, positionA, positionB)) {
+						if (host) socket.emit('message', { action: SET_DAMAGE_BUILDING, data: { playerId: p, buildingIndex: r2 } })
+						
 						break
 					}
 				}
@@ -699,19 +721,18 @@ export function game() {
 
 				// see if a path was found using default positions
 				var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
-
-				//if something is blocking, then find a better path
-				if (!path.length) path = findOpenPath({ finder: finder, grid: grid, gm: gm, height: vertical, start: start, end: end })
-
-				grid = setWalkableAt(grid, gm, objects[p].start[0], objects[p].start[1], false)
+				
+				var pattern = objects[p].pattern
+				
+				var patternizedPath = patternizePath(path, pattern)
 
 				var element = {
 					id: players[r].elements.length,
 					playerId: key,
 					type: object.type,
-					start: start,
-					end: end,
-					path: path,
+					start: patternizedPath[0],
+					end: patternizedPath[patternizedPath.length - 1],
+					path: patternizedPath,
 					level: object.level,
 					dynamics: {
 						totalHealth: defaultHealth * object.level,
@@ -869,12 +890,6 @@ export function game() {
 		}
 	}
 
-	function walkBuildings(player) {
-		for (var i = 0; i < player.buildings.length; i++) {
-			grid = setWalkableAt(grid, gm, player.buildings[i].start[0], player.buildings[i].start[1], false)
-		}
-	}
-
 	function increaseEnergy(player, amount = defaultBuildings.turbine.income) {
 		players[player.id].energy = players[player.id].energy + amount
 	}
@@ -942,12 +957,40 @@ export function game() {
 		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
 		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}
+	
+	function patternizePath(path, pattern) {
+		var patternizedPath = []
+		var lastColumn = 0
+		
+		for (var i = 0; i < path.length; i++) {
+			if (lastColumn > pattern.length - 1) lastColumn = 0
+			
+			var step = alterStep(path[i], pattern, lastColumn)
+			
+			patternizedPath.push(step)
+			lastColumn++
+		}
+		
+		return patternizedPath
+	}
+	
+	function alterStep(step, pattern, lastColumn) {
+		var extra = -gm - 1
+		
+		for (var column = extra; column < pattern.length + extra; column++) {
+			for (var row = 0; row < pattern.length; row++) {
+				var block = pattern[row][lastColumn]
+				
+				if (block > 0) return [step[0], step[1] + row + extra]
+			}
+		}
+
+	}
 
 	setInterval(function() {
 		time = (new Date).getTime()
 
 		for (var p in players) {
-			walkBuildings(players[p]) // just a safety measure, because collion's setwalkable isn't sometimes firing
 			hit(players[p])
 			deepHit(players[p])
 			health(players[p])
@@ -957,7 +1000,8 @@ export function game() {
 
 		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
-			collision(p)
+			elementCollision(p)
+			buildingCollision(p)
 			attack(players[p])
 
 			if (!gameOver) {
@@ -987,7 +1031,7 @@ export function game() {
 		if (client) {
 			move('movement', 'elements', key)
 			move('movement', 'projectiles', key)
-			move('movement', 'deepProjectiles', key)
+			//move('movement', 'deepProjectiles', key)
 		}
 	}
 }
