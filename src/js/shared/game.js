@@ -664,6 +664,8 @@ export function game() {
 		var objects = players[key][type] ? players[key][type] : []
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
+			
+			if (!object.offensive) players[key].buildings[p].built = true
 
 			if (object.charge < 100) {
 				object.charge = object.charge + convertRange(1 / fps * cooldown, [0, fps], [0, 100])
