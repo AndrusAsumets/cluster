@@ -28,6 +28,7 @@ export function createMatrix(vertical, horizontal) {
 	return matrix
 }
 
+
 export function ctx(container, className, w, h, z) {
 	var ratio = PIXEL_RATIO
 	var canvas = document.createElement('canvas')
@@ -40,6 +41,77 @@ export function ctx(container, className, w, h, z) {
 	canvas.style.zIndex = z
 	container.appendChild(canvas)
 	return canvas.getContext('2d')
+}
+
+export function chessboard(o) {
+	var canvas = o.canvas
+	var shape1 = o.shape1
+	var shape2 = o.shape2
+	var smallHorizontal = o.smallHorizontal
+	var smallVertical = o.smallVertical
+	var blockWidth = o.blockWidth
+	var blockHeight = o.blockHeight
+	var alpha = o.alpha ? o.alpha : 1
+
+	for (var i = 0; i < smallHorizontal + 1; i++) {
+		if (i % 2) {
+			for (var j = 0; j < smallVertical; j++) {
+				if (j % 2) {
+					rectangle({
+						ctx: canvas,
+						shape: shape1,
+						x1: blockWidth * i,
+						y1: blockHeight * j,
+						width: blockWidth,
+						height: blockHeight,
+						alpha: alpha
+					})
+				}
+				
+				else {
+					rectangle({
+						ctx: canvas,
+						shape: shape1,
+						x1: blockWidth * (i - 1),
+						y1: blockHeight * j,
+						width: blockWidth,
+						height: blockHeight,
+						alpha: alpha
+					})
+				}
+			}
+		}
+	}
+	
+	for (var i = 0; i < smallHorizontal + 1; i++) {
+		if (i % 2 === 0) {
+			for (var j = 0; j < smallVertical; j++) {
+				if (j % 2 !== 0) {
+					rectangle({
+						ctx: canvas,
+						shape: shape2,
+						x1: blockWidth * i,
+						y1: blockHeight * j,
+						width: blockWidth,
+						height: blockHeight,
+						alpha: alpha
+					})
+				}
+				
+				else {
+					rectangle({
+						ctx: canvas,
+						shape: shape2,
+						x1: blockWidth * (i - 1),
+						y1: blockHeight * j,
+						width: blockWidth,
+						height: blockHeight,
+						alpha: alpha
+					})
+				}
+			}
+		}
+	}
 }
 
 export function line(o) {

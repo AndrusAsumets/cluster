@@ -2,11 +2,9 @@ cluster.game
 
 
 NOW:
-* add text for upgrades
-* patterns
-* get rid of grid for the bubbles
-* pattern damage and damage bar
+* programmatically generated pattern icons
 * health and health bar
+* pattern damage and damage bar
 * separate tick from fps
 * turns
 

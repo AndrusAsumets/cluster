@@ -6,14 +6,14 @@ import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShap
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
-import { createMatrix, ctx, line, rectangle, circle, dot, donut, image, drawBoundaries } from './draw'
+import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue } from './dynamic'
 
 export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
-	const cooldown = 5 // how often should the buildings create new elements
+	const cooldown = 2 // how often should the buildings create new elements
 	const fps = 60
 	var gameOver = false
 	var time = (new Date).getTime()
@@ -68,6 +68,19 @@ export function game() {
 		}
 
 		// create a visual UI grid
+		/*
+		chessboard({
+			canvas: canvas.background,
+			shape1: defaultShapes.dark,
+			shape2: defaultShapes.background,
+			smallHorizontal: smallHorizontal,
+			smallVertical: smallVertical,
+			blockWidth: blockWidth,
+			blockHeight: blockHeight,
+			alpha: 0.25
+		})
+		*/
+		
 		for (var i = 0; i < smallHorizontal + 2; i++) {
 			line({
 				ctx: canvas.background,
@@ -844,7 +857,7 @@ export function game() {
 
 				if (x1 == x2 && y1 == y2) {
 					var health = players[player.id].elements[r].dynamics.health
-					var damage = (defaultDamage * projectiles[p].level) / 3
+					var damage = defaultDamage * projectiles[p].level
 					players[player.id].elements[r].dynamics.health = health - damage
 					break
 				}

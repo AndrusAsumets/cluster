@@ -1,8 +1,3 @@
-//fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-//strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }, // punane
-//fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine]
-//strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }, // sinine
-
 /*
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
@@ -34,16 +29,28 @@ export const defaultShapes = {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' }
 	},
+	black: {
+		fillStyle: function (alpha) { return 'rgba(0, 0, 0,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(0, 0, 0,' + alpha + ')' }
+	},
+	red: {
+		fillStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 74, 61,' + alpha + ')' }
+	},
+	blue: {
+		fillStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(0, 190, 229,' + alpha + ')' }
+	},
 	earth: {
 		fillStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(194, 97, 204,' + alpha + ')' }
 	},
-	mine: {
+	invest: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/turbine.svg'
 	},
-	pattern: {
+	attack: {
 		file: '/public/images/pattern.svg'
 	},
 	patternA: {
@@ -61,12 +68,12 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/patternB.svg'
 	},
-	shield: {
+	defend: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/shield.svg'
 	},
-	booster: {
+	boost: {
 		file: '/public/images/booster.svg'
 	},
 	boosterA: {
@@ -102,7 +109,7 @@ const defaultPatterns = {
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0]
-		]	
+		]
 	},
 	patternB: {
 		cost: 50,
@@ -118,7 +125,7 @@ const defaultPatterns = {
 			[0,0,0,0,0,0,6,0,0],
 			[0,0,0,0,0,0,0,9,0],
 			[0,0,0,0,0,0,0,0,6]
-		]	
+		]
 	},
 	patternC: {
 		cost: 50,
@@ -134,7 +141,7 @@ const defaultPatterns = {
 			[0,0,6,0,0,0,0,0,0],
 			[0,9,0,0,0,0,0,0,0],
 			[6,0,0,0,0,0,0,0,0]
-		]	
+		]
 	}
 }
 
@@ -150,22 +157,22 @@ const defaultBoosters = {
 }
 
 export const defaultBuildings = {
-	pattern: {
+	attack: {
 		submenu: defaultPatterns
 	},
-	shield: {
+	defend: {
 		cost: 50,
 		level: 1,
 		defensive: true
 	},
-	mine: {
+	invest: {
 		cost: 25,
 		level: 1,
 		linkable: true,
 		producer: true,
 		income: 0.5
 	},
-	booster: {
+	boost: {
 		submenu: defaultBoosters
 	}
 }
