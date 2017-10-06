@@ -109,6 +109,9 @@ export function game() {
 	// networking
 	var me = client ? getUrlParams('me') : null
 	if (!me && !host) return console.log('add ?me=some_player_id to your url')
+	
+	// development
+	var dev = client && getUrlParams('dev') ? true : false
 
 	var uri = process.env.WS_SERVER && process.env.WS_PORT
 		? 'ws://' + process.env.WS_SERVER + ':' + process.env.WS_PORT
@@ -192,6 +195,8 @@ export function game() {
 				players[building.playerId].buildings.push(building)
 				for (var p in players) createPaths(players[p])
 				
+				if (client) canvas.start.clearRect(0, 0, w, h)
+				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
 				
@@ -246,14 +251,21 @@ export function game() {
 		if ('touches' in event) event = event.touches[0]
 		
 		canvas.menu.clearRect(0, 0, w, h)
-
-		var player = players[me]
 		
 		showStartingPosition()
 
-		var side = getSide(me)
 		var x = event.clientX
 		var y = event.clientY
+		
+		var user = dev
+			? x < w / 2
+				? 'player1'
+				: 'player2'
+			: me
+		
+		var side = getSide(user)
+		var player = players[user]
+		
 		var yBlock = Math.floor(y / blockHeight)
 		var xBlock = Math.floor(x / blockWidth)
 		var menuXBlock = side == 'left'
@@ -266,18 +278,18 @@ export function game() {
 		})
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
-		var inBounds = findBoundary(players[me].boundaries, { x: xBlock * gm, y: yBlock * gm })
+		var inBounds = findBoundary(players[user].boundaries, { x: xBlock * gm, y: yBlock * gm })
 		
 		var inCenter
 		if (
-			me == 'player1' &&
+			user == 'player1' &&
 			xBlock == Math.floor(smallHorizontal / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
 		
 		else if (
-			me == 'player2' &&
+			user == 'player2' &&
 			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
@@ -311,7 +323,7 @@ export function game() {
 				
 				var message = {
 					action: defaultOptions[optionType].action,
-					data: { playerId: me, buildingIndex: buildingIndex }
+					data: { playerId: user, buildingIndex: buildingIndex }
 				}
 			
 				socket.emit('message', message)
@@ -604,8 +616,11 @@ export function game() {
 				!player.elements[r].length &&
 				!player.elements[r].path &&
 				!player.elements[r].path[a] &&
-				!player.elements[r].path[a].length
+				!player.elements[r].path[a].length &&
+				!player.elements[r].path[a][2]
 			) continue
+			
+			if (player.elements[r].path[a][2] < 9) continue
 
 			var positionA = player.elements[r].path[a]
 			if (!positionA) continue
@@ -862,6 +877,7 @@ export function game() {
 				if (object.type) {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
+					var size = object.path[1][2] | 0
 
 					donut({
 						ctx: canvas[layer],
@@ -872,7 +888,7 @@ export function game() {
 						width: blockWidth,
 						height: blockHeight,
 						alpha: 0.66,
-						size: object.level
+						size: object.level * size / 9
 					})
 				}
 				else {
@@ -960,27 +976,27 @@ export function game() {
 	
 	function patternizePath(path, pattern) {
 		var patternizedPath = []
-		var lastColumn = 0
+		var lastRow = 0
 		
 		for (var i = 0; i < path.length; i++) {
-			if (lastColumn > pattern.length - 1) lastColumn = 0
+			if (lastRow > pattern.length - 1) lastRow = 0
 			
-			var step = alterStep(path[i], pattern, lastColumn)
+			var step = alterStep(path[i], pattern, lastRow)
 			
 			patternizedPath.push(step)
-			lastColumn++
+			lastRow++
 		}
 		
 		return patternizedPath
 	}
 	
-	function alterStep(step, pattern, lastColumn) {
+	function alterStep(step, pattern, lastRow) {
 		var extra = -gm - 1
 		
-		for (var row = 0; row < pattern.length; row++) {
-			var block = pattern[row][lastColumn]
+		for (var column = 0; column < pattern.length; column++) {
+			var block = pattern[column][lastRow]
 			
-			if (block > 0) return [step[0], step[1] + row + extra]
+			if (block > 0) return [step[0], step[1] + column + extra, block]
 		}
 	}
 
