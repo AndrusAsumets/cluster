@@ -68,6 +68,11 @@ export const defaultShapes = {
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		file: '/public/images/patternB.svg'
 	},
+	patternD: {
+		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
+		file: '/public/images/patternB.svg'
+	},
 	defend: {
 		fillStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
 		strokeStyle: function (alpha) { return 'rgba(255, 255, 255,' + alpha + ')' },
@@ -98,13 +103,14 @@ const defaultPatterns = {
 	patternA: {
 		cost: 50,
 		level: 1,
+		health: 20,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
-			[2,2,2,2,2,2,6,9,6],
+			[3,3,3,3,3,3,6,9,6],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
@@ -114,22 +120,41 @@ const defaultPatterns = {
 	patternB: {
 		cost: 50,
 		level: 1,
+		health: 20,
 		offensive: true,
 		pattern: [
-			[2,0,0,0,0,0,0,0,0],
-			[0,2,0,0,0,0,0,0,0],
-			[0,0,2,0,0,0,0,0,0],
-			[0,0,0,2,0,0,0,0,0],
-			[0,0,0,0,2,0,0,0,0],
-			[0,0,0,0,0,2,0,0,0],
-			[0,0,0,0,0,0,6,0,0],
-			[0,0,0,0,0,0,0,9,0],
-			[0,0,0,0,0,0,0,0,6]
+			[3,0,0,0,0,0,0,0,3],
+			[0,3,0,0,0,0,0,3,0],
+			[0,3,0,0,0,0,0,3,0],
+			[0,0,3,0,0,0,3,0,0],
+			[0,0,3,0,0,0,3,0,0],
+			[0,0,3,0,0,0,3,0,0],
+			[0,0,0,6,0,6,0,0,0],
+			[0,0,0,0,9,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0]
 		]
 	},
 	patternC: {
 		cost: 50,
 		level: 1,
+		health: 20,
+		offensive: true,
+		pattern: [
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,3,0,0,0,0,0,0],
+			[0,3,0,3,0,0,0,0,0],
+			[3,0,0,0,3,0,0,0,6],
+			[0,0,0,0,0,3,0,9,0],
+			[0,0,0,0,0,0,3,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0]
+		]
+	},
+	patternD: {
+		cost: 50,
+		level: 1,
+		health: 20,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,2],
@@ -148,11 +173,13 @@ const defaultPatterns = {
 const defaultBoosters = {
 	boosterA: {
 		cost: 50,
-		level: 1
+		level: 1,
+		health: 10
 	},
 	boosterB: {
 		cost: 50,
-		level: 1		
+		level: 1,
+		health: 10		
 	}
 }
 
@@ -163,11 +190,13 @@ export const defaultBuildings = {
 	defend: {
 		cost: 50,
 		level: 1,
+		health: 30,
 		defensive: true
 	},
 	invest: {
 		cost: 25,
 		level: 1,
+		health: 10,
 		linkable: true,
 		producer: true,
 		income: 0.5

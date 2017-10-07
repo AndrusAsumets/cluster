@@ -145,7 +145,7 @@ export function dot(o) {
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
-	var size = o.size ? o.size / 3 / 0.66 : 1 / 0.66
+	var size = o.size / 3 / 0.66
 	var radius = Math.sqrt((o.width + o.height) * size)
 
 	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, radius: radius, alpha: alpha, fillStyle: fillStyle })
@@ -280,13 +280,13 @@ export function label(o) {
 	var canvas = o.ctx
 	var string = o.string
 	var vertical = o.vertical | 0
-	var baseHeight = o.baseHeight * vertical | 0
-	var height = o.height
+	var height = o.height * vertical | 0
 	var size = o.size | 16
 	var x1 = o.x1
+	var y1 = o.y1
 	var alpha = o.alpha | 1
 	var fillStyle = o.shape.fillStyle(alpha)
-	var fontSize = getFontSize({ canvas: canvas.canvas, size: size, base: baseHeight })
+	var fontSize = getFontSize({ canvas: canvas.canvas, size: size, base: height })
 	var font = o.size + 'px Helvetica'
 	var center = o.center | false
 	var extra = 0
@@ -297,10 +297,10 @@ export function label(o) {
 	
 	var stringWidth = canvas.measureText(string).width
 	var stringHeight = canvas.measureText('M').width
-	var blockWidth = baseHeight / vertical | 0
+	var blockWidth = height / vertical | 0
 	var extra = center ? (blockWidth - stringWidth) / 2 : 0
 
-	canvas.fillText(string, x1 + extra, height + stringHeight / 2)
+	canvas.fillText(string, x1 + extra, y1 + stringHeight / 2)
 }
 
 function getFontSize(o) {

@@ -1,6 +1,7 @@
 import { SET_BUILDING } from './actions'
 import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { line, rectangle, circle, dot, donut, image, label } from './draw'
+import { dotGroup } from './draw/dot-group'
 
 export function buildPopup(o) {
 	var extra = o.side == 'left' ? 0 : o.width / 2
@@ -69,26 +70,82 @@ export function buildPopup(o) {
 		alpha: 0.075
 	})
 
-	var i = 0
+	var index = 0
 	for (var key in o.buildings) {
 		var building = o.buildings[key]
 		var level = building.level
 		var cost = building.cost
+		var pattern = building.pattern
 		
 		// don't show buildings that have reached the maximum level
 		if (key == 'upgrade' && level > 2) continue
 		
-		// generic icon
-		image({
-			ctx: o.canvas.menu,
-			type: key,
-			file: defaultShapes[key].file,
-			x1: extra + i * o.height,
-			y1: 0,
-			width: o.height,
-			height: o.height,
-			size: 3.5
-		})
+		if (pattern) {
+			var size = 3.5				
+			var marginX = o.height / size
+			var marginY = o.height / size
+			var width = o.height / size / 3
+			var maxWidth = o.height - marginX * 2
+			var maxHeight = o.height - marginY * 2
+				
+			var count = 3
+			for (var i = 0; i < pattern.length; i++) {
+				var centeredVertically = (i + 2) % count
+				
+				if (centeredVertically === 0) {
+					var column = pattern[i]
+					var sizes = []
+					
+					if (extra == 0) {
+						for (var j = 0; j < pattern.length; j++) {
+							var centeredHorizontally = (j + 2) % count
+							
+							if (centeredHorizontally === 0) {
+								var block = column[j] / count
+								sizes.push(block)
+							}
+						}
+					}
+					else {
+						for (var j = pattern.length - 1; j > 0; j--) {
+							var centeredHorizontally = (j + 2) % count
+							
+							if (centeredHorizontally === 0) {
+								var block = column[j] / count
+								sizes.push(block)
+							}
+						}					
+					}
+					
+					dotGroup({
+						count: count,
+						ctx: o.canvas.menu,
+						shape: defaultShapes.light,
+						width: width,
+						x1: extra + width + o.height * index,
+						y1: (o.blockHeight / 17) * i + (o.blockHeight / 24),
+						maxWidth: maxWidth,
+						maxHeight: maxHeight,
+						sizes: sizes,
+						alpha: 0.75
+					})
+				}
+			}
+		}
+		
+		else {
+			// generic icon
+			image({
+				ctx: o.canvas.menu,
+				type: key,
+				file: defaultShapes[key].file,
+				x1: extra + index * o.height,
+				y1: 0,
+				width: o.height,
+				height: o.height,
+				size: 3.5
+			})
+		}
 		
 		// cost label
 		if (
@@ -100,60 +157,24 @@ export function buildPopup(o) {
 				ctx: o.canvas.menu,
 				string: Math.floor(cost),
 				shape: defaultShapes.light,
-				x1: extra + i * o.height,
-				baseHeight: o.height,
+				x1: extra + index * o.height,
+				y1: o.height / 6.2,
+				height: o.height,
 				vertical: o.vertical,
-				height: o.height / 6.2,
-				size: 10,
-				center: true
-			})		
-		}
-		
-		/*
-		if (upgrade) {
-			label({
-				ctx: o.canvas.menu,
-				string: upgrade,
-				shape: defaultShapes.light,
-				x1: extra + i * o.height,
-				baseHeight: o.height,
-				vertical: o.vertical,
-				height: o.height / 6.5,
 				size: 10,
 				center: true
 			})
-
-			var level = object.level
-			var marginX = blockWidth / size
-			var marginY = blockHeight / size
-			var width = blockWidth / size / 3
-			var maxWidth = blockWidth - marginX * 2
-			var maxHeight = blockHeight - marginY * 2
-				
-			dotGroup({
-				count: object.level,
-				ctx: canvas[layer],
-				shape: defaultShapes.light,
-				width: width,
-				x1: object.start[0] * blockWidth / gm + width,
-				y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
-				maxWidth: maxWidth,
-				maxHeight: maxHeight,
-				size: 1,
-				alpha: 0.75
-			})
 		}
-		*/
 		
 		// name label
 		label({
 			ctx: o.canvas.menu,
 			string: key.toUpperCase(),
 			shape: defaultShapes.light,
-			x1: extra + i * o.height,
-			baseHeight: o.height,
+			x1: extra + index * o.height,
+			y1: o.blockHeight,
+			height: o.height,
 			vertical: o.vertical,
-			height: o.blockHeight,
 			size: 10,
 			center: true
 		})
@@ -162,14 +183,14 @@ export function buildPopup(o) {
 		line({
 			ctx: o.canvas.menu,
 			shape: defaultShapes.light,
-			x1: extra + o.height + o.height * i,
+			x1: extra + o.height + o.height * index,
 			y1: 4,
-			x2: extra + o.height + o.height * i,
+			x2: extra + o.height + o.height * index,
 			y2: o.height,
 			alpha: 0.075
 		})
 
-		i++
+		index++
 	}
 }
 

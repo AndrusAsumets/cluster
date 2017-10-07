@@ -2,10 +2,9 @@ cluster.game
 
 
 NOW:
-* attack the block in the middle
 * programmatically generated pattern icons
 * health and health bar
-* pattern damage and damage bar
+* damage bar
 * separate tick from fps
 * turns
 

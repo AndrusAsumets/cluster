@@ -1,12 +1,12 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_DAMAGE_BUILDING } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_BUILDING_DAMAGE } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
-import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, drawBoundaries } from './draw'
+import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue } from './dynamic'
 
@@ -215,10 +215,14 @@ export function game() {
 				
 				break
 			
-			case SET_DAMAGE_BUILDING:
+			case SET_BUILDING_DAMAGE:
 				var playerId = data.playerId
 				var buildingIndex = data.buildingIndex
-				players[playerId].buildings.splice(buildingIndex, 1)
+				var damage = data.damage
+				var health = players[playerId].buildings[buildingIndex].health - damage
+				
+				if (health < 1) players[playerId].buildings.splice(buildingIndex, 1)
+				else players[playerId].buildings[buildingIndex].health = health
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
@@ -411,7 +415,8 @@ export function game() {
 					side: side,
 					width: w,
 					height: (h + marginBottom) / smallVertical,
-					vertical: vertical
+					vertical: vertical,
+					gm: gm
 				})
 
 				gameMenu.submenu = submenu
@@ -452,13 +457,14 @@ export function game() {
 				side: side,
 				width: w,
 				height: (h + marginBottom) / smallVertical,
-				vertical: vertical
+				vertical: vertical,
+				gm: gm
 			})
 			
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, options: true }
 		}
 
-		//build a first level generic popup
+		//build a first level popup
 		else if (
 			(
 				!gameMenu.xBlock &&
@@ -482,7 +488,8 @@ export function game() {
 				side: side,
 				width: w,
 				height: (h + marginBottom) / smallVertical,
-				vertical: vertical
+				vertical: vertical,
+				gm: gm
 			})
 
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
@@ -633,11 +640,14 @@ export function game() {
 				!player.elements[r].path[a][2]
 			) continue
 			
+			// only deal damage when threshold has been exceeded
 			if (player.elements[r].path[a][2] < 9) continue
 
 			var positionA = player.elements[r].path[a]
 			if (!positionA) continue
 			if (!positionA.length) continue
+			
+			var damage = player.elements[r].dynamics.damage
 
 			for (var p2 in players) {
 				if (p == p2) continue
@@ -651,7 +661,7 @@ export function game() {
 					if (!positionB.length) continue
 
 					if (isNear(1, positionA, positionB)) {
-						if (host) socket.emit('message', { action: SET_DAMAGE_BUILDING, data: { playerId: p, buildingIndex: r2 } })
+						if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingIndex: r2, damage: damage } })
 						
 						break
 					}
@@ -664,6 +674,7 @@ export function game() {
 		var objects = players[key][type] ? players[key][type] : []
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
+			var pattern = object.pattern
 			
 			if (!object.offensive) players[key].buildings[p].built = true
 
@@ -682,26 +693,16 @@ export function game() {
 			}
 
 			if (client) {
-				var size = 3.5
-
-				image({
-					ctx: canvas[layer],
-					type: object.type,
-					file: defaultShapes[object.type].file,
-					x1: object.start[0] * blockWidth / gm,
-					y1: object.start[1] * blockHeight / gm,
-					width: blockWidth,
-					height: blockHeight,
-					size: size,
-					percentage: object.charge
-				})
-				
+				var size = 3.5				
 				var level = object.level
 				var marginX = blockWidth / size
 				var marginY = blockHeight / size
 				var width = blockWidth / size / 3
 				var maxWidth = blockWidth - marginX * 2
 				var maxHeight = blockHeight - marginY * 2
+				
+				var sizes = []
+				for (var i = 0; i < object.level; i++) sizes.push(1)
 					
 				dotGroup({
 					count: object.level,
@@ -712,9 +713,70 @@ export function game() {
 					y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
 					maxWidth: maxWidth,
 					maxHeight: maxHeight,
-					size: 1,
+					sizes: sizes,
 					alpha: 0.75
 				})
+				
+				if (pattern) {
+					var count = 3
+					for (var i = 0; i < pattern.length; i++) {
+						var centeredVertically = (i + 2) % count
+						
+						if (centeredVertically === 0) {
+							var column = pattern[i]
+							
+							var sizes = []
+							var side = getSide(key)
+							if (side == 'left') {
+								for (var j = 0; j < pattern.length; j++) {
+									var centeredHorizontally = (j + 2) % count
+									
+									if (centeredHorizontally === 0) {
+										var block = column[j] / count
+										sizes.push(block)
+									}
+								}
+							}
+							else {
+								for (var j = pattern.length - 1; j > 0; j--) {
+									var centeredHorizontally = (j + 2) % count
+									
+									if (centeredHorizontally === 0) {
+										var block = column[j] / count
+										sizes.push(block)
+									}
+								}					
+							}
+							
+							dotGroup({
+								count: count,
+								ctx: canvas[layer],
+								shape: defaultShapes.blue,
+								width: width,
+								x1: object.start[0] * blockWidth / gm + width,
+								y1: object.start[1] * blockHeight / gm + (blockHeight / 17) * i + (blockHeight / 24),
+								maxWidth: maxWidth,
+								maxHeight: maxHeight,
+								sizes: sizes,
+								alpha: 0.75
+							})
+						}
+					}
+				}
+				
+				else {
+					image({
+						ctx: canvas[layer],
+						type: object.type,
+						file: defaultShapes[object.type].file,
+						x1: object.start[0] * blockWidth / gm,
+						y1: object.start[1] * blockHeight / gm,
+						width: blockWidth,
+						height: blockHeight,
+						size: size,
+						percentage: object.charge
+					})					
+				}
 
 				if (object.offensive) {
 					var marginY = blockHeight / size
@@ -732,6 +794,19 @@ export function game() {
 						alpha: 0.75
 					})
 				}
+				
+				
+				// health label
+				label({
+					ctx: canvas[layer],
+					string: object.health,
+					shape: defaultShapes.light,
+					x1: object.start[0] * blockWidth / gm + blockWidth / 2,
+					y1: object.start[1] * blockHeight / gm + blockHeight / 8,
+					height: blockHeight,
+					size: 10,
+					center: true
+				})
 			}
 		}
 	}
@@ -766,7 +841,8 @@ export function game() {
 					level: object.level,
 					dynamics: {
 						totalHealth: defaultHealth * object.level,
-						health: defaultHealth * object.level
+						health: defaultHealth * object.level,
+						damage: defaultDamage * object.level
 					}
 				}
 
@@ -993,7 +1069,7 @@ export function game() {
 		var patternizedPath = []
 		var lastRow = 0
 		
-		for (var i = 0; i < path.length; i++) {
+		for (var i = 2; i < path.length - 2; i++) {
 			if (lastRow > pattern.length - 1) lastRow = 0
 			
 			var step = alterStep(path[i], pattern, lastRow)
@@ -1013,6 +1089,8 @@ export function game() {
 			
 			if (block > 0) return [step[0], step[1] + column + extra, block]
 		}
+		
+		return step
 	}
 
 	setInterval(function() {

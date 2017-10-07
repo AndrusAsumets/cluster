@@ -9,7 +9,7 @@ export function dotGroup(o) {
 	var maxHeight = o.maxHeight
 	var x1 = o.x1
 	var y1 = o.y1
-	var size = o.size
+	var sizes = o.sizes
 	var alpha = o.alpha
 	
 	for (var i = 0; i < count; i++) {
@@ -22,7 +22,7 @@ export function dotGroup(o) {
 			y1: y1,
 			width: maxWidth,
 			height: maxHeight,
-			size: size,
+			size: sizes[i],
 			alpha: alpha
 		})
 	}
