@@ -549,6 +549,9 @@ export function game() {
 				!element.path[0].length
 			) {
 				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
+				
+				var last = path.length - 1
+
 				players[player.id].elements[p].path = path
 			}
 		}
@@ -836,7 +839,6 @@ export function game() {
 					playerId: key,
 					type: object.type,
 					start: patternizedPath[0],
-					end: patternizedPath[patternizedPath.length - 1],
 					path: patternizedPath,
 					level: object.level,
 					dynamics: {
@@ -1069,7 +1071,7 @@ export function game() {
 		var patternizedPath = []
 		var lastRow = 0
 		
-		for (var i = 2; i < path.length - 2; i++) {
+		for (var i = 2; i < path.length; i++) {
 			if (lastRow > pattern.length - 1) lastRow = 0
 			
 			var step = alterStep(path[i], pattern, lastRow)

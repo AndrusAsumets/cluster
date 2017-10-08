@@ -2,18 +2,23 @@ cluster.game
 
 
 NOW:
-* programmatically generated pattern icons
-* health and health bar
+- gameplay:
 * damage bar
+* attack only in the center
+* random resourced
+* def 200, 300, 400. attack 200, 400, 800  
+* defend blockib ehk müüriks
+
+- UI:
+* kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
+* damage animations
+* pattern path ikooni
+* past trail for patterns
+* colors
+* programmatically gene acactrated pattern icons
+
+- server
 * separate tick from fps
-* turns
-
-- pattern tornid: ratsu, siinuslaine
-- stellaris
-- pane tähele kontrolloreid
-
-PHASE0:
-* health bar
 
 PHASE1:
 * game balance & upgrades
