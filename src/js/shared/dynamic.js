@@ -58,6 +58,5 @@ export function sellBackValue(o) {
 }
 
 export function calculateDamage(level) {
-	console.log(defaultDamage, level)
 	return defaultDamage * level
 }

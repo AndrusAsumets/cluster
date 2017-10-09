@@ -3,13 +3,11 @@ cluster.game
 
 NOW:
 - gameplay:
-* attack only in the center
-* random resourced
 * def 200, 300, 400. attack 200, 400, 800  
 * defend blockib ehk müüriks
+* random resourced
 
 - UI:
-* damage bar
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 * damage animations
 * past trail for patterns

@@ -846,7 +846,6 @@ export function game() {
 			// damage label
 			if (object.offensive) {
 				var damage = calculateDamage(object.level)
-				console.log(object, object.level, calculateDamage, damage)
 				
 				label({
 					ctx: canvas[layer],
@@ -947,7 +946,8 @@ export function game() {
 			if (
 				!element.path ||
 				!element.path[1] ||
-				!element.path[1].length
+				!element.path[1].length ||
+				element.path[1][2] < 9
 			) continue
 
 			var x2 = element.path[1][0]
@@ -958,7 +958,12 @@ export function game() {
 				var x1 = projectiles[p].path[1][0]
 				var y1 = projectiles[p].path[1][1]
 
-				if (x1 == x2 && y1 == y2) {
+				if (
+					x1 == x2 &&
+					y1 == y2 &&
+					x1 % 3 === 0 &&
+					y1 % 3 === 0
+				) {
 					var health = players[player.id].elements[r].dynamics.health
 					var damage = calculateDamage(projectiles[p].level)
 					players[player.id].elements[r].dynamics.health = health - damage
@@ -1117,60 +1122,6 @@ export function game() {
 		
 		return step
 	}
-
-	setInterval(function() {
-		time = (new Date).getTime()
-
-		for (var p in players) {
-			hit(players[p])
-			deepHit(players[p])
-			health(players[p])
-			resetProjectiles(players[p])
-			shiftPaths(players[p])
-		}
-
-		// then run the last part because deep projectiles couldn't be updated otherwise
-		for (var p in players) {
-			elementCollision(p)
-			buildingCollision(p)
-			attack(players[p])
-
-			if (!gameOver) {
-				energy(players[p])
-				end(players[p])
-			}
-		}
-
-		if (host && !gameOver) broadcastEnergy()
-	}, tick)
-	
-	// render
-	function animationFrame() {
-		requestAnimationFrame(animationFrame)
-		
-		canvas.movement.clearRect(0, 0, w, h)
-		
-		for (var p in players) {
-			move('movement', 'elements', p)
-			displayCharge(p)		
-		}
-	}
-	if (client) requestAnimationFrame(animationFrame)
-	
-	// create elements in the server
-	if (host) {
-		var update = 0
-		
-		setInterval(function() {
-			update += speed
-			
-			if (Math.ceil(update) >= 100) {
-				update = 0
-	
-				for (var p in players) createElements(p)		
-			}
-		}, tick / fps)
-	}
 	
 	function createElements(p) {
 		var objects = players[p].buildings
@@ -1246,5 +1197,59 @@ export function game() {
 			
 			players[p].buildings[i].charge = object.charge
 		}
+	}
+
+	setInterval(function() {
+		time = (new Date).getTime()
+
+		for (var p in players) {
+			hit(players[p])
+			deepHit(players[p])
+			health(players[p])
+			resetProjectiles(players[p])
+			shiftPaths(players[p])
+		}
+
+		// then run the last part because deep projectiles couldn't be updated otherwise
+		for (var p in players) {
+			elementCollision(p)
+			buildingCollision(p)
+			attack(players[p])
+
+			if (!gameOver) {
+				energy(players[p])
+				end(players[p])
+			}
+		}
+
+		if (host && !gameOver) broadcastEnergy()
+	}, tick)
+	
+	// render
+	function animationFrame() {
+		requestAnimationFrame(animationFrame)
+		
+		canvas.movement.clearRect(0, 0, w, h)
+		
+		for (var p in players) {
+			move('movement', 'elements', p)
+			displayCharge(p)		
+		}
+	}
+	if (client) requestAnimationFrame(animationFrame)
+	
+	// create elements in the server
+	if (host) {
+		var update = 0
+		
+		setInterval(function() {
+			update += speed
+			
+			if (Math.ceil(update) >= 100) {
+				update = 0
+	
+				for (var p in players) createElements(p)		
+			}
+		}, tick / fps)
 	}
 }
