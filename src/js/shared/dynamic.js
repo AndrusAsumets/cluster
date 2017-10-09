@@ -1,3 +1,5 @@
+import { defaultDamage } from './defaults'
+
 export function upgrade(o) {
 	var player = o.player
 	var buildingIndex = o.buildingIndex
@@ -53,4 +55,9 @@ export function sellBackValue(o) {
 		index--
 	}
 	return total / 2
+}
+
+export function calculateDamage(level) {
+	console.log(defaultDamage, level)
+	return defaultDamage * level
 }

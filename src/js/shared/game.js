@@ -8,7 +8,7 @@ import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
-import { upgrade, sell, upgradeCost, sellBackValue } from './dynamic'
+import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage } from './dynamic'
 
 export function game() {
 	// gameplay
@@ -698,7 +698,6 @@ export function game() {
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			var pattern = object.pattern
-
 			var size = 3.5				
 			var level = object.level
 			var marginX = blockWidth / size
@@ -708,6 +707,7 @@ export function game() {
 			var maxWidth = blockWidth - marginX * 2
 			var maxHeight = blockHeight - marginY * 2
 			
+			/*
 			// show level bar
 			var sizes = []
 			for (var i = 0; i < object.level; i++) sizes.push(1)
@@ -724,6 +724,7 @@ export function game() {
 				sizes: sizes,
 				alpha: 0.75
 			})
+			*/
 			
 			// show pattern
 			if (pattern) {
@@ -841,6 +842,39 @@ export function game() {
 				size: 10,
 				center: true
 			})
+			
+			// damage label
+			if (object.offensive) {
+				var damage = calculateDamage(object.level)
+				console.log(object, object.level, calculateDamage, damage)
+				
+				label({
+					ctx: canvas[layer],
+					string: damage,
+					shape: defaultShapes.light,
+					x1: object.start[0] * blockWidth / gm + blockWidth / 2,
+					y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 8,
+					height: blockHeight,
+					size: 10,
+					center: true
+				})
+			}
+			
+			// levels	
+			var marginY = blockHeight / size
+			var width = blockWidth / size / 3
+			var maxHeight = blockHeight - marginY * 2
+			var height = convertRange(object.level, [0, 3], [0, -maxHeight])
+	
+			rectangle({
+				ctx: canvas[layer],
+				shape: defaultShapes.light,
+				x1: object.start[0] * blockWidth / gm + width,
+				y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
+				width: width,
+				height: height,
+				alpha: 0.75
+			})
 		}
 	}
 
@@ -898,7 +932,7 @@ export function game() {
 
 				if (x1 == x2 && y1 == y2) {
 					var health = players[player.id].elements[r].dynamics.health
-					var damage = defaultDamage * projectiles[p].level
+					var damage = calculateDamage(projectiles[p].level)
 					players[player.id].elements[r].dynamics.health = health - damage
 					break
 				}
@@ -926,7 +960,7 @@ export function game() {
 
 				if (x1 == x2 && y1 == y2) {
 					var health = players[player.id].elements[r].dynamics.health
-					var damage = defaultDamage * projectiles[p].level
+					var damage = calculateDamage(projectiles[p].level)
 					players[player.id].elements[r].dynamics.health = health - damage
 					break
 				}
@@ -1203,7 +1237,7 @@ export function game() {
 			rectangle({
 				ctx: canvas.movement,
 				shape: defaultShapes.light,
-				x1: object.start[0] * blockWidth / gm + width,
+				x1: (object.start[0] + gm) * blockWidth / gm - (width * 3 / 2) - (width / 3),
 				y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
 				width: width,
 				height: height,

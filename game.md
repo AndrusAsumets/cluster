@@ -3,24 +3,17 @@ cluster.game
 
 NOW:
 - gameplay:
-* damage bar
 * attack only in the center
 * random resourced
 * def 200, 300, 400. attack 200, 400, 800  
 * defend blockib ehk müüriks
 
 - UI:
+* damage bar
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 * damage animations
-* pattern path ikooni
 * past trail for patterns
 * colors
-* programmatically gene acactrated pattern icons
-
-- performance
-* separate charge bar and buildings into separate canvases 
-* separate tick from fps
-* 
 
 PHASE1:
 * game balance & upgrades
