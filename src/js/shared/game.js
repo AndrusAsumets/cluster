@@ -13,9 +13,9 @@ import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage } from './dy
 export function game() {
 	// gameplay
 	const tick = 1000 // how often should the events happen
-	const cooldown = 2 // how often should the buildings create new elements
 	const fps = 60
-	const speed = convertRange(1 / fps * cooldown, [0, fps], [0, 100])
+	const speed = convertRange(1 / fps * 2, [0, fps], [0, 100])
+	var charge = 0
 	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
@@ -191,9 +191,6 @@ export function game() {
 
 						players[key].energy = data[key].energy
 						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
-
-						var share = convertRange(data[key].energyShare, [0, 100], [0, w / 2])
-						document.getElementsByClassName('scorebar-' + key)[0].style.width = share + 'px'
 					}
 				}
 				break
@@ -239,16 +236,14 @@ export function game() {
 				break
 
 			case SET_ELEMENT:
-				if (client) {
-					var element = data.element
-					var playerId = element.playerId
-					var buildingIndex = data.buildingIndex
+				var element = data.element
+				var playerId = element.playerId
+				var buildingIndex = data.buildingIndex
 
-					for (var key in players) {
-						if (key != playerId) players[key].elements.push(element)
-						else players[playerId].buildings[buildingIndex].charge = 0
-					}
-				}
+				for (var key in players) if (key != playerId) players[key].elements.push(element)
+				
+				charge = 0
+				
 				break
 
 			case SET_UPGRADE:
@@ -609,27 +604,31 @@ export function game() {
 					if (!positionB.length) continue
 
 					if (isNear(1, positionA, positionB)) {
-						var projectile = {
-							path: [
-								player.elements[r].path[a - 1],
-								anotherPlayer.elements[r2].path[b]
-							],
-							shape: defaultShapes[player.elements[r].type],
-							level: player.elements[r].level
+						if (positionB[2] == 9) {
+							var projectile = {
+								path: [
+									player.elements[r].path[a - 1],
+									anotherPlayer.elements[r2].path[b]
+								],
+								shape: defaultShapes[player.elements[r].type],
+								level: player.elements[r].level
+							}
+							
+							players[player.id].deepProjectiles.push(projectile)
 						}
-
-						players[anotherPlayer.id].deepProjectiles.push(projectile)
-
-						var projectile = {
-							path: [
-								anotherPlayer.elements[r2].path[a - 1],
-								player.elements[r].path[b]
-							],
-							shape: defaultShapes[anotherPlayer.elements[r2].type],
-							level: anotherPlayer.elements[r2].level
+						
+						if (positionA[2] == 9) {
+							var projectile = {
+								path: [
+									anotherPlayer.elements[r2].path[a - 1],
+									player.elements[r].path[b]
+								],
+								shape: defaultShapes[anotherPlayer.elements[r2].type],
+								level: anotherPlayer.elements[r2].level
+							}
+							
+							players[anotherPlayer.id].deepProjectiles.push(projectile)
 						}
-
-						players[player.id].deepProjectiles.push(projectile)
 
 						break
 					}
@@ -1169,14 +1168,19 @@ export function game() {
 					}
 	
 					socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i } })
-	
-					players[r].elements.push(element)
 				}
 			}
 		}
 	}
 	
-	function displayCharge(p) {
+	function displayCharge() {
+		console.log('displayCharge')
+		
+		var share = convertRange(charge, [0, 100], [0, w / 2])
+		document.getElementsByClassName('scorebar-player1')[0].style.width = share + 'px'
+		document.getElementsByClassName('scorebar-player2')[0].style.width = share + 'px'
+		
+		/*
 		for (var i = 0; i < players[p].buildings.length; i++) {
 			var object = players[p].buildings[i]
 			
@@ -1202,6 +1206,7 @@ export function game() {
 			
 			players[p].buildings[i].charge = object.charge
 		}
+		*/
 	}
 
 	setInterval(function() {
@@ -1236,25 +1241,30 @@ export function game() {
 		
 		canvas.movement.clearRect(0, 0, w, h)
 		
-		for (var p in players) {
-			move('movement', 'elements', p)
-			displayCharge(p)		
-		}
+		for (var p in players) move('movement', 'elements', p)	
 	}
 	if (client) requestAnimationFrame(animationFrame)
 	
 	// create elements in the server
 	if (host) {
-		var update = 0
-		
 		setInterval(function() {
-			update += speed
+			charge += speed
 			
-			if (Math.ceil(update) >= 100) {
-				update = 0
+			if (Math.ceil(charge) >= 100) {
+				charge = 0
 	
 				for (var p in players) createElements(p)		
 			}
 		}, tick / fps)
+	}
+	
+	// display charge bar
+	if (client) {
+		setInterval(function() {
+			charge += speed * 2.5
+			displayCharge()
+			
+			if (Math.ceil(charge) >= 100) charge = 0
+		}, tick / fps * 2.5)
 	}
 }
