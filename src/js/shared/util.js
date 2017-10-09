@@ -109,3 +109,8 @@ export function findBoundary(results, position) {
 export function getSide(playerId) {
 	return playerId == 'player1' ? 'left' : 'right'
 }
+
+export function getColoredShape(defaultShapes, side) {
+	var color = side == 'left' ? defaultShapes.blue : defaultShapes.red
+	return color
+}

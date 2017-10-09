@@ -5,9 +5,11 @@ NOW:
 - gameplay:
 * def 200, 300, 400. attack 200, 400, 800  
 * defend blockib ehk müüriks
+* repair
 * random resourced
 
 - UI:
+* move chargebars into bottom
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 * damage animations
 * past trail for patterns

@@ -5,7 +5,7 @@ import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, S
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide } from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape} from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage } from './dynamic'
@@ -758,17 +758,20 @@ export function game() {
 							}					
 						}
 						
+						var side = getSide(key)
+						var shape = getColoredShape(defaultShapes, side)
+						
 						dotGroup({
 							count: count,
 							ctx: canvas[layer],
-							shape: defaultShapes.blue,
+							shape: shape,
 							width: width,
 							x1: object.start[0] * blockWidth / gm + width,
 							y1: object.start[1] * blockHeight / gm + (blockHeight / 17) * i + (blockHeight / 24),
 							maxWidth: maxWidth,
 							maxHeight: maxHeight,
 							sizes: sizes,
-							alpha: 0.75
+							alpha: 1
 						})
 					}
 				}
@@ -1000,16 +1003,18 @@ export function game() {
 					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
 					var size = object.path[1][2] | 0
+					var side = getSide(object.playerId)
+					var shape = getColoredShape(defaultShapes, side)
 
 					donut({
 						ctx: canvas[layer],
-						shape: defaultShapes[object.type],
+						shape: shape,
 						percentage: percentage,
 						x1: dx,
 						y1: dy,
 						width: blockWidth,
 						height: blockHeight,
-						alpha: 0.66,
+						alpha: 1,
 						size: object.level * size / 9
 					})
 				}
@@ -1147,7 +1152,6 @@ export function game() {
 					var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
 					
 					var pattern = object.pattern
-					
 					var patternizedPath = patternizePath(path, pattern)
 	
 					var element = {
