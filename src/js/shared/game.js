@@ -15,6 +15,7 @@ export function game() {
 	const tick = 1000 // how often should the events happen
 	const cooldown = 2 // how often should the buildings create new elements
 	const fps = 60
+	const speed = convertRange(1 / fps * cooldown, [0, fps], [0, 100])
 	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
@@ -60,11 +61,12 @@ export function game() {
 		document.getElementsByClassName('game')[0].appendChild(container)
 		canvas = {
 			background: ctx(container, 'background', w, h, 1),
-			movement: ctx(container, 'movement', w, h, 2),
-			boundaries: ctx(container, 'boundaries', w, h, 3),
-			start: ctx(container, 'start', w, h, 4),
-			selection: ctx(container, 'selection', w, h, 5),
-			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 6)
+			buildings: ctx(container, 'buildings', w, h, 2),
+			movement: ctx(container, 'movement', w, h, 3),
+			boundaries: ctx(container, 'boundaries', w, h, 4),
+			start: ctx(container, 'start', w, h, 5),
+			selection: ctx(container, 'selection', w, h, 6),
+			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 7)
 		}
 
 		// create a visual UI grid
@@ -176,6 +178,8 @@ export function game() {
 						}
 						
 						if (key == me) showStartingPosition()
+						
+						refreshBuildings()
 					}
 				}
 				break
@@ -206,9 +210,13 @@ export function game() {
 
 				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
+				
 				for (var p in players) createPaths(players[p])
 				
-				if (client) canvas.start.clearRect(0, 0, w, h)
+				if (client) {
+					canvas.start.clearRect(0, 0, w, h)
+					refreshBuildings()
+				}
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
@@ -226,6 +234,8 @@ export function game() {
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
+				
+				if (client) refreshBuildings()
 				break
 
 			case SET_ELEMENT:
@@ -243,6 +253,8 @@ export function game() {
 
 			case SET_UPGRADE:
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+				
+				if (client) refreshBuildings()
 				break
 
 			case SET_SELL:
@@ -250,11 +262,11 @@ export function game() {
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: data.playerId })
-				
 				 
 				if (client) {
 					if (data.playerId == me) canvas.selection.clearRect(0, 0, w, h)
 					if (!players[data.playerId].buildings.length) showStartingPosition()
+					refreshBuildings()
 				}
 				break
 		}
@@ -672,186 +684,163 @@ export function game() {
 			}
 		}
 	}
+	
+	function refreshBuildings() {
+		canvas.buildings.clearRect(0, 0, w, h)
+		
+		for (var p in players) {
+			displayBuildings('buildings', 'buildings', p)
+		}
+	}
 
-	function charge(layer, type, key) {
+	function displayBuildings(layer, type, key) {
 		var objects = players[key][type] ? players[key][type] : []
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			var pattern = object.pattern
+
+			var size = 3.5				
+			var level = object.level
+			var marginX = blockWidth / size
+			var marginY = blockHeight / size
+			var width = blockWidth / size / 3
+			var height = blockHeight / size / 3
+			var maxWidth = blockWidth - marginX * 2
+			var maxHeight = blockHeight - marginY * 2
 			
-			if (!object.offensive) players[key].buildings[p].built = true
-
-			if (object.charge < 100) {
-				object.charge = object.charge + convertRange(1 / fps * cooldown, [0, fps], [0, 100])
-				objects[p].charge = object.charge
-			}
-
-			else if (object.charge >= 100) {
-				players[key].buildings[p].built = true
-
-				if (object.offensive) {
-					players[key].buildings[p].charge = 0
-					if (host) newElement(objects, key, p)
-				}
-			}
-
-			if (client) {
-				var size = 3.5				
-				var level = object.level
-				var marginX = blockWidth / size
-				var marginY = blockHeight / size
-				var width = blockWidth / size / 3
-				var maxWidth = blockWidth - marginX * 2
-				var maxHeight = blockHeight - marginY * 2
+			// show level bar
+			var sizes = []
+			for (var i = 0; i < object.level; i++) sizes.push(1)
 				
-				var sizes = []
-				for (var i = 0; i < object.level; i++) sizes.push(1)
+			dotGroup({
+				count: object.level,
+				ctx: canvas[layer],
+				shape: defaultShapes.light,
+				width: width,
+				x1: object.start[0] * blockWidth / gm + width,
+				y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
+				maxWidth: maxWidth,
+				maxHeight: maxHeight,
+				sizes: sizes,
+				alpha: 0.75
+			})
+			
+			// show pattern
+			if (pattern) {
+				var count = 3
+				for (var i = 0; i < pattern.length; i++) {
+					var centeredVertically = (i + 2) % count
 					
-				dotGroup({
-					count: object.level,
-					ctx: canvas[layer],
-					shape: defaultShapes.light,
-					width: width,
-					x1: object.start[0] * blockWidth / gm + width,
-					y1: (object.start[1] + 2) * blockHeight / gm - (blockHeight / 24),
-					maxWidth: maxWidth,
-					maxHeight: maxHeight,
-					sizes: sizes,
-					alpha: 0.75
-				})
-				
-				if (pattern) {
-					var count = 3
-					for (var i = 0; i < pattern.length; i++) {
-						var centeredVertically = (i + 2) % count
+					if (centeredVertically === 0) {
+						var column = pattern[i]
 						
-						if (centeredVertically === 0) {
-							var column = pattern[i]
-							
-							var sizes = []
-							var side = getSide(key)
-							if (side == 'left') {
-								for (var j = 0; j < pattern.length; j++) {
-									var centeredHorizontally = (j + 2) % count
-									
-									if (centeredHorizontally === 0) {
-										var block = column[j] / count
-										sizes.push(block)
-									}
+						var sizes = []
+						var side = getSide(key)
+						if (side == 'left') {
+							for (var j = 0; j < pattern.length; j++) {
+								var centeredHorizontally = (j + 2) % count
+								
+								if (centeredHorizontally === 0) {
+									var block = column[j] / count
+									sizes.push(block)
 								}
 							}
-							else {
-								for (var j = pattern.length - 1; j > 0; j--) {
-									var centeredHorizontally = (j + 2) % count
-									
-									if (centeredHorizontally === 0) {
-										var block = column[j] / count
-										sizes.push(block)
-									}
-								}					
-							}
-							
-							dotGroup({
-								count: count,
-								ctx: canvas[layer],
-								shape: defaultShapes.blue,
-								width: width,
-								x1: object.start[0] * blockWidth / gm + width,
-								y1: object.start[1] * blockHeight / gm + (blockHeight / 17) * i + (blockHeight / 24),
-								maxWidth: maxWidth,
-								maxHeight: maxHeight,
-								sizes: sizes,
-								alpha: 0.75
-							})
 						}
+						else {
+							for (var j = pattern.length - 1; j > 0; j--) {
+								var centeredHorizontally = (j + 2) % count
+								
+								if (centeredHorizontally === 0) {
+									var block = column[j] / count
+									sizes.push(block)
+								}
+							}					
+						}
+						
+						dotGroup({
+							count: count,
+							ctx: canvas[layer],
+							shape: defaultShapes.blue,
+							width: width,
+							x1: object.start[0] * blockWidth / gm + width,
+							y1: object.start[1] * blockHeight / gm + (blockHeight / 17) * i + (blockHeight / 24),
+							maxWidth: maxWidth,
+							maxHeight: maxHeight,
+							sizes: sizes,
+							alpha: 0.75
+						})
 					}
 				}
 				
-				else {
-					image({
-						ctx: canvas[layer],
-						type: object.type,
-						file: defaultShapes[object.type].file,
-						x1: object.start[0] * blockWidth / gm,
-						y1: object.start[1] * blockHeight / gm,
-						width: blockWidth,
-						height: blockHeight,
-						size: size,
-						percentage: object.charge
-					})					
-				}
-
-				if (object.offensive) {
-					var marginY = blockHeight / size
-					var width = blockWidth / size / 3
-					var maxHeight = blockHeight - marginY * 2
-					var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
-
-					rectangle({
-						ctx: canvas[layer],
-						shape: defaultShapes.light,
-						x1: object.start[0] * blockWidth / gm + width,
-						y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
-						width: width,
-						height: height,
-						alpha: 0.75
-					})
-				}
+				var alpha = 0.33
 				
-				
-				// health label
-				label({
+				// grid
+				line({
 					ctx: canvas[layer],
-					string: object.health,
 					shape: defaultShapes.light,
-					x1: object.start[0] * blockWidth / gm + blockWidth / 2,
-					y1: object.start[1] * blockHeight / gm + blockHeight / 8,
-					height: blockHeight,
-					size: 10,
-					center: true
+					x1: object.start[0] * blockWidth / gm + (width * 4.25),
+					y1: object.start[1] * blockHeight / gm + (height * 2.75),
+					x2: object.start[0] * blockWidth / gm + (width * 4.25),
+					y2: (object.start[1] + gm) * blockHeight / gm - (height * 2.75),
+					alpha: alpha
+				})
+				
+				line({
+					ctx: canvas[layer],
+					shape: defaultShapes.light,
+					x1: object.start[0] * blockWidth / gm + (width * 4.25) + (width * 2),
+					y1: object.start[1] * blockHeight / gm + (height * 2.75),
+					x2: object.start[0] * blockWidth / gm + (width * 4.25) + (width * 2),
+					y2: (object.start[1] + gm) * blockHeight / gm - (height * 2.75),
+					alpha: alpha
+				})
+				
+				line({
+					ctx: canvas[layer],
+					shape: defaultShapes.light,
+					x1: object.start[0] * blockWidth / gm + (width * 2.5),
+					y1: object.start[1] * blockHeight / gm + (height * 4.25),
+					x2: (object.start[0] + gm) * blockWidth / gm - (width * 2.5),
+					y2: object.start[1] * blockHeight / gm + (height * 4.25),
+					alpha: alpha
+				})
+				
+				line({
+					ctx: canvas[layer],
+					shape: defaultShapes.light,
+					x1: object.start[0] * blockWidth / gm + (width * 2.5),
+					y1: object.start[1] * blockHeight / gm + (height * 4.25) + (height * 2),
+					x2: (object.start[0] + gm) * blockWidth / gm - (width * 2.5),
+					y2: object.start[1] * blockHeight / gm + (height * 4.25) + (height * 2),
+					alpha: alpha
 				})
 			}
-		}
-	}
-
-	function newElement(objects, key, p) {
-		var object = objects[p]
-		for (var r in players) {
-			if (key != r) {
-				var start = objects[p].start
-				var end = objects[p].end
-
-				//change direction to right
-				if (r == 'player2') end[0] = horizontal - gm
-
-				// make a temporary hole into the grid
-				grid = setWalkableAt(grid, gm, start[0], start[1], true)
-
-				// see if a path was found using default positions
-				var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
-				
-				var pattern = objects[p].pattern
-				
-				var patternizedPath = patternizePath(path, pattern)
-
-				var element = {
-					id: players[r].elements.length,
-					playerId: key,
+			
+			else {
+				image({
+					ctx: canvas[layer],
 					type: object.type,
-					start: patternizedPath[0],
-					path: patternizedPath,
-					level: object.level,
-					dynamics: {
-						totalHealth: defaultHealth * object.level,
-						health: defaultHealth * object.level,
-						damage: defaultDamage * object.level
-					}
-				}
-
-				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: p } })
-
-				players[r].elements.push(element)
+					file: defaultShapes[object.type].file,
+					x1: object.start[0] * blockWidth / gm,
+					y1: object.start[1] * blockHeight / gm,
+					width: blockWidth,
+					height: blockHeight,
+					size: size,
+					percentage: object.charge
+				})					
 			}
+			
+			// health label
+			label({
+				ctx: canvas[layer],
+				string: object.health,
+				shape: defaultShapes.light,
+				x1: object.start[0] * blockWidth / gm + blockWidth / 2,
+				y1: object.start[1] * blockHeight / gm + blockHeight / 8,
+				height: blockHeight,
+				size: 10,
+				center: true
+			})
 		}
 	}
 
@@ -1120,26 +1109,108 @@ export function game() {
 
 		if (host && !gameOver) broadcastEnergy()
 	}, tick)
-
-	if (host) {
-		setInterval(function() {
-			for (var p in players) animate(p)
-		}, tick / fps)
-	}
-
+	
+	// render
 	function animationFrame() {
 		requestAnimationFrame(animationFrame)
-		if (client) canvas.movement.clearRect(0, 0, w, h)
-		for (var p in players) animate(p)
+		
+		canvas.movement.clearRect(0, 0, w, h)
+		
+		for (var p in players) {
+			move('movement', 'elements', p)
+			displayCharge(p)		
+		}
 	}
 	if (client) requestAnimationFrame(animationFrame)
-
-	function animate(key) {
-		charge('movement', 'buildings', key)
-		if (client) {
-			move('movement', 'elements', key)
-			move('movement', 'projectiles', key)
-			//move('movement', 'deepProjectiles', key)
+	
+	// create elements in the server
+	if (host) {
+		var update = 0
+		
+		setInterval(function() {
+			update += speed
+			
+			if (Math.ceil(update) >= 100) {
+				update = 0
+	
+				for (var p in players) createElements(p)		
+			}
+		}, tick / fps)
+	}
+	
+	function createElements(p) {
+		var objects = players[p].buildings
+		
+		for (var i = 0; i < objects.length; i++) {
+			var object = objects[i]
+			
+			if (!object.offensive) continue
+			
+			for (var r in players) {
+				if (p != r) {
+					var start = object.start
+					var end = object.end
+	
+					//change direction to right
+					if (r == 'player2') end[0] = horizontal - gm
+	
+					// make a temporary hole into the grid
+					grid = setWalkableAt(grid, gm, start[0], start[1], true)
+	
+					// see if a path was found using default positions
+					var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
+					
+					var pattern = object.pattern
+					
+					var patternizedPath = patternizePath(path, pattern)
+	
+					var element = {
+						id: players[r].elements.length,
+						playerId: p,
+						type: object.type,
+						start: patternizedPath[0],
+						path: patternizedPath,
+						level: object.level,
+						dynamics: {
+							totalHealth: defaultHealth * object.level,
+							health: defaultHealth * object.level,
+							damage: defaultDamage * object.level
+						}
+					}
+	
+					socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i } })
+	
+					players[r].elements.push(element)
+				}
+			}
+		}
+	}
+	
+	function displayCharge(p) {
+		for (var i = 0; i < players[p].buildings.length; i++) {
+			var object = players[p].buildings[i]
+			
+			if (!object.offensive) continue
+			
+			if (object.charge < 100) object.charge = object.charge + speed
+			
+			var size = 3.5	
+			var marginY = blockHeight / size
+			var width = blockWidth / size / 3
+			var maxHeight = blockHeight - marginY * 2
+			var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
+	
+			rectangle({
+				ctx: canvas.movement,
+				shape: defaultShapes.light,
+				x1: object.start[0] * blockWidth / gm + width,
+				y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
+				width: width,
+				height: height,
+				alpha: 0.75
+			})
+			
+			players[p].buildings[i].charge = object.charge
 		}
 	}
 }

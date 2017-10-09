@@ -17,8 +17,10 @@ NOW:
 * colors
 * programmatically gene acactrated pattern icons
 
-- server
+- performance
+* separate charge bar and buildings into separate canvases 
 * separate tick from fps
+* 
 
 PHASE1:
 * game balance & upgrades

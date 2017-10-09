@@ -287,7 +287,7 @@ export function label(o) {
 	var alpha = o.alpha | 1
 	var fillStyle = o.shape.fillStyle(alpha)
 	var fontSize = getFontSize({ canvas: canvas.canvas, size: size, base: height })
-	var font = o.size + 'px Helvetica'
+	var font = o.size + 'px sans-serif'
 	var center = o.center | false
 	var extra = 0
 	

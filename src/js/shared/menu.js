@@ -85,8 +85,12 @@ export function buildPopup(o) {
 			var marginX = o.height / size
 			var marginY = o.height / size
 			var width = o.height / size / 3
+			var height = o.width / size / 3
 			var maxWidth = o.height - marginX * 2
 			var maxHeight = o.height - marginY * 2
+			var blockWidth = o.blockWidth
+			var blockHeight = o.blockHeight
+			var gm = o.gm
 				
 			var count = 3
 			for (var i = 0; i < pattern.length; i++) {
