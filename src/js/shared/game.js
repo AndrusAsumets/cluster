@@ -946,8 +946,7 @@ export function game() {
 			if (
 				!element.path ||
 				!element.path[1] ||
-				!element.path[1].length ||
-				element.path[1][2] < 9
+				!element.path[1].length
 			) continue
 
 			var x2 = element.path[1][0]
@@ -957,12 +956,14 @@ export function game() {
 			for (var p = 0; p < projectiles.length; p++) {
 				var x1 = projectiles[p].path[1][0]
 				var y1 = projectiles[p].path[1][1]
+				var d1 = projectiles[p].path[1][2]
 
 				if (
 					x1 == x2 &&
 					y1 == y2 &&
 					x1 % 3 === 0 &&
-					y1 % 3 === 0
+					y1 % 3 === 0 &&
+					d1 == 9
 				) {
 					var health = players[player.id].elements[r].dynamics.health
 					var damage = calculateDamage(projectiles[p].level)
