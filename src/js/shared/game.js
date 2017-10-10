@@ -697,7 +697,7 @@ export function game() {
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			var pattern = object.pattern
-			var size = 3.5				
+			var size = 3.5		
 			var level = object.level
 			var marginX = blockWidth / size
 			var marginY = blockHeight / size
@@ -742,7 +742,7 @@ export function game() {
 								
 								if (centeredHorizontally === 0) {
 									var block = column[j] / count
-									sizes.push(block)
+									sizes.push(block - 0.5)
 								}
 							}
 						}
@@ -752,7 +752,7 @@ export function game() {
 								
 								if (centeredHorizontally === 0) {
 									var block = column[j] / count
-									sizes.push(block)
+									sizes.push(block - 0.5)
 								}
 							}					
 						}
@@ -839,7 +839,7 @@ export function game() {
 				string: object.health + ' / ' + (object.initialHealth * object.level),
 				shape: defaultShapes.light,
 				x1: object.start[0] * blockWidth / gm + blockWidth / 2,
-				y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 8,
+				y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 7,
 				height: blockHeight,
 				size: 10,
 				center: true
@@ -1059,12 +1059,6 @@ export function game() {
 		for (var p in players) {
 			currentPlayer[p] = {}
 			currentPlayer[p].energy = players[p].energy
-
-			for (var r in players) {
-				if (p == r) continue
-
-				currentPlayer[p].energyShare = players[p].energy / players[r].energy * 100
-			}
 		}
 
 		socket.emit('message', { action: SET_ENERGY, data: currentPlayer })
