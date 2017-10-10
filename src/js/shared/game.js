@@ -52,7 +52,7 @@ export function game() {
 		this.energy = defaultEnergy
 		this.boundaries = []
 	}
-
+	
 	var canvas = {}
 
 	if (client) {
@@ -208,8 +208,6 @@ export function game() {
 				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
 				
-				for (var p in players) createPaths(players[p])
-				
 				if (client) {
 					canvas.start.clearRect(0, 0, w, h)
 					refreshBuildings()
@@ -227,18 +225,19 @@ export function game() {
 				var damage = data.damage
 				var currentBuildingHealth = players[playerId].buildings[buildingIndex].health
 				var health = currentBuildingHealth - damage
-				var elementHealth = players[playerId].elements[elementIndex].dynamics.health - damage
+				var elementHealth = players[playerId].elements[elementIndex].dynamics.health
+				var extra = 0
 				
 				if (health < 1) {
 					players[playerId].buildings.splice(buildingIndex, 1)
-					elementHealth += Math.abs(health) // but don't destroy the element just yet
+					extra = Math.abs(health) // but don't destroy the element just yet
 				}
 				else {
 					players[playerId].buildings[buildingIndex].health = health
 				}
 				
 				if (elementHealth < 1) players[playerId].elements[elementIndex].path = []
-				else players[playerId].elements[elementIndex].dynamics.health = elementHealth
+				else players[playerId].elements[elementIndex].dynamics.health = elementHealth - damage + extra
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
@@ -553,7 +552,6 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				//decreaseEnergy(player, players[player.id].elements[p].dynamics.damage)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
@@ -1174,8 +1172,8 @@ export function game() {
 						path: patternizedPath,
 						level: object.level,
 						dynamics: {
-							totalHealth: object.health,
-							health: object.health,
+							totalHealth: object.damage,
+							health: object.damage,
 							damage: object.damage
 						}
 					}

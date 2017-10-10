@@ -102,7 +102,7 @@ const defaultPatterns = {
 	patternA: {
 		cost: 50,
 		level: 1,
-		initialHealth: 20,
+		initialHealth: 10,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,0],
@@ -119,7 +119,7 @@ const defaultPatterns = {
 	patternB: {
 		cost: 50,
 		level: 1,
-		initialHealth: 20,
+		initialHealth: 10,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,0],
@@ -136,7 +136,7 @@ const defaultPatterns = {
 	patternC: {
 		cost: 50,
 		level: 1,
-		initialHealth: 20,
+		initialHealth: 10,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,6],
@@ -153,7 +153,7 @@ const defaultPatterns = {
 	patternD: {
 		cost: 50,
 		level: 1,
-		initialHealth: 20,
+		initialHealth: 10,
 		offensive: true,
 		pattern: [
 			[0,0,0,0,0,0,0,0,3],
