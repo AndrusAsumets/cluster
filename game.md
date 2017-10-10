@@ -3,8 +3,6 @@ cluster.game
 
 NOW:
 - gameplay:
-* def 200, 300, 400. attack 200, 400, 800  
-* defend blockib ehk müüriks
 * repair
 * random resourced
 
