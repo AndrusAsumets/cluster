@@ -223,11 +223,22 @@ export function game() {
 			case SET_BUILDING_DAMAGE:
 				var playerId = data.playerId
 				var buildingIndex = data.buildingIndex
+				var elementIndex = data.elementIndex
 				var damage = data.damage
-				var health = players[playerId].buildings[buildingIndex].health - damage
+				var currentBuildingHealth = players[playerId].buildings[buildingIndex].health
+				var health = currentBuildingHealth - damage
+				var elementHealth = players[playerId].elements[elementIndex].dynamics.health - damage
 				
-				if (health < 1) players[playerId].buildings.splice(buildingIndex, 1)
-				else players[playerId].buildings[buildingIndex].health = health
+				if (health < 1) {
+					players[playerId].buildings.splice(buildingIndex, 1)
+					elementHealth += Math.abs(health) // but don't destroy the element just yet
+				}
+				else {
+					players[playerId].buildings[buildingIndex].health = health
+				}
+				
+				if (elementHealth < 1) players[playerId].elements[elementIndex].path = []
+				else players[playerId].elements[elementIndex].dynamics.health = elementHealth
 				
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
@@ -681,7 +692,7 @@ export function game() {
 					if (!positionB.length) continue
 
 					if (isNear(1, positionA, positionB)) {
-						if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingIndex: r2, damage: damage } })
+						if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingIndex: r2, damage: damage, elementIndex: r } })
 						
 						break
 					}
