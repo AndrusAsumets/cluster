@@ -3,9 +3,9 @@ cluster.game
 
 NOW:
 - gameplay:
-* random resourced
 
 - UI:
+* how to display buildings which are on a resource?
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 * damage animations
 * past trail for patterns

@@ -2,10 +2,10 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultResourceCount } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape } from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair } from './dynamic'
@@ -41,6 +41,19 @@ export function game() {
 	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
 	var grid = new PF.Grid(matrix)
+	
+	// resources
+	var resources = {
+		left: [],
+		right: []
+	}
+	
+	for (var i = 0; i < defaultResourceCount; i++) {
+		var resource = createResource({ width: smallHorizontal / 2, height: smallVertical, resources: resources.left })
+		
+		resources.left.push(resource)
+		resources.right.push({ x: smallHorizontal - resource.x - 1, y: smallVertical - resource.y - 1 })
+	}
 
 	// player
 	function Player (options) {
@@ -64,9 +77,10 @@ export function game() {
 			buildings: ctx(container, 'buildings', w, h, 2),
 			movement: ctx(container, 'movement', w, h, 3),
 			boundaries: ctx(container, 'boundaries', w, h, 4),
-			start: ctx(container, 'start', w, h, 5),
-			selection: ctx(container, 'selection', w, h, 6),
-			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 7)
+			resources: ctx(container, 'resources', w, h, 5),
+			start: ctx(container, 'start', w, h, 6),
+			selection: ctx(container, 'selection', w, h, 7),
+			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 8)
 		}
 
 		// create a visual UI grid
@@ -116,9 +130,41 @@ export function game() {
 			y2: h,
 			alpha: 0.75
 		})
+		
+		displayResources({ resources: resources.left })
+		displayResources({ resources: resources.right })
 
 		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
+	}
+	
+	function displayResources(o) {
+		var resources = o.resources
+		
+		for (var i = 0; i < resources.length; i++) {
+			var x1 = resources[i].x
+			var y1 = resources[i].y
+		
+			rectangle({
+				ctx: canvas.resources,
+				shape: defaultShapes.resource,
+				x1: x1 * blockWidth,
+				y1: y1 * blockHeight,
+				width: blockWidth,
+				height: blockHeight,
+				alpha: 0.033
+			})	
+		
+			image({
+				ctx: canvas.resources,
+				file: defaultShapes.resource.file,
+				x1: x1 * blockWidth,
+				y1: y1 * blockHeight,
+				width: blockWidth,
+				height: blockHeight,
+				size: 3.5
+			})
+		}
 	}
 
 	// networking
@@ -386,6 +432,8 @@ export function game() {
 			else if (gameMenu.submenu) {
 				var message = selectFromPopup({
 					player: player,
+					side: side,
+					resources: resources,
 					buildings: gameMenu.submenu,
 					building: building,
 					gameMenu: gameMenu,
@@ -406,6 +454,8 @@ export function game() {
 				// select from the first level popup
 				var message = selectFromPopup({
 					player: player,
+					side: side,
+					resources: resources,
 					buildings: defaultBuildings,
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
@@ -741,6 +791,7 @@ export function game() {
 
 	function displayBuildings(layer, type, key) {
 		var objects = players[key][type] ? players[key][type] : []
+		
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			var pattern = object.pattern
@@ -775,6 +826,7 @@ export function game() {
 			// show pattern
 			if (pattern) {
 				var count = 3
+				
 				for (var i = 0; i < pattern.length; i++) {
 					var centeredVertically = (i + 2) % count
 
@@ -805,7 +857,7 @@ export function game() {
 						}
 
 						var side = getSide(key)
-						var shape = getColoredShape(defaultShapes, side)
+						var shape = getSideColor(defaultShapes, side)
 
 						dotGroup({
 							count: count,
@@ -869,7 +921,7 @@ export function game() {
 			else {
 				image({
 					ctx: canvas[layer],
-					type: object.type,
+					type: object.type, // ???
 					file: defaultShapes[object.type].file,
 					x1: object.start[0] * blockWidth / gm,
 					y1: object.start[1] * blockHeight / gm,
@@ -1051,7 +1103,7 @@ export function game() {
 					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
 					var size = object.path[1][2] | 0
 					var side = getSide(object.playerId)
-					var shape = getColoredShape(defaultShapes, side)
+					var shape = getSideColor(defaultShapes, side)
 
 					donut({
 						ctx: canvas[layer],
@@ -1093,10 +1145,9 @@ export function game() {
 			var building = player.buildings[i]
 
 			if (
-				building.producer == true &&
-				building.built == true
+				building.producer == true
 			) {
-				increaseEnergy(player, building.level)
+				increaseEnergy(player, building.level * building.resource)
 			}
 		}
 	}

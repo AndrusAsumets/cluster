@@ -1,5 +1,5 @@
 import { SET_BUILDING } from './actions'
-import { defaultShapes, defaultBuildings, defaultOptions, defaultDamage } from './defaults'
+import { defaultShapes, defaultBuildings, defaultOptions, defaultDamage, defaultResourceMultiplier } from './defaults'
 import { line, rectangle, circle, dot, donut, image, label } from './draw'
 import { dotGroup } from './draw/dot-group'
 
@@ -225,6 +225,11 @@ export function selectFromPopup(o) {
 	var damage = offensive == true ? defaultDamage : 0
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
+	var resources = o.resources
+	var onResource = isOnResource(resources[o.side], o.gameMenu.xBlock, o.gameMenu.yBlock)
+	
+	health = onResource ? health * defaultResourceMultiplier : health
+	damage = onResource ? damage * defaultResourceMultiplier : health
 
 	var building = {
 		playerId: o.player.id,
@@ -235,6 +240,7 @@ export function selectFromPopup(o) {
 		start: start,
 		end: end,
 		charge: 0,
+		resource: onResource ? defaultResourceMultiplier : 1,
 		dynamics: {}
 	}
 
@@ -248,4 +254,15 @@ export function selectFromPopup(o) {
 	}
 
 	return message
+}
+
+function isOnResource(resources, x1, y1) {
+	for (var i = 0; i < resources.length; i++) {
+		var x2 = resources[i].x
+		var y2 = resources[i].y
+		
+		if (x1 == x2 && y1 == y2) return true
+	}
+	
+	return false
 }
