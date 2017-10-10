@@ -6,7 +6,7 @@ import { dotGroup } from './draw/dot-group'
 export function buildPopup(o) {
 	var extra = o.side == 'left' ? 0 : o.width / 2
 	var reverseExtra = o.side == 'right' ? 0 : o.width / 2
-	
+
 	//highlight the selected building block
 	rectangle({
 		ctx: o.canvas.selection,
@@ -47,7 +47,7 @@ export function buildPopup(o) {
 		height: 4,
 		alpha: 0.5
 	})
-	
+
 	// a tiny separator for the beginning
 	line({
 		ctx: o.canvas.menu,
@@ -58,7 +58,7 @@ export function buildPopup(o) {
 		y2: o.height,
 		alpha: 0.075
 	})
-	
+
 	// a tiny separator for the end
 	line({
 		ctx: o.canvas.menu,
@@ -76,12 +76,13 @@ export function buildPopup(o) {
 		var level = building.level
 		var cost = building.cost
 		var pattern = building.pattern
-		
+
 		// don't show buildings that have reached the maximum level
 		if (key == 'upgrade' && level > 2) continue
-		
+		if (key == 'repair' && !cost) continue
+
 		if (pattern) {
-			var size = 3.5				
+			var size = 3.5
 			var marginX = o.height / size
 			var marginY = o.height / size
 			var width = o.height / size / 3
@@ -91,19 +92,19 @@ export function buildPopup(o) {
 			var blockWidth = o.blockWidth
 			var blockHeight = o.blockHeight
 			var gm = o.gm
-				
+
 			var count = 3
 			for (var i = 0; i < pattern.length; i++) {
 				var centeredVertically = (i + 2) % count
-				
+
 				if (centeredVertically === 0) {
 					var column = pattern[i]
 					var sizes = []
-					
+
 					if (extra == 0) {
 						for (var j = 0; j < pattern.length; j++) {
 							var centeredHorizontally = (j + 2) % count
-							
+
 							if (centeredHorizontally === 0) {
 								var block = column[j] / count
 								sizes.push(block)
@@ -113,14 +114,14 @@ export function buildPopup(o) {
 					else {
 						for (var j = pattern.length - 1; j > 0; j--) {
 							var centeredHorizontally = (j + 2) % count
-							
+
 							if (centeredHorizontally === 0) {
 								var block = column[j] / count
 								sizes.push(block)
 							}
-						}					
+						}
 					}
-					
+
 					dotGroup({
 						count: count,
 						ctx: o.canvas.menu,
@@ -136,7 +137,7 @@ export function buildPopup(o) {
 				}
 			}
 		}
-		
+
 		else {
 			// generic icon
 			image({
@@ -150,7 +151,7 @@ export function buildPopup(o) {
 				size: 3.5
 			})
 		}
-		
+
 		// cost label
 		if (
 			(cost && level < 3)
@@ -169,7 +170,26 @@ export function buildPopup(o) {
 				center: true
 			})
 		}
-		
+
+		// repair label
+		if (
+			cost
+			&&
+			key == 'repair'
+		) {
+			label({
+				ctx: o.canvas.menu,
+				string: Math.floor(cost),
+				shape: defaultShapes.light,
+				x1: extra + index * o.height,
+				y1: o.height / 6.2,
+				height: o.height,
+				vertical: o.vertical,
+				size: 10,
+				center: true
+			})
+		}
+
 		// name label
 		label({
 			ctx: o.canvas.menu,
@@ -217,7 +237,7 @@ export function selectFromPopup(o) {
 		charge: 0,
 		dynamics: {}
 	}
-	
+
 	var data = Object.assign({}, o.buildings[o.type], building)
 	data.buildings = o.buildings
 
@@ -226,10 +246,6 @@ export function selectFromPopup(o) {
 		data: data,
 		playerId: o.me
 	}
-	
+
 	return message
-}
-
-function showPatterns(o) {
-
 }

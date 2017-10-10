@@ -1,14 +1,14 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_BUILDING_DAMAGE } from './actions'
+import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
-import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage } from './dynamic'
+import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair } from './dynamic'
 
 export function game() {
 	// gameplay
@@ -52,7 +52,7 @@ export function game() {
 		this.energy = defaultEnergy
 		this.boundaries = []
 	}
-	
+
 	var canvas = {}
 
 	if (client) {
@@ -82,7 +82,7 @@ export function game() {
 			alpha: 0.25
 		})
 		*/
-		
+
 		for (var i = 0; i < smallHorizontal + 2; i++) {
 			line({
 				ctx: canvas.background,
@@ -124,7 +124,7 @@ export function game() {
 	// networking
 	var me = client ? getUrlParams('me') : null
 	if (!me && !host) return console.log('add ?me=some_player_id to your url')
-	
+
 	// development
 	var dev = client && getUrlParams('dev') ? true : false
 
@@ -176,9 +176,9 @@ export function game() {
 						for (var i = 0; i < data[key].buildings.length; i++) {
 							grid = setWalkableAt(grid, gm, data[key].buildings[i].start[0], data[key].buildings[i].start[1], false)
 						}
-						
+
 						if (key == me) showStartingPosition()
-						
+
 						refreshBuildings()
 					}
 				}
@@ -207,17 +207,17 @@ export function game() {
 
 				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
 				players[building.playerId].buildings.push(building)
-				
+
 				if (client) {
 					canvas.start.clearRect(0, 0, w, h)
 					refreshBuildings()
 				}
-				
+
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
-				
+
 				break
-			
+
 			case SET_BUILDING_DAMAGE:
 				var playerId = data.playerId
 				var buildingIndex = data.buildingIndex
@@ -227,7 +227,7 @@ export function game() {
 				var health = currentBuildingHealth - damage
 				var elementHealth = players[playerId].elements[elementIndex].dynamics.health
 				var extra = 0
-				
+
 				if (health < 1) {
 					players[playerId].buildings.splice(buildingIndex, 1)
 					extra = Math.abs(health) // but don't destroy the element just yet
@@ -235,13 +235,13 @@ export function game() {
 				else {
 					players[playerId].buildings[buildingIndex].health = health
 				}
-				
+
 				if (elementHealth < 1) players[playerId].elements[elementIndex].path = []
 				else players[playerId].elements[elementIndex].dynamics.health = elementHealth - damage + extra
-				
+
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
-				
+
 				if (client) refreshBuildings()
 				break
 
@@ -251,28 +251,34 @@ export function game() {
 				var buildingIndex = data.buildingIndex
 
 				for (var key in players) if (key != playerId) players[key].elements.push(element)
-				
+
 				charge = 0
-				
+
 				break
 
 			case SET_UPGRADE:
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
-				
+
 				if (client) refreshBuildings()
 				break
 
 			case SET_SELL:
 				players[data.playerId] = sell({ player: players[data.playerId], buildingIndex: data.buildingIndex })
-				
+
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: data.playerId })
-				 
+
 				if (client) {
 					if (data.playerId == me) canvas.selection.clearRect(0, 0, w, h)
 					if (!players[data.playerId].buildings.length) showStartingPosition()
 					refreshBuildings()
 				}
+				break
+
+			case SET_REPAIR:
+				players[data.playerId] = repair({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+
+				if (client) refreshBuildings()
 				break
 		}
 	})
@@ -283,29 +289,29 @@ export function game() {
 
 		event.preventDefault()
 		if ('touches' in event) event = event.touches[0]
-		
+
 		canvas.menu.clearRect(0, 0, w, h)
-		
+
 		showStartingPosition()
 
 		var x = event.clientX
 		var y = event.clientY
-		
+
 		var user = dev
 			? x < w / 2
 				? 'player1'
 				: 'player2'
 			: me
-		
+
 		var side = getSide(user)
 		var player = players[user]
-		
+
 		var yBlock = Math.floor(y / blockHeight)
 		var xBlock = Math.floor(x / blockWidth)
 		var menuXBlock = side == 'left'
 			? Math.floor(x / (h / (smallVertical - 1)))
 			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
-		var buildingIndex = findBuildingIndex(player.buildings, { 
+		var buildingIndex = findBuildingIndex(player.buildings, {
 			start: gameMenu.xBlock && gameMenu.yBlock
 				? [gameMenu.xBlock * gm, gameMenu.yBlock * gm]
 				: [xBlock * gm, yBlock * gm]
@@ -313,7 +319,7 @@ export function game() {
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		var inBounds = findBoundary(players[user].boundaries, { x: xBlock * gm, y: yBlock * gm })
-		
+
 		var inCenter
 		if (
 			user == 'player1' &&
@@ -321,14 +327,14 @@ export function game() {
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
-		
+
 		else if (
 			user == 'player2' &&
 			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
-		
+
 		// disallow for clicking on the opposite side
 		if (
 			(side == 'left' && xBlock * gm >= horizontal / 2 && !gameMenu.x) ||
@@ -338,7 +344,7 @@ export function game() {
 			canvas.selection.clearRect(0, 0, w, h)
 			return
 		}
-			
+
 		else if (
 			(
 				'xBlock' in gameMenu &&
@@ -350,18 +356,22 @@ export function game() {
 			var type = buildings[menuXBlock]
 			if (!type) return gameMenu = {}
 			var submenu = defaultBuildings[type] ? defaultBuildings[type].submenu : {} // submenu
-			
+
 			// choose from the options (upgrade, sell, etc.)
-			if (gameMenu.options) {				
+			if (gameMenu.options) {
 				var optionType = Object.keys(defaultOptions)[menuXBlock]
-				
+				var upgradeable = players[user].buildings[buildingIndex].level < 3 ? true : false
+
+				// select repair instead
+				if (optionType == 'upgrade' && !upgradeable) optionType = 'repair'
+
 				var message = {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex }
 				}
-			
+
 				socket.emit('message', message)
-				
+
 				// leave the menu open if there are more upgrades left
 				if (building.level > 2) {
 					gameMenu = {}
@@ -383,16 +393,16 @@ export function game() {
 					gm: gm,
 					type: type
 				})
-				
+
 				socket.emit('message', message)
-				
+
 				gameMenu = {}
 				canvas.selection.clearRect(0, 0, w, h)
 			}
 
 			// if a building has no options
 			else if (!submenu) {
-				
+
 				// select from the first level popup
 				var message = selectFromPopup({
 					player: player,
@@ -402,9 +412,9 @@ export function game() {
 					gm: gm,
 					type: type
 				})
-				
+
 				socket.emit('message', message)
-				
+
 				gameMenu = {}
 				canvas.selection.clearRect(0, 0, w, h)
 			}
@@ -441,30 +451,35 @@ export function game() {
 				gameMenu.submenu = submenu
 			}
 		}
-		
+
 		// menu for upgrade, sell etc.
 		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
 			canvas.selection.clearRect(0, 0, w, h)
-			
+
 			// make sure we're working with the current building
 			building = player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]
-			
+
 			var buildings = {}
 			var sell = defaultOptions.sell
 			var upgrade = defaultOptions.upgrade
-			
+			var repair = defaultOptions.repair
+
 			if (building) {
 				var cost = building.cost
 				var level = building.level
-				
+
 				buildings.sell = {}
 				buildings.sell.cost = building.level ? sellBackValue({ building: building }) : false
 				buildings.sell.level = level
+
 				buildings.upgrade = {}
 				buildings.upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
 				buildings.upgrade.level = level
+
+				buildings.repair = {}
+				buildings.repair.cost = building.initialHealth * building.level - building.health > 0 ? building.initialHealth * building.level - building.health : false
 			}
-			
+
 			// build a second level popup
 			buildPopup({
 				canvas: canvas,
@@ -479,7 +494,7 @@ export function game() {
 				vertical: vertical,
 				gm: gm
 			})
-			
+
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, options: true }
 		}
 
@@ -495,7 +510,7 @@ export function game() {
 			inBounds
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
-			
+
 			buildPopup({
 				canvas: canvas,
 				building: building,
@@ -513,7 +528,7 @@ export function game() {
 
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
 		}
-		
+
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
@@ -569,7 +584,7 @@ export function game() {
 				!element.path[0].length
 			) {
 				var path = finder.findPath(player.elements[p].start[0], player.elements[p].start[1], player.elements[p].end[0], player.elements[p].end[1], grid.clone())
-				
+
 				var last = path.length - 1
 
 				players[player.id].elements[p].path = path
@@ -629,10 +644,10 @@ export function game() {
 									damage: anotherPlayer.elements[r2].dynamics.damage
 								}
 							}
-							
+
 							players[player.id].deepProjectiles.push(projectile)
 						}
-						
+
 						if (positionA[2] == 9) {
 							var projectile = {
 								path: [
@@ -645,7 +660,7 @@ export function game() {
 									damage: player.elements[r].dynamics.damage
 								}
 							}
-							
+
 							players[anotherPlayer.id].deepProjectiles.push(projectile)
 						}
 
@@ -655,14 +670,14 @@ export function game() {
 			}
 		}
 	}
-	
+
 	function buildingCollision(p) {
 		var player = players[p]
 		var a = 0
 		var b = 0
 
 		for (var r = 0; r < player.elements.length; r++) {
-			
+
 			// only deal damage when threshold has been exceeded
 			if (
 				!player.elements[r].path ||
@@ -675,33 +690,33 @@ export function game() {
 			var positionA = player.elements[r].path[a]
 			if (!positionA) continue
 			if (!positionA.length) continue
-			
+
 			var damage = player.elements[r].dynamics.damage
 
 			for (var p2 in players) {
 				if (p == p2) continue
-				
+
 				var anotherPlayer = players[p]
 
 				for (var r2 = 0; r2 < anotherPlayer.buildings.length; r2++) {
 					var positionB = anotherPlayer.buildings[r2].start
-					
+
 					if (!positionB) continue
 					if (!positionB.length) continue
 
 					if (isNear(1, positionA, positionB)) {
 						if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingIndex: r2, damage: damage, elementIndex: r } })
-						
+
 						break
 					}
 				}
 			}
 		}
 	}
-	
+
 	function refreshBuildings() {
 		canvas.buildings.clearRect(0, 0, w, h)
-		
+
 		for (var p in players) {
 			displayBuildings('buildings', 'buildings', p)
 		}
@@ -712,7 +727,7 @@ export function game() {
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
 			var pattern = object.pattern
-			var size = 3.5		
+			var size = 3.5
 			var level = object.level
 			var marginX = blockWidth / size
 			var marginY = blockHeight / size
@@ -720,12 +735,12 @@ export function game() {
 			var height = blockHeight / size / 3
 			var maxWidth = blockWidth - marginX * 2
 			var maxHeight = blockHeight - marginY * 2
-			
+
 			/*
 			// show level bar
 			var sizes = []
 			for (var i = 0; i < object.level; i++) sizes.push(1)
-				
+
 			dotGroup({
 				count: object.level,
 				ctx: canvas[layer],
@@ -739,22 +754,22 @@ export function game() {
 				alpha: 0.75
 			})
 			*/
-			
+
 			// show pattern
 			if (pattern) {
 				var count = 3
 				for (var i = 0; i < pattern.length; i++) {
 					var centeredVertically = (i + 2) % count
-					
+
 					if (centeredVertically === 0) {
 						var column = pattern[i]
-						
+
 						var sizes = []
 						var side = getSide(key)
 						if (side == 'left') {
 							for (var j = 0; j < pattern.length; j++) {
 								var centeredHorizontally = (j + 2) % count
-								
+
 								if (centeredHorizontally === 0) {
 									var block = column[j] / count
 									sizes.push(block - 0.5)
@@ -764,17 +779,17 @@ export function game() {
 						else {
 							for (var j = pattern.length - 1; j > 0; j--) {
 								var centeredHorizontally = (j + 2) % count
-								
+
 								if (centeredHorizontally === 0) {
 									var block = column[j] / count
 									sizes.push(block - 0.5)
 								}
-							}					
+							}
 						}
-						
+
 						var side = getSide(key)
 						var shape = getColoredShape(defaultShapes, side)
-						
+
 						dotGroup({
 							count: count,
 							ctx: canvas[layer],
@@ -789,9 +804,9 @@ export function game() {
 						})
 					}
 				}
-				
+
 				var alpha = 0.33
-				
+
 				// grid
 				line({
 					ctx: canvas[layer],
@@ -802,7 +817,7 @@ export function game() {
 					y2: (object.start[1] + gm) * blockHeight / gm - (height * 2.75),
 					alpha: alpha
 				})
-				
+
 				line({
 					ctx: canvas[layer],
 					shape: defaultShapes.light,
@@ -812,7 +827,7 @@ export function game() {
 					y2: (object.start[1] + gm) * blockHeight / gm - (height * 2.75),
 					alpha: alpha
 				})
-				
+
 				line({
 					ctx: canvas[layer],
 					shape: defaultShapes.light,
@@ -822,7 +837,7 @@ export function game() {
 					y2: object.start[1] * blockHeight / gm + (height * 4.25),
 					alpha: alpha
 				})
-				
+
 				line({
 					ctx: canvas[layer],
 					shape: defaultShapes.light,
@@ -833,7 +848,7 @@ export function game() {
 					alpha: alpha
 				})
 			}
-			
+
 			else {
 				image({
 					ctx: canvas[layer],
@@ -845,9 +860,9 @@ export function game() {
 					height: blockHeight,
 					size: size,
 					percentage: object.charge
-				})					
+				})
 			}
-			
+
 			// health label
 			label({
 				ctx: canvas[layer],
@@ -859,11 +874,11 @@ export function game() {
 				size: 10,
 				center: true
 			})
-			
+
 			// damage label
 			if (object.offensive) {
 				var damage = object.damage
-				
+
 				label({
 					ctx: canvas[layer],
 					string: damage,
@@ -875,13 +890,13 @@ export function game() {
 					center: true
 				})
 			}
-			
-			// levels	
+
+			// levels
 			var marginY = blockHeight / size
 			var width = blockWidth / size / 3
 			var maxHeight = blockHeight - marginY * 2
 			var height = convertRange(object.level, [0, 3], [0, -maxHeight])
-	
+
 			rectangle({
 				ctx: canvas[layer],
 				shape: defaultShapes.light,
@@ -1079,14 +1094,14 @@ export function game() {
 
 		socket.emit('message', { action: SET_ENERGY, data: currentPlayer })
 	}
-	
+
 	function end(player) {
 		if (player.energy < 0) gameOver = true
 	}
 
 	function showStartingPosition() {
 		canvas.start.clearRect(0, 0, w, h)
-		
+
 		if (!players[me].buildings.length) {
 			var position = me == 'player1'
 				? [Math.floor(smallHorizontal / 4), Math.floor(smallVertical / 2)]
@@ -1103,66 +1118,66 @@ export function game() {
 			})
 		}
 	}
-	
+
 	function boundaries(o) {
 		var side = getSide(o.playerId)
 		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
 		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}
-	
+
 	function patternizePath(path, pattern) {
 		var patternizedPath = []
 		var lastRow = 0
-		
+
 		for (var i = 2; i < path.length; i++) {
 			if (lastRow > pattern.length - 1) lastRow = 0
-			
+
 			var step = alterStep(path[i], pattern, lastRow)
-			
+
 			patternizedPath.push(step)
 			lastRow++
 		}
-		
+
 		return patternizedPath
 	}
-	
+
 	function alterStep(step, pattern, lastRow) {
 		var extra = -gm - 1
-		
+
 		for (var column = 0; column < pattern.length; column++) {
 			var block = pattern[column][lastRow]
-			
+
 			if (block > 0) return [step[0], step[1] + column + extra, block]
 		}
-		
+
 		return step
 	}
-	
+
 	function createElements(p) {
 		var objects = players[p].buildings
-		
+
 		for (var i = 0; i < objects.length; i++) {
 			var object = objects[i]
-			
+
 			if (!object.offensive) continue
-			
+
 			for (var r in players) {
 				if (p != r) {
 					var start = object.start
 					var end = object.end
-	
+
 					//change direction to right
 					if (r == 'player2') end[0] = horizontal - gm
-	
+
 					// make a temporary hole into the grid
 					grid = setWalkableAt(grid, gm, start[0], start[1], true)
-	
+
 					// see if a path was found using default positions
 					var path = finder.findPath(start[0], start[1], end[0], end[1], grid.clone())
-					
+
 					var pattern = object.pattern
 					var patternizedPath = patternizePath(path, pattern)
-	
+
 					var element = {
 						id: players[r].elements.length,
 						playerId: p,
@@ -1177,32 +1192,32 @@ export function game() {
 							damage: object.damage
 						}
 					}
-	
+
 					socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i } })
 				}
 			}
 		}
 	}
-	
+
 	function displayCharge() {
 		var share = convertRange(charge, [0, 100], [0, w / 2])
 		document.getElementsByClassName('scorebar-player1')[0].style.width = share + 'px'
 		document.getElementsByClassName('scorebar-player2')[0].style.width = share + 'px'
-		
+
 		/*
 		for (var i = 0; i < players[p].buildings.length; i++) {
 			var object = players[p].buildings[i]
-			
+
 			if (!object.offensive) continue
-			
+
 			if (object.charge < 100) object.charge = object.charge + speed
-			
-			var size = 3.5	
+
+			var size = 3.5
 			var marginY = blockHeight / size
 			var width = blockWidth / size / 3
 			var maxHeight = blockHeight - marginY * 2
 			var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
-	
+
 			rectangle({
 				ctx: canvas.movement,
 				shape: defaultShapes.light,
@@ -1212,7 +1227,7 @@ export function game() {
 				height: height,
 				alpha: 0.75
 			})
-			
+
 			players[p].buildings[i].charge = object.charge
 		}
 		*/
@@ -1243,36 +1258,36 @@ export function game() {
 
 		if (host && !gameOver) broadcastEnergy()
 	}, tick)
-	
+
 	// render
 	function animationFrame() {
 		requestAnimationFrame(animationFrame)
-		
+
 		canvas.movement.clearRect(0, 0, w, h)
-		
-		for (var p in players) move('movement', 'elements', p)	
+
+		for (var p in players) move('movement', 'elements', p)
 	}
 	if (client) requestAnimationFrame(animationFrame)
-	
+
 	// create elements in the server
 	if (host) {
 		setInterval(function() {
 			charge += speed
-			
+
 			if (Math.ceil(charge) >= 100) {
 				charge = 0
-	
-				for (var p in players) createElements(p)		
+
+				for (var p in players) createElements(p)
 			}
 		}, tick / fps)
 	}
-	
+
 	// display charge bar
 	if (client) {
 		setInterval(function() {
 			charge += speed * 2.5
 			displayCharge()
-			
+
 			if (Math.ceil(charge) >= 100) charge = 0
 		}, tick / fps * 2.5)
 	}

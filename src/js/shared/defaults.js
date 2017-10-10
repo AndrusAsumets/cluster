@@ -10,7 +10,7 @@
 			[0,0,0,0,0,0,0,0,0]
 */
 
-import { SET_UPGRADE, SET_SELL } from './actions'
+import { SET_UPGRADE, SET_SELL, SET_REPAIR } from './actions'
 
 export const defaultEnergy = 500
 export const defaultHealth = 30
@@ -95,6 +95,9 @@ export const defaultShapes = {
 	},
 	sell: {
 		file: '/public/images/sell.svg'
+	},
+	repair: {
+		file: '/public/images/repair.svg'
 	}
 }
 
@@ -178,7 +181,7 @@ const defaultBoosters = {
 	boosterB: {
 		cost: 50,
 		level: 1,
-		initialHealth: 10		
+		initialHealth: 10
 	}
 }
 
@@ -213,5 +216,8 @@ export const defaultOptions = {
 	},
 	upgrade: {
 		action: SET_UPGRADE
+	},
+	repair: {
+		action: SET_REPAIR
 	}
 }
