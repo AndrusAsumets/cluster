@@ -14,8 +14,7 @@ import { SET_UPGRADE, SET_SELL } from './actions'
 
 export const defaultEnergy = 500
 export const defaultHealth = 30
-export const defaultDamage = 10
-export const defaultAbsorb = 10
+export const defaultDamage = 20
 
 export const defaultShapes = {
 	background: {

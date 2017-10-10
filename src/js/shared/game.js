@@ -2,7 +2,7 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_BUILDING_DAMAGE } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape } from './util'
@@ -540,7 +540,7 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				decreaseEnergy(player, players[player.id].elements[p].dynamics.damage)
+				//decreaseEnergy(player, players[player.id].elements[p].dynamics.damage)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
@@ -615,7 +615,7 @@ export function game() {
 								shape: defaultShapes[player.elements[r].type],
 								level: player.elements[r].level,
 								dynamics: {
-									damage: player.elements[r].dynamics.damage
+									damage: anotherPlayer.elements[r2].dynamics.damage
 								}
 							}
 							
@@ -631,7 +631,7 @@ export function game() {
 								shape: defaultShapes[anotherPlayer.elements[r2].type],
 								level: anotherPlayer.elements[r2].level,
 								dynamics: {
-									damage: player.elements[r2].dynamics.damage
+									damage: player.elements[r].dynamics.damage
 								}
 							}
 							
@@ -651,19 +651,15 @@ export function game() {
 		var b = 0
 
 		for (var r = 0; r < player.elements.length; r++) {
-			if (
-				!player.elements &&
-				!player.elements.length &&
-				!player.elements[r] &&
-				!player.elements[r].length &&
-				!player.elements[r].path &&
-				!player.elements[r].path[a] &&
-				!player.elements[r].path[a].length &&
-				!player.elements[r].path[a][2]
-			) continue
 			
 			// only deal damage when threshold has been exceeded
-			if (player.elements[r].path[a][2] < 9) continue
+			if (
+				!player.elements[r].path ||
+				!player.elements[r].path.length ||
+				!player.elements[r].path[a] ||
+				!player.elements[r].path[a][2] ||
+				player.elements[r].path[a][2] < 9
+			) continue
 
 			var positionA = player.elements[r].path[a]
 			if (!positionA) continue
