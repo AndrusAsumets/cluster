@@ -364,16 +364,17 @@ export function game() {
 
 			// choose from a second level popup
 			else if (gameMenu.submenu) {
-				selectFromPopup({
+				var message = selectFromPopup({
 					player: player,
 					buildings: gameMenu.submenu,
 					building: building,
-					socket: socket,
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
 					gm: gm,
 					type: type
 				})
+				
+				socket.emit('message', message)
 				
 				gameMenu = {}
 				canvas.selection.clearRect(0, 0, w, h)
@@ -383,15 +384,16 @@ export function game() {
 			else if (!submenu) {
 				
 				// select from the first level popup
-				selectFromPopup({
+				var message = selectFromPopup({
 					player: player,
 					buildings: defaultBuildings,
-					socket: socket,
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
 					gm: gm,
 					type: type
 				})
+				
+				socket.emit('message', message)
 				
 				gameMenu = {}
 				canvas.selection.clearRect(0, 0, w, h)

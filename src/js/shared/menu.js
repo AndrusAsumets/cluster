@@ -226,8 +226,8 @@ export function selectFromPopup(o) {
 		data: data,
 		playerId: o.me
 	}
-
-	o.socket.emit('message', message)
+	
+	return message
 }
 
 function showPatterns(o) {
