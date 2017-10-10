@@ -139,3 +139,14 @@ function isDuplicateResource(resources, x1, y1) {
 	
 	return false
 }
+
+export function isOnResource(resources, x1, y1) {
+	for (var i = 0; i < resources.length; i++) {
+		var x2 = resources[i].x
+		var y2 = resources[i].y
+		
+		if (x1 == x2 && y1 == y2) return true
+	}
+	
+	return false
+}

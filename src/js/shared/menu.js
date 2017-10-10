@@ -1,5 +1,6 @@
 import { SET_BUILDING } from './actions'
 import { defaultShapes, defaultBuildings, defaultOptions, defaultDamage, defaultResourceMultiplier } from './defaults'
+import { isOnResource } from './util'
 import { line, rectangle, circle, dot, donut, image, label } from './draw'
 import { dotGroup } from './draw/dot-group'
 
@@ -254,15 +255,4 @@ export function selectFromPopup(o) {
 	}
 
 	return message
-}
-
-function isOnResource(resources, x1, y1) {
-	for (var i = 0; i < resources.length; i++) {
-		var x2 = resources[i].x
-		var y2 = resources[i].y
-		
-		if (x1 == x2 && y1 == y2) return true
-	}
-	
-	return false
 }

@@ -2,10 +2,10 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultResourceCount } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultResourceCount, defaultResourceMultiplier } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource } from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, isOnResource } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair } from './dynamic'
@@ -793,6 +793,7 @@ export function game() {
 		var objects = players[key][type] ? players[key][type] : []
 		
 		for (var p = 0; p < objects.length; p++) {
+			var side = getSide(key)
 			var object = objects[p]
 			var pattern = object.pattern
 			var size = 3.5
@@ -803,8 +804,10 @@ export function game() {
 			var height = blockHeight / size / 3
 			var maxWidth = blockWidth - marginX * 2
 			var maxHeight = blockHeight - marginY * 2
+			var onResource = isOnResource(resources[side], object.start[0] / gm, object.start[1] / gm)
+			var initialHealth = onResource ? object.initialHealth * defaultResourceMultiplier : object.initialHealth
 
-			/*
+			/*`
 			// show level bar
 			var sizes = []
 			for (var i = 0; i < object.level; i++) sizes.push(1)
@@ -834,7 +837,6 @@ export function game() {
 						var column = pattern[i]
 
 						var sizes = []
-						var side = getSide(key)
 						if (side == 'left') {
 							for (var j = 0; j < pattern.length; j++) {
 								var centeredHorizontally = (j + 2) % count
@@ -935,7 +937,7 @@ export function game() {
 			// health label
 			label({
 				ctx: canvas[layer],
-				string: object.health + ' / ' + (object.initialHealth * object.level),
+				string: object.health + ' / ' + (initialHealth * object.level),
 				shape: defaultShapes.light,
 				x1: object.start[0] * blockWidth / gm + blockWidth / 2,
 				y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 7,
@@ -1182,7 +1184,7 @@ export function game() {
 				y1: position[1] * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
-				alpha: 0.05
+				alpha: 0.075
 			})
 		}
 	}
