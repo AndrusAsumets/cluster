@@ -3,7 +3,6 @@ cluster.game
 
 NOW:
 - gameplay:
-* repair
 * random resourced
 
 - UI:

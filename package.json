@@ -4,7 +4,7 @@
   "description": "",
   "main": "init.js",
   "scripts": {
-    "server": "nodemon transpile-server",
+    "server": "forever -w --watchDirectory src transpile-server.js ",
     "client": "node development.js",
     "env": "cp .env.default .env",
     "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
@@ -31,7 +31,7 @@
     "copy-webpack-plugin": "^4.0.1",
     "css-loader": "^0.28.4",
     "extract-text-webpack-plugin": "^3.0.0",
-    "nodemon": "^1.11.0",
+    "forever": "^0.15.3",
     "style-loader": "^0.18.2",
     "webpack": "^3.5.4",
     "webpack-dev-server": "^2.7.1"
