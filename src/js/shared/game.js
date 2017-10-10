@@ -532,13 +532,15 @@ export function game() {
 		else if (
 			(
 				
-				(
-					xBlock == smallHorizontal / 2
-				||
-					xBlock == smallHorizontal / 2 - 1
-				)
+					dev
 				&&
-				yBlock > smallVertical - 1
+					(
+						xBlock == smallHorizontal / 2
+					||
+						xBlock == smallHorizontal / 2 - 1
+					)
+				&&
+					yBlock > smallVertical - 1
 			)
 		) {
 			socket.emit('restart')
