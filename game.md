@@ -9,11 +9,10 @@ NOW:
 * random resourced
 
 - UI:
-* move chargebars into bottom
+* health / total health blocki
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 * damage animations
 * past trail for patterns
-* colors
 
 PHASE1:
 * game balance & upgrades

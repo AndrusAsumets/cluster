@@ -5,7 +5,7 @@ import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, S
 import { defaultEnergy, defaultHealth, defaultDamage, defaultAbsorb, defaultShapes, defaultBuildings, defaultOptions } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape} from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getColoredShape } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage } from './dynamic'
@@ -836,10 +836,10 @@ export function game() {
 			// health label
 			label({
 				ctx: canvas[layer],
-				string: object.health,
+				string: object.health + ' / ' + (object.initialHealth * object.level),
 				shape: defaultShapes.light,
 				x1: object.start[0] * blockWidth / gm + blockWidth / 2,
-				y1: object.start[1] * blockHeight / gm + blockHeight / 8,
+				y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 8,
 				height: blockHeight,
 				size: 10,
 				center: true
@@ -854,7 +854,7 @@ export function game() {
 					string: damage,
 					shape: defaultShapes.light,
 					x1: object.start[0] * blockWidth / gm + blockWidth / 2,
-					y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 8,
+					y1: object.start[1] * blockHeight / gm + blockHeight / 8,
 					height: blockHeight,
 					size: 10,
 					center: true

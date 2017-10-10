@@ -200,12 +200,14 @@ export function buildPopup(o) {
 
 export function selectFromPopup(o) {
 	var level = o.buildings[o.type].level
+	var health = o.buildings[o.type].initialHealth
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
 	var building = {
 		playerId: o.player.id,
 		level: level,
+		health: health,
 		type: o.type,
 		start: start,
 		end: end,
