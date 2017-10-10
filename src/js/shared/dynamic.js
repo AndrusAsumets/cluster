@@ -5,6 +5,7 @@ export function upgrade(o) {
 	var buildingIndex = o.buildingIndex
 	var buildings = player.buildings
 	var building = buildings[buildingIndex]
+	var damage = building.damage
 	var energy = player.energy
 	var level = building.level + 1
 	var cost = upgradeCost(Object.assign({}, o, { building: building }))
@@ -13,9 +14,10 @@ export function upgrade(o) {
 	if (energy - cost < 0) return player
 	
 	player.energy = energy - cost
-	if (player.buildings[buildingIndex] && player.buildings[buildingIndex].level) {
+	if (building && building.level) {
 		player.buildings[buildingIndex].level = level
-		player.buildings[buildingIndex].health = player.buildings[buildingIndex].health * 2
+		player.buildings[buildingIndex].health = building.health + building.initialHealth
+		player.buildings[buildingIndex].damage = damage + damage
 	}
 	return player
 }

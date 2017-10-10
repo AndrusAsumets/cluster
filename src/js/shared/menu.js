@@ -1,5 +1,5 @@
 import { SET_BUILDING } from './actions'
-import { defaultShapes, defaultBuildings, defaultOptions } from './defaults'
+import { defaultShapes, defaultBuildings, defaultOptions, defaultDamage } from './defaults'
 import { line, rectangle, circle, dot, donut, image, label } from './draw'
 import { dotGroup } from './draw/dot-group'
 
@@ -201,6 +201,8 @@ export function buildPopup(o) {
 export function selectFromPopup(o) {
 	var level = o.buildings[o.type].level
 	var health = o.buildings[o.type].initialHealth
+	var offensive = o.buildings[o.type].offensive
+	var damage = offensive == true ? defaultDamage : 0
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 
@@ -208,6 +210,7 @@ export function selectFromPopup(o) {
 		playerId: o.player.id,
 		level: level,
 		health: health,
+		damage: damage,
 		type: o.type,
 		start: start,
 		end: end,

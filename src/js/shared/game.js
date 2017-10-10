@@ -532,13 +532,15 @@ export function game() {
 		for (var p = 0; p < elements.length; p++) {
 			var element = player.elements[p]
 
-			if (element.inactive) { continue }
+			if (element.inactive) {
+				continue
+			}
 			else if (
 				!element.path ||
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				decreaseEnergy(player, defaultAbsorb * players[player.id].elements[p].level)
+				decreaseEnergy(player, players[player.id].elements[p].dynamics.damage)
 				players[player.id].elements[p].inactive = true
 			} else {
 				players[player.id].elements[p].path.shift()
@@ -611,7 +613,10 @@ export function game() {
 									anotherPlayer.elements[r2].path[b]
 								],
 								shape: defaultShapes[player.elements[r].type],
-								level: player.elements[r].level
+								level: player.elements[r].level,
+								dynamics: {
+									damage: player.elements[r].dynamics.damage
+								}
 							}
 							
 							players[player.id].deepProjectiles.push(projectile)
@@ -624,7 +629,10 @@ export function game() {
 									player.elements[r].path[b]
 								],
 								shape: defaultShapes[anotherPlayer.elements[r2].type],
-								level: anotherPlayer.elements[r2].level
+								level: anotherPlayer.elements[r2].level,
+								dynamics: {
+									damage: player.elements[r2].dynamics.damage
+								}
 							}
 							
 							players[anotherPlayer.id].deepProjectiles.push(projectile)
@@ -847,7 +855,7 @@ export function game() {
 			
 			// damage label
 			if (object.offensive) {
-				var damage = calculateDamage(object.level)
+				var damage = object.damage
 				
 				label({
 					ctx: canvas[layer],
@@ -968,8 +976,9 @@ export function game() {
 					d1 == 9
 				) {
 					var health = players[player.id].elements[r].dynamics.health
-					var damage = calculateDamage(projectiles[p].level)
+					var damage = projectiles[p].dynamics.damage
 					players[player.id].elements[r].dynamics.health = health - damage
+					if (players[player.id].elements[r].dynamics.health < 1) players[player.id].elements[r].path = []
 					break
 				}
 			}
@@ -1150,14 +1159,15 @@ export function game() {
 					var element = {
 						id: players[r].elements.length,
 						playerId: p,
+						active: true,
 						type: object.type,
 						start: patternizedPath[0],
 						path: patternizedPath,
 						level: object.level,
 						dynamics: {
-							totalHealth: defaultHealth * object.level,
-							health: defaultHealth * object.level,
-							damage: defaultDamage * object.level
+							totalHealth: object.health,
+							health: object.health,
+							damage: object.damage
 						}
 					}
 	
@@ -1168,8 +1178,6 @@ export function game() {
 	}
 	
 	function displayCharge() {
-		console.log('displayCharge')
-		
 		var share = convertRange(charge, [0, 100], [0, w / 2])
 		document.getElementsByClassName('scorebar-player1')[0].style.width = share + 'px'
 		document.getElementsByClassName('scorebar-player2')[0].style.width = share + 'px'
