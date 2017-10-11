@@ -48,11 +48,13 @@ export function game() {
 		right: []
 	}
 
-	for (var i = 0; i < defaultResourceCount; i++) {
-		var resource = createResource({ width: smallHorizontal / 2, height: smallVertical, resources: resources.left })
+	if (host) {
+		for (var i = 0; i < defaultResourceCount; i++) {
+			var resource = createResource({ width: smallHorizontal / 2, height: smallVertical, resources: resources.left })
 
-		resources.left.push(resource)
-		resources.right.push({ x: smallHorizontal - resource.x - 1, y: smallVertical - resource.y - 1 })
+			resources.left.push(resource)
+			resources.right.push({ x: smallHorizontal - resource.x - 1, y: smallVertical - resource.y - 1 })
+		}
 	}
 
 	// player
@@ -135,35 +137,6 @@ export function game() {
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
 	}
 
-	function displayResources(o) {
-		var resources = o.resources
-
-		for (var i = 0; i < resources.length; i++) {
-			var x1 = resources[i].x
-			var y1 = resources[i].y
-
-			rectangle({
-				ctx: canvas.buildings,
-				shape: defaultShapes.resource,
-				x1: x1 * blockWidth,
-				y1: y1 * blockHeight,
-				width: blockWidth,
-				height: blockHeight,
-				alpha: 0.075
-			})
-
-			image({
-				ctx: canvas.buildings,
-				file: defaultShapes.resource.file,
-				x1: x1 * blockWidth,
-				y1: y1 * blockHeight,
-				width: blockWidth,
-				height: blockHeight,
-				size: 3.5
-			})
-		}
-	}
-
 	// networking
 	var me = client ? getUrlParams('me') : null
 	if (!me && !host) return console.log('add ?me=some_player_id to your url')
@@ -203,17 +176,19 @@ export function game() {
 				if (host) {
 					if (!players[data]) players[data] = new Player({ id: data })
 
-					socket.emit('message', { action: SET_STATE, data: players })
+					socket.emit('message', { action: SET_STATE, data: { players: players, resources: resources }})
 				}
 				break
 
 			case SET_STATE:
 				if (client) {
-					for (var key in data) {
+					resources = data.resources
+
+					for (var key in data.players) {
 						if (!players[key]) players[key] = new Player({ id: key })
 
-						players[key].buildings = data[key].buildings
-						players[key].elements = data[key].elements
+						players[key].buildings = data.players[key].buildings
+						players[key].elements = data.players[key].elements
 						boundaries({ playerId: key })
 
 						for (var i = 0; i < players[key].elements.length; i++) {
@@ -602,6 +577,25 @@ export function game() {
 		else {
 			gameMenu = {}
 			canvas.selection.clearRect(0, 0, w, h)
+		}
+	}
+
+	function displayResources(o) {
+		var resources = o.resources
+
+		for (var i = 0; i < resources.length; i++) {
+			var x1 = resources[i].x
+			var y1 = resources[i].y
+
+			image({
+				ctx: canvas.buildings,
+				file: defaultShapes.resource.file,
+				x1: x1 * blockWidth,
+				y1: y1 * blockHeight,
+				width: blockWidth,
+				height: blockHeight,
+				size: 14
+			})
 		}
 	}
 
