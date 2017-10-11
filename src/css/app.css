@@ -33,7 +33,7 @@ canvas {
 .header,
 .menu {
 	position: fixed;
-	height: calc(100vh / 7);
+	height: calc(100vh / 5);
 	width: 100vw;
 	left: 0;
 	top: auto;
@@ -77,15 +77,16 @@ canvas {
 .scorebar-player2 {
 	position: absolute;
 	top: 0;
-	border-top: 4px solid rgba(0, 190, 229, 0.5);
 }
 
 .scorebar-player1 {
 	right: 0;
+	border-top: 4px solid rgba(255, 74, 61, 0.5);
 }
 
 .scorebar-player2 {
 	left: 0;
+	border-top: 4px solid rgba(0, 190, 229, 0.5);
 }
 
 .player {
@@ -101,9 +102,9 @@ canvas {
 }
 
 .burger {
-	width: calc(100vh / 7);
-	height: calc(100vh / 7);
-	background-size: calc(100vh / 14) calc(100vh / 14);
+	width: calc(100vh / 5);
+	height: calc(100vh / 5);
+	background-size: calc(100vh / 10) calc(100vh / 10);
 	background-image: url(/public/images/burger.svg);
 	background-repeat: no-repeat;
 	background-position: center center;

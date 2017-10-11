@@ -15,7 +15,7 @@ import { SET_UPGRADE, SET_SELL, SET_REPAIR } from './actions'
 export const defaultEnergy = 500
 export const defaultHealth = 30
 export const defaultDamage = 20
-export const defaultResourceCount = 3
+export const defaultResourceCount = 2
 export const defaultResourceMultiplier = 5
 
 const defaultPatterns = {

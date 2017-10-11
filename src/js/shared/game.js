@@ -25,8 +25,8 @@ export function game() {
 	const host = !window ? true : false
 
 	// window
-	const smallHorizontal = 14 // how many blocks to have on x scale
-	const smallVertical = 7 // how many blocks to have on y scale
+	const smallHorizontal = 10 // how many blocks to have on x scale
+	const smallVertical = 5 // how many blocks to have on y scale
 	const gm = 3 // grid multiplier (how much to upscale the grid for gameplay)
 	const horizontal = smallHorizontal * gm
 	const vertical = smallVertical * gm
@@ -78,7 +78,7 @@ export function game() {
 		canvas = {
 			background: ctx(container, 'background', w, h, false),
 			buildings: ctx(container, 'buildings', w, h, false),
-			boundaries: ctx(container, 'boundaries', w, false),
+			boundaries: ctx(container, 'boundaries', w, h, false),
 			start: ctx(container, 'start', w, h, false),
 			selection: ctx(container, 'selection', w, h, false),
 			movement: ctx(container, 'movement', w, h, true),
@@ -594,7 +594,8 @@ export function game() {
 				y1: y1 * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
-				size: 14
+				size: 14,
+				alpha: 0.25
 			})
 		}
 	}
@@ -1294,7 +1295,7 @@ export function game() {
 	if (client) {
 		var left = document.getElementsByClassName('scorebar-player1')[0]
 		var right = document.getElementsByClassName('scorebar-player2')[0]
-		var slow = 100
+		var slow = 5
 
 		setInterval(function() {
 			charge += speed * slow

@@ -249,17 +249,27 @@ export function circle(o) {
 
 var images = []
 export function image(o) {
+	var alpha = o.alpha ? o.alpha : 1
+	
 	var cacheIndex = isCached(images, { type: o.type })
-	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(
-		images[cacheIndex].image,
-		o.x1 + o.width / o.size,
-		o.y1 + o.height / o.size,
-		o.width - o.width / (o.size / 2),
-		o.height - o.height / (o.size / 2)
-	)
+	if (Number.isInteger(cacheIndex)) {
+	    o.ctx.save()
+	    o.ctx.globalAlpha = alpha
+		o.ctx.drawImage(
+			images[cacheIndex].image,
+			o.x1 + o.width / o.size,
+			o.y1 + o.height / o.size,
+			o.width - o.width / (o.size / 2),
+			o.height - o.height / (o.size / 2)
+		)
+		o.ctx.restore()
+		return o.ctx
+	}
 
 	var image = new Image()
 	image.onload = function() {
+	    o.ctx.save()
+	    o.ctx.globalAlpha = alpha
 		o.ctx.drawImage(
 			image,
 			o.x1 + o.width / o.size,
@@ -267,6 +277,7 @@ export function image(o) {
 			o.width - o.width / (o.size / 2),
 			o.height - o.height / (o.size / 2)
 		)
+		o.ctx.restore()
 
 		images.push({
 			type: o.type,
