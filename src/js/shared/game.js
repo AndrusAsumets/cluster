@@ -329,17 +329,19 @@ export function game() {
 
 		var side = getSide(user)
 		var player = players[user]
-
-		var yBlock = Math.floor(y / blockHeight)
+		
 		var xBlock = Math.floor(x / blockWidth)
+		var yBlock = Math.floor(y / blockHeight)
 		var menuXBlock = side == 'left'
-			? Math.floor(x / (h / (smallVertical - 1)))
-			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
+			? Math.floor(x / (h / smallVertical))
+			: Math.floor((event.clientX - w / 2) / (h / smallVertical))
+			
 		var buildingIndex = findBuildingIndex(player.buildings, {
-			start: gameMenu.xBlock && gameMenu.yBlock
+			start: Number.isInteger(gameMenu.xBlock) && Number.isInteger(gameMenu.yBlock)
 				? [gameMenu.xBlock * gm, gameMenu.yBlock * gm]
 				: [xBlock * gm, yBlock * gm]
 		})
+		
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		var inBounds = findBoundary(players[user].boundaries, { x: xBlock * gm, y: yBlock * gm })
@@ -589,13 +591,14 @@ export function game() {
 
 			image({
 				ctx: canvas.buildings,
+				type: 'resource',
 				file: defaultShapes.resource.file,
 				x1: x1 * blockWidth,
 				y1: y1 * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
 				size: 14,
-				alpha: 0.25
+				alpha: 0.4
 			})
 		}
 	}
@@ -928,7 +931,7 @@ export function game() {
 			else {
 				image({
 					ctx: canvas[layer],
-					type: object.type, // ???
+					type: object.type,
 					file: defaultShapes[object.type].file,
 					x1: object.start[0] * blockWidth / gm,
 					y1: object.start[1] * blockHeight / gm,
