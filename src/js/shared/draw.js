@@ -29,18 +29,18 @@ export function createMatrix(vertical, horizontal) {
 }
 
 
-export function ctx(container, className, w, h, z) {
-	var ratio = PIXEL_RATIO
+export function ctx(container, className, w, h, retina) {
+	var ratio = retina ? PIXEL_RATIO : 1
 	var canvas = document.createElement('canvas')
+	var c = canvas.getContext('2d')
 	canvas.className = className
 	canvas.width = w * ratio
 	canvas.height = h * ratio
 	canvas.style.width = w + 'px'
 	canvas.style.height = h + 'px'
-	canvas.getContext('2d').setTransform(ratio, 0, 0, ratio, 0, 0)
-	canvas.style.zIndex = z
+	c.setTransform(ratio, 0, 0, ratio, 0, 0)
 	container.appendChild(canvas)
-	return canvas.getContext('2d')
+	return c
 }
 
 export function chessboard(o) {
@@ -67,7 +67,7 @@ export function chessboard(o) {
 						alpha: alpha
 					})
 				}
-				
+
 				else {
 					rectangle({
 						ctx: canvas,
@@ -82,7 +82,7 @@ export function chessboard(o) {
 			}
 		}
 	}
-	
+
 	for (var i = 0; i < smallHorizontal + 1; i++) {
 		if (i % 2 === 0) {
 			for (var j = 0; j < smallVertical; j++) {
@@ -97,7 +97,7 @@ export function chessboard(o) {
 						alpha: alpha
 					})
 				}
-				
+
 				else {
 					rectangle({
 						ctx: canvas,
@@ -290,11 +290,11 @@ export function label(o) {
 	var font = o.size + 'px sans-serif'
 	var center = o.center | false
 	var extra = 0
-	
+
 	canvas.fillStyle = fillStyle
 	canvas.strokeStyle = fillStyle
 	canvas.font = font
-	
+
 	var stringWidth = canvas.measureText(string).width
 	var stringHeight = canvas.measureText('M').width
 	var blockWidth = height / vertical | 0
@@ -322,13 +322,13 @@ export function drawBoundaries(o) {
 	var blockHeight = o.blockHeight
 	var gm = o.gm
 	var extra = o.side == 'left' ? 0 : width / 2
-	
+
 	canvas.clearRect(extra, 0, width / 2, height)
-	
+
 	for (var i = 0; i < boundaries.length; i++) {
 		var x = boundaries[i].x / gm
 		var y = boundaries[i].y / gm
-		
+
 		rectangle({
 			ctx: canvas,
 			shape: defaultShapes.light,

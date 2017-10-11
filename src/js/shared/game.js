@@ -41,16 +41,16 @@ export function game() {
 	const finder = new PF.AStarFinder({ allowDiagonal: true })
 	const matrix = createMatrix(vertical, horizontal)
 	var grid = new PF.Grid(matrix)
-	
+
 	// resources
 	var resources = {
 		left: [],
 		right: []
 	}
-	
+
 	for (var i = 0; i < defaultResourceCount; i++) {
 		var resource = createResource({ width: smallHorizontal / 2, height: smallVertical, resources: resources.left })
-		
+
 		resources.left.push(resource)
 		resources.right.push({ x: smallHorizontal - resource.x - 1, y: smallVertical - resource.y - 1 })
 	}
@@ -72,15 +72,15 @@ export function game() {
 		var container = document.createElement('div')
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
+
 		canvas = {
-			background: ctx(container, 'background', w, h, 1),
-			buildings: ctx(container, 'buildings', w, h, 2),
-			movement: ctx(container, 'movement', w, h, 3),
-			boundaries: ctx(container, 'boundaries', w, h, 4),
-			resources: ctx(container, 'resources', w, h, 5),
-			start: ctx(container, 'start', w, h, 6),
-			selection: ctx(container, 'selection', w, h, 7),
-			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, 8)
+			background: ctx(container, 'background', w, h, false),
+			buildings: ctx(container, 'buildings', w, h, false),
+			boundaries: ctx(container, 'boundaries', w, false),
+			start: ctx(container, 'start', w, h, false),
+			selection: ctx(container, 'selection', w, h, false),
+			movement: ctx(container, 'movement', w, h, true),
+			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, true)
 		}
 
 		// create a visual UI grid
@@ -130,33 +130,30 @@ export function game() {
 			y2: h,
 			alpha: 0.75
 		})
-		
-		displayResources({ resources: resources.left })
-		displayResources({ resources: resources.right })
 
 		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
 	}
-	
+
 	function displayResources(o) {
 		var resources = o.resources
-		
+
 		for (var i = 0; i < resources.length; i++) {
 			var x1 = resources[i].x
 			var y1 = resources[i].y
-		
+
 			rectangle({
-				ctx: canvas.resources,
+				ctx: canvas.buildings,
 				shape: defaultShapes.resource,
 				x1: x1 * blockWidth,
 				y1: y1 * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
 				alpha: 0.075
-			})	
-		
+			})
+
 			image({
-				ctx: canvas.resources,
+				ctx: canvas.buildings,
 				file: defaultShapes.resource.file,
 				x1: x1 * blockWidth,
 				y1: y1 * blockHeight,
@@ -219,8 +216,10 @@ export function game() {
 						players[key].elements = data[key].elements
 						boundaries({ playerId: key })
 
-						for (var i = 0; i < data[key].buildings.length; i++) {
-							grid = setWalkableAt(grid, gm, data[key].buildings[i].start[0], data[key].buildings[i].start[1], false)
+						for (var i = 0; i < players[key].elements.length; i++) {
+							var side = getSide(key)
+							var shape = getSideColor(defaultShapes, side == 'left' ? 'right' : 'left')
+							players[key].elements[i].shape = shape
 						}
 
 						if (key == me) showStartingPosition()
@@ -295,6 +294,10 @@ export function game() {
 				var element = data.element
 				var playerId = element.playerId
 				var buildingIndex = data.buildingIndex
+
+				var side = getSide(playerId)
+				var shape = getSideColor(defaultShapes, side)
+				element.shape = shape
 
 				for (var key in players) if (key != playerId) players[key].elements.push(element)
 
@@ -578,10 +581,9 @@ export function game() {
 
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
 		}
-		
+
 		else if (
 			(
-				
 					dev
 				&&
 					(
@@ -766,7 +768,7 @@ export function game() {
 
 				for (var r2 = 0; r2 < anotherPlayer.buildings.length; r2++) {
 					var positionB = anotherPlayer.buildings[r2].start
-					
+
 					if (
 						player.elements[r].path[a][2] == 9 ||
 						anotherPlayer.buildings[r2].defensive
@@ -789,6 +791,9 @@ export function game() {
 	function refreshBuildings() {
 		canvas.buildings.clearRect(0, 0, w, h)
 
+		displayResources({ resources: resources.left })
+		displayResources({ resources: resources.right })
+
 		for (var p in players) {
 			displayBuildings('buildings', 'buildings', p)
 		}
@@ -796,7 +801,7 @@ export function game() {
 
 	function displayBuildings(layer, type, key) {
 		var objects = players[key][type] ? players[key][type] : []
-		
+
 		for (var p = 0; p < objects.length; p++) {
 			var side = getSide(key)
 			var object = objects[p]
@@ -834,7 +839,7 @@ export function game() {
 			// show pattern
 			if (pattern) {
 				var count = 3
-				
+
 				for (var i = 0; i < pattern.length; i++) {
 					var centeredVertically = (i + 2) % count
 
@@ -985,68 +990,6 @@ export function game() {
 		}
 	}
 
-	function attack(player) {
-		var buildings = player.buildings ? player.buildings : []
-		var x = 1
-		for (var p = 0; p < buildings.length; p++) {
-			if (!player.buildings[p].defensive) continue
-			if (!player.buildings[p].built) continue
-
-			var positionA = player.buildings[p].start
-			for (var r = 0; r < player.elements.length; r++) {
-				if (
-					!player.elements[r].path ||
-					!player.elements[r].path[x] ||
-					!player.elements[r].path[x].length
-				) continue
-
-				var positionB = player.elements[r].path[x]
-				if (!isNear(gm, positionA, positionB)) continue
-
-				var projectile = {
-					path: [
-						player.buildings[p].start,
-						player.elements[r].path[1]
-					],
-					shape: defaultShapes[player.buildings[p].type],
-					level: player.buildings[p].level
-				}
-
-				players[player.id].projectiles.push(projectile)
-				players[player.id].buildings[p].dynamics.fired++
-				break
-			}
-		}
-	}
-
-	function hit(player) {
-		var projectiles = player.projectiles
-		for (var p = 0; p < projectiles.length; p++) {
-			var x1 = projectiles[p].path[1][0]
-			var y1 = projectiles[p].path[1][1]
-
-			for (var r = 0; r < player.elements.length; r++) {
-				var element = player.elements[r]
-
-				if (
-					!element.path ||
-					!element.path[1] ||
-					!element.path[1].length
-				) continue
-
-				var x2 = element.path[1][0]
-				var y2 = element.path[1][1]
-
-				if (x1 == x2 && y1 == y2) {
-					var health = players[player.id].elements[r].dynamics.health
-					var damage = calculateDamage(projectiles[p].level)
-					players[player.id].elements[r].dynamics.health = health - damage
-					break
-				}
-			}
-		}
-	}
-
 	function deepHit(player) {
 		for (var r = 0; r < player.elements.length; r++) {
 			var element = player.elements[r]
@@ -1086,6 +1029,8 @@ export function game() {
 	// move the elements according to their positions in space and time
 	function move(layer, type, key) {
 		var objects = players[key] && players[key][type] ? players[key][type] : []
+		var width = blockWidth / gm
+		var height = blockHeight / gm
 
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
@@ -1096,45 +1041,41 @@ export function game() {
 				!object.path[1].length
 			) continue
 
-			var x1 = object.path[0][0] * blockWidth / gm
-			var y1 = object.path[0][1] * blockHeight / gm
-			var x2 = object.path[1][0] * blockWidth / gm
-			var y2 = object.path[1][1] * blockHeight / gm
+			var x1 = object.path[0][0] * width
+			var y1 = object.path[0][1] * height
+			var x2 = object.path[1][0] * width
+			var y2 = object.path[1][1] * height
 			var dt = (new Date).getTime() - time
 			var dx = x1 - (x1 - x2) * dt / tick
 			var dy = y1 - (y1 - y2) * dt / tick
 
-			if (client) {
-				if (object.type) {
-					var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
-					var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-					var size = object.path[1][2] | 0
-					var side = getSide(object.playerId)
-					var shape = getSideColor(defaultShapes, side)
+			if (object.type) {
+				var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
+				var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
+				var size = object.path[1][2] | 0
 
-					donut({
-						ctx: canvas[layer],
-						shape: shape,
-						percentage: percentage,
-						x1: dx,
-						y1: dy,
-						width: blockWidth,
-						height: blockHeight,
-						alpha: 1,
-						size: object.level * size / 9
-					})
-				}
-				else {
-					dot({
-						ctx: canvas[layer],
-						shape: object.shape,
-						x1: dx,
-						y1: dy,
-						width: blockWidth,
-						height: blockHeight,
-						size: object.level
-					})
-				}
+				donut({
+					ctx: canvas[layer],
+					shape: object.shape,
+					percentage: percentage,
+					x1: dx,
+					y1: dy,
+					width: blockWidth,
+					height: blockHeight,
+					alpha: 1,
+					size: object.level * size / 9
+				})
+			}
+			else {
+				dot({
+					ctx: canvas[layer],
+					shape: object.shape,
+					x1: dx,
+					y1: dy,
+					width: blockWidth,
+					height: blockHeight,
+					size: object.level
+				})
 			}
 		}
 	}
@@ -1274,10 +1215,10 @@ export function game() {
 		}
 	}
 
-	function displayCharge() {
+	function displayCharge(left, right) {
 		var share = convertRange(charge, [0, 100], [0, w / 2])
-		document.getElementsByClassName('scorebar-player1')[0].style.width = share + 'px'
-		document.getElementsByClassName('scorebar-player2')[0].style.width = share + 'px'
+		left.style.width = share + 'px'
+		right.style.width = share + 'px'
 
 		/*
 		for (var i = 0; i < players[p].buildings.length; i++) {
@@ -1312,7 +1253,6 @@ export function game() {
 		time = (new Date).getTime()
 
 		for (var p in players) {
-			hit(players[p])
 			deepHit(players[p])
 			health(players[p])
 			resetProjectiles(players[p])
@@ -1323,7 +1263,6 @@ export function game() {
 		for (var p in players) {
 			elementCollision(p)
 			buildingCollision(p)
-			attack(players[p])
 
 			if (!gameOver) {
 				energy(players[p])
@@ -1336,11 +1275,11 @@ export function game() {
 
 	// render
 	function animationFrame() {
-		requestAnimationFrame(animationFrame)
-
 		canvas.movement.clearRect(0, 0, w, h)
 
 		for (var p in players) move('movement', 'elements', p)
+
+		requestAnimationFrame(animationFrame)
 	}
 	if (client) requestAnimationFrame(animationFrame)
 
@@ -1359,11 +1298,14 @@ export function game() {
 
 	// display charge bar
 	if (client) {
-		setInterval(function() {
-			charge += speed * 2.5
-			displayCharge()
+		var left = document.getElementsByClassName('scorebar-player1')[0]
+		var right = document.getElementsByClassName('scorebar-player2')[0]
+		var slow = 100
 
+		setInterval(function() {
+			charge += speed * slow
 			if (Math.ceil(charge) >= 100) charge = 0
-		}, tick / fps * 2.5)
+			displayCharge(left, right)
+		}, tick / fps * slow)
 	}
 }
