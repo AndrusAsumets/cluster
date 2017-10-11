@@ -333,8 +333,8 @@ export function game() {
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var menuXBlock = side == 'left'
-			? Math.floor(x / (h / smallVertical))
-			: Math.floor((event.clientX - w / 2) / (h / smallVertical))
+			? Math.floor(x / (h / (smallVertical - 1)))
+			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
 			
 		var buildingIndex = findBuildingIndex(player.buildings, {
 			start: Number.isInteger(gameMenu.xBlock) && Number.isInteger(gameMenu.yBlock)
@@ -983,7 +983,7 @@ export function game() {
 				y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
 				width: width,
 				height: height,
-				alpha: 0.75
+				alpha: 0.5
 			})
 		}
 	}
@@ -1029,28 +1029,30 @@ export function game() {
 		var objects = players[key] && players[key][type] ? players[key][type] : []
 		var width = blockWidth / gm
 		var height = blockHeight / gm
+		var newTime = (new Date).getTime()
 
 		for (var p = 0; p < objects.length; p++) {
 			var object = objects[p]
+			var path = object.path
 
 			if (
-				!object.path ||
-				!object.path[1] ||
-				!object.path[1].length
+				!path ||
+				!path[1] ||
+				!path[1].length
 			) continue
 
-			var x1 = object.path[0][0] * width
-			var y1 = object.path[0][1] * height
-			var x2 = object.path[1][0] * width
-			var y2 = object.path[1][1] * height
-			var dt = (new Date).getTime() - time
+			var x1 = path[0][0] * width
+			var y1 = path[0][1] * height
+			var x2 = path[1][0] * width
+			var y2 = path[1][1] * height
+			var dt = newTime - time
 			var dx = x1 - (x1 - x2) * dt / tick
 			var dy = y1 - (y1 - y2) * dt / tick
 
 			if (object.type) {
 				var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 				var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-				var size = object.path[1][2] | 0
+				var size = path[1][2] | 0
 
 				donut({
 					ctx: canvas[layer],
