@@ -29,7 +29,7 @@ const defaultPatterns = {
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
-			[3,9,3,3,9,3,6,9,6],
+			[3,3,3,3,3,3,6,9,6],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
 			[0,0,0,0,0,0,0,0,0],
@@ -228,7 +228,7 @@ export const defaultShapes = {
 	},
 	resource: {
 		file: '/public/images/resource.svg',
-		fillStyle: function (alpha) { return 'rgba(244, 66, 146,' + alpha + ')' },
-		strokeStyle: function (alpha) { return 'rgba(244, 66, 146,' + alpha + ')' }
+		fillStyle: function (alpha) { return 'rgba(0, 255, 199,' + alpha + ')' },
+		strokeStyle: function (alpha) { return 'rgba(0, 255, 199,' + alpha + ')' }
 	}
 }

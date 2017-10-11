@@ -118,26 +118,14 @@ export function getSideColor(defaultShapes, side) {
 export function createResource(o) {
 	var width = o.width
 	var height = o.height
-	var opposite = o.opposite
 	var resources = o.resources
 	
 	var x = Math.floor(Math.random() * width - 1) + 1
 	var y = Math.floor(Math.random() * height - 1) + 1
 	
-	while (isDuplicateResource(resources, x, y)) return createResource(o)
+	while (isOnResource(resources, x, y)) return createResource(o)
 	
 	return { x: x, y: y }
-}
-
-function isDuplicateResource(resources, x1, y1) {
-	for (var i = 0; i < resources.length; i++) {
-		var x2 = resources[i].x
-		var y2 = resources[i].y
-		
-		if (x1 == x2 && y1 == y2) return true
-	}
-	
-	return false
 }
 
 export function isOnResource(resources, x1, y1) {

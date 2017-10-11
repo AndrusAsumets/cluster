@@ -152,7 +152,7 @@ export function game() {
 				y1: y1 * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
-				alpha: 0.033
+				alpha: 0.075
 			})	
 		
 			image({
@@ -750,8 +750,7 @@ export function game() {
 				!player.elements[r].path ||
 				!player.elements[r].path.length ||
 				!player.elements[r].path[a] ||
-				!player.elements[r].path[a][2] ||
-				player.elements[r].path[a][2] < 9
+				!player.elements[r].path[a][2]
 			) continue
 
 			var positionA = player.elements[r].path[a]
@@ -767,6 +766,12 @@ export function game() {
 
 				for (var r2 = 0; r2 < anotherPlayer.buildings.length; r2++) {
 					var positionB = anotherPlayer.buildings[r2].start
+					
+					if (
+						player.elements[r].path[a][2] == 9 ||
+						anotherPlayer.buildings[r2].defensive
+					) {}
+					else continue
 
 					if (!positionB) continue
 					if (!positionB.length) continue
@@ -1149,7 +1154,7 @@ export function game() {
 			if (
 				building.producer == true
 			) {
-				increaseEnergy(player, building.level * building.resource)
+				increaseEnergy(player, building.level * building.resource / 2)
 			}
 		}
 	}
@@ -1184,7 +1189,7 @@ export function game() {
 				y1: position[1] * blockHeight,
 				width: blockWidth,
 				height: blockHeight,
-				alpha: 0.075
+				alpha: 0.15
 			})
 		}
 	}
