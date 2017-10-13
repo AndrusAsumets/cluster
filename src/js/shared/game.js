@@ -1,6 +1,5 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
-var pathval = require('pathval')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
 import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier } from './defaults'
@@ -78,7 +77,7 @@ export function game() {
 
 		canvas = {
 			background: ctx(container, 'background', w, h, false),
-			buildings: ctx(container, 'buildings', w, h, false),
+			buildings: ctx(container, 'buildings', w, h, true),
 			boundaries: ctx(container, 'boundaries', w, h, false),
 			start: ctx(container, 'start', w, h, false),
 			selection: ctx(container, 'selection', w, h, false),
@@ -311,11 +310,12 @@ export function game() {
 	})
 
 	var gameMenu = {}
-	function createMenu(event) {
+	function createMenu(originalEvent) {
+		var event = originalEvent
 		if (gameOver) return
 
 		event.preventDefault()
-		if ('touches' in event) event = event.touches[0]
+		if ('touches' in originalEvent) event = event.touches[0]
 
 		canvas.menu.clearRect(0, 0, w, h)
 
@@ -390,7 +390,7 @@ export function game() {
 			!('pattern' in gameMenu) &&
 			!!gameMenu.options &&
 			gameMenu.options &&
-			yBlock > smallVertical - 1
+			bottom
 		) {
 			if (!buildingIndex && Number.isInteger(gameMenu.buildingIndex)) buildingIndex = gameMenu.buildingIndex
 			
@@ -412,7 +412,8 @@ export function game() {
 				gameMenu.pattern = 'upgrade' in building.submenu ? defaultPatterns : building.submenu
 				gameMenu.isMenuOpen = false
 				gameMenu.buildingIndex = buildingIndex
-				createMenu(event)
+				
+				createMenu(originalEvent)
 			}
 			
 			else if (Number.isInteger(gameMenu.buildingIndex)) {
@@ -476,7 +477,7 @@ export function game() {
 		//build a first level popup
 		else if (
 				(
-					yBlock < smallVertical &&
+					!bottom &&
 					inCenter
 				)
 			||
@@ -544,7 +545,7 @@ export function game() {
 						xBlock == smallHorizontal / 2 - 1
 					)
 				&&
-					yBlock > smallVertical - 1
+					bottom
 			)
 		) {
 			socket.emit('restart')
