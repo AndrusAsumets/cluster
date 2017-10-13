@@ -56,7 +56,8 @@ export function sellBackValue(o) {
 		total += index * cost
 		index--
 	}
-	return total / 2
+	
+	return total / 2 * building.health / building.initialHealth * level
 }
 
 export function calculateDamage(level) {
@@ -81,4 +82,8 @@ export function repair(o) {
 	player.buildings[buildingIndex].health = maxHealth
 
 	return player
+}
+
+export function calculateRepairCost(building) {
+	return building.initialHealth * building.level - building.health
 }

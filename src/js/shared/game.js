@@ -8,7 +8,7 @@ import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, isOnResource } from './util'
 import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
 import { dotGroup } from './draw/dot-group'
-import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair } from './dynamic'
+import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair, calculateRepairCost } from './dynamic'
 
 export function game() {
 	// gameplay
@@ -501,8 +501,11 @@ export function game() {
 				options.sell.cost = level ? sellBackValue({ building: building }) : false
 				options.sell.level = level
 		
+				var repairCost = calculateRepairCost(building)
 				options.repair = {}
-				options.repair.cost = building.initialHealth * level - building.health > 0 ? building.initialHealth * building.level - building.health : false
+				options.repair.cost = repairCost > 0
+					? repairCost
+					: false
 				
 				options.upgrade = {}
 				options.upgrade.cost = building.cost && level ? upgradeCost({ building: building }) : false
