@@ -18,77 +18,7 @@ export const defaultDamage = 20
 export const defaultResourceCount = 2
 export const defaultResourceMultiplier = 5
 
-const defaultPatterns = {
-	patternA: {
-		cost: 50,
-		level: 1,
-		initialHealth: 10,
-		offensive: true,
-		pattern: [
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[3,3,3,3,3,3,6,9,6],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0]
-		]
-	},
-	patternB: {
-		cost: 50,
-		level: 1,
-		initialHealth: 10,
-		offensive: true,
-		pattern: [
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[0,0,0,0,0,0,0,0,0],
-			[3,3,0,0,0,0,0,0,0],
-			[0,0,3,0,0,0,0,0,0],
-			[0,0,0,3,0,0,0,0,6],
-			[0,0,0,0,3,3,6,9,0],
-			[0,0,0,0,0,0,0,0,0]
-		]
-	},
-	patternC: {
-		cost: 50,
-		level: 1,
-		initialHealth: 10,
-		offensive: true,
-		pattern: [
-			[0,0,0,0,0,0,0,0,6],
-			[0,0,0,0,0,0,0,9,0],
-			[0,0,0,0,0,0,6,0,0],
-			[0,0,0,0,0,3,0,0,0],
-			[0,0,0,0,3,0,0,0,0],
-			[0,0,0,3,0,0,0,0,0],
-			[0,0,3,0,0,0,0,0,0],
-			[0,3,0,0,0,0,0,0,0],
-			[3,0,0,0,0,0,0,0,0]
-		]
-	},
-	patternD: {
-		cost: 50,
-		level: 1,
-		initialHealth: 10,
-		offensive: true,
-		pattern: [
-			[0,0,0,0,0,0,0,0,3],
-			[0,0,0,0,0,0,0,3,0],
-			[0,0,0,0,0,0,3,0,0],
-			[0,0,0,0,0,3,0,0,0],
-			[0,0,0,0,3,0,0,0,0],
-			[0,0,0,3,0,0,0,0,0],
-			[0,0,6,0,0,0,0,0,0],
-			[0,9,0,0,0,0,0,0,0],
-			[6,0,0,0,0,0,0,0,0]
-		]
-	}
-}
-
+/*
 const defaultBoosters = {
 	boosterA: {
 		cost: 50,
@@ -101,30 +31,52 @@ const defaultBoosters = {
 		initialHealth: 10
 	}
 }
+*/
 
-export const defaultBuildings = {
-	attack: {
-		submenu: defaultPatterns
+const defaultPatterns2 = {
+	patternA: {
+		pattern: [
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0]
+		]
 	},
-	defend: {
-		cost: 50,
-		level: 1,
-		initialHealth: 30,
-		defensive: true
-	},
-	invest: {
-		cost: 25,
-		level: 1,
-		initialHealth: 10,
-		linkable: true,
-		producer: true,
-		income: 0.5
-	},
-	/*
-	boost: {
-		submenu: defaultBoosters
+	patternB: {
+		pattern: [
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0]
+		]
 	}
-	*/
+}
+
+export const defaultPatterns = {
+	patternA: {
+		submenu: defaultPatterns2,
+		pattern: [
+			[0,0,0,0,0,0,0,0,6],
+			[0,0,0,0,0,0,0,9,0],
+			[0,0,0,0,0,0,6,0,0],
+			[0,0,0,0,0,3,0,0,0],
+			[0,0,0,0,3,0,0,0,0],
+			[0,0,0,3,0,0,0,0,0],
+			[0,0,3,0,0,0,0,0,0],
+			[0,3,0,0,0,0,0,0,0],
+			[3,0,0,0,0,0,0,0,0]
+		]
+	}
 }
 
 export const defaultOptions = {
@@ -137,6 +89,48 @@ export const defaultOptions = {
 	repair: {
 		action: SET_REPAIR
 	}
+}
+
+export const defaultBuildings = {
+	attack: {
+		cost: 50,
+		level: 1,
+		initialHealth: 10,
+		offensive: true,
+		pattern: [
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[9,9,9,9,9,9,9,9,9],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0],
+			[0,0,0,0,0,0,0,0,0]
+		],
+		submenu: defaultOptions
+	},
+	defend: {
+		cost: 50,
+		level: 1,
+		initialHealth: 30,
+		defensive: true,
+		submenu: defaultOptions
+	},
+	invest: {
+		cost: 25,
+		level: 1,
+		initialHealth: 10,
+		linkable: true,
+		producer: true,
+		income: 0.5,
+		submenu: defaultOptions
+	},
+	/*
+	boost: {
+		submenu: defaultBoosters
+	}
+	*/
 }
 
 export const defaultShapes = {

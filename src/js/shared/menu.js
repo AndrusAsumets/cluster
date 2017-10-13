@@ -79,9 +79,48 @@ export function buildPopup(o) {
 		var pattern = building.pattern
 
 		// don't show buildings that have reached the maximum level
-		if (key == 'upgrade' && level > 2) continue
+		
+		if (key == 'upgrade' && (level > 2 || !!building.offensive)) continue
 		if (key == 'repair' && !cost) continue
 
+		// cost label
+		if (
+			(cost && level < 3)
+			||
+			key == 'sell'
+		) {
+			label({
+				ctx: o.canvas.menu,
+				string: Math.floor(cost),
+				shape: defaultShapes.light,
+				x1: extra + index * o.height,
+				y1: o.height / 6.2,
+				height: o.height,
+				vertical: o.vertical,
+				size: 10,
+				center: true
+			})
+		}
+
+		// repair label
+		if (
+			cost
+			&&
+			key == 'repair'
+		) {
+			label({
+				ctx: o.canvas.menu,
+				string: Math.floor(cost),
+				shape: defaultShapes.light,
+				x1: extra + index * o.height,
+				y1: o.height / 6.2,
+				height: o.height,
+				vertical: o.vertical,
+				size: 10,
+				center: true
+			})
+		}
+		
 		if (pattern) {
 			var size = 3.5
 			var marginX = o.height / size
@@ -136,6 +175,23 @@ export function buildPopup(o) {
 						alpha: 0.75
 					})
 				}
+				
+				// cost label
+				if (
+					cost
+				) {
+					label({
+						ctx: o.canvas.menu,
+						string: Math.floor(cost),
+						shape: defaultShapes.light,
+						x1: extra + index * o.height,
+						y1: o.height / 6.2,
+						height: o.height,
+						vertical: o.vertical,
+						size: 10,
+						center: true
+					})
+				}
 			}
 		}
 
@@ -150,44 +206,6 @@ export function buildPopup(o) {
 				width: o.height,
 				height: o.height,
 				size: 3.5
-			})
-		}
-
-		// cost label
-		if (
-			(cost && level < 3)
-			||
-			key == 'sell'
-		) {
-			label({
-				ctx: o.canvas.menu,
-				string: Math.floor(cost),
-				shape: defaultShapes.light,
-				x1: extra + index * o.height,
-				y1: o.height / 6.2,
-				height: o.height,
-				vertical: o.vertical,
-				size: 10,
-				center: true
-			})
-		}
-
-		// repair label
-		if (
-			cost
-			&&
-			key == 'repair'
-		) {
-			label({
-				ctx: o.canvas.menu,
-				string: Math.floor(cost),
-				shape: defaultShapes.light,
-				x1: extra + index * o.height,
-				y1: o.height / 6.2,
-				height: o.height,
-				vertical: o.vertical,
-				size: 10,
-				center: true
 			})
 		}
 
@@ -220,9 +238,10 @@ export function buildPopup(o) {
 }
 
 export function selectFromPopup(o) {
-	var level = o.buildings[o.type].level
-	var health = o.buildings[o.type].initialHealth
-	var offensive = o.buildings[o.type].offensive
+	var submenu = o.submenu
+	var level = submenu[o.type].level
+	var health = submenu[o.type].initialHealth
+	var offensive = submenu[o.type].offensive
 	var damage = offensive == true ? defaultDamage : 0
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
 	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
@@ -242,17 +261,18 @@ export function selectFromPopup(o) {
 		end: end,
 		charge: 0,
 		resource: onResource ? defaultResourceMultiplier : 1,
-		dynamics: {}
+		dynamics: {},
+		submenu: submenu[o.type].submenu
 	}
-
-	var data = Object.assign({}, o.buildings[o.type], building)
-	data.buildings = o.buildings
 
 	var message = {
 		action: SET_BUILDING,
-		data: data,
-		playerId: o.me
+		data: {
+			playerId: o.me,
+			building: Object.assign({}, submenu[o.type], building),
+			menu: submenu
+		}
 	}
-
+	
 	return message
 }

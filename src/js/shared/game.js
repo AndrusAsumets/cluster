@@ -1,8 +1,9 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
+var pathval = require('pathval')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultResourceCount, defaultResourceMultiplier } from './defaults'
+import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, isOnResource } from './util'
@@ -216,16 +217,17 @@ export function game() {
 				break
 
 			case SET_BUILDING:
-				var building = data
+				var building = data.building
 				var player = players[building.playerId]
+				var menu = data.menu
 
 				// if not sufficient energy
-				if (player.energy - data.buildings[building.type].cost < 0) return
+				if (player.energy - menu[building.type].cost < 0) return
 
 				// check if there's an building on that location already
 				if (Number.isInteger(findBuildingIndex(player.buildings, building))) return
 
-				decreaseEnergy(players[building.playerId], data.buildings[building.type].cost)
+				decreaseEnergy(players[building.playerId], menu[building.type].cost)
 				players[building.playerId].buildings.push(building)
 
 				if (client) {
@@ -235,7 +237,6 @@ export function game() {
 
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
-
 				break
 
 			case SET_BUILDING_DAMAGE:
@@ -277,11 +278,13 @@ export function game() {
 				for (var key in players) if (key != playerId) players[key].elements.push(element)
 
 				charge = 0
-
 				break
 
 			case SET_UPGRADE:
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
+
+				if (!!data.pattern) players[data.playerId].buildings[data.buildingIndex].pattern = data.pattern
+				if (!!data.submenu) players[data.playerId].buildings[data.buildingIndex].submenu = data.submenu
 
 				if (client) refreshBuildings()
 				break
@@ -336,8 +339,10 @@ export function game() {
 			? Math.floor(x / (h / (smallVertical - 1)))
 			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
 			
+		var bottom = yBlock > smallVertical - 1
+			
 		var buildingIndex = findBuildingIndex(player.buildings, {
-			start: Number.isInteger(gameMenu.xBlock) && Number.isInteger(gameMenu.yBlock)
+			start: Number.isInteger(gameMenu.xBlock) && Number.isInteger(gameMenu.yBlock) && bottom
 				? [gameMenu.xBlock * gm, gameMenu.yBlock * gm]
 				: [xBlock * gm, yBlock * gm]
 		})
@@ -345,6 +350,16 @@ export function game() {
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		var inBounds = findBoundary(players[user].boundaries, { x: xBlock * gm, y: yBlock * gm })
+		
+		var options = (
+							buildingIsFound
+					&&
+						(
+							!!building.submenu
+						)
+				)
+			? { sell: building.submenu.sell, upgrade: building.submenu.upgrade, repair: building.submenu.repair}
+			: false
 
 		var inCenter
 		if (
@@ -370,149 +385,140 @@ export function game() {
 			canvas.selection.clearRect(0, 0, w, h)
 			return
 		}
-
-		else if (
-			(
-				'xBlock' in gameMenu &&
-				'yBlock' in gameMenu &&
-				yBlock >= smallVertical
-			)
+		
+		if (
+			!('pattern' in gameMenu) &&
+			!!gameMenu.options &&
+			gameMenu.options &&
+			yBlock > smallVertical - 1
 		) {
-			var buildings = Object.keys(gameMenu.submenu ? gameMenu.submenu : defaultBuildings)
-			var type = buildings[menuXBlock]
-			if (!type) return gameMenu = {}
-			var submenu = defaultBuildings[type] ? defaultBuildings[type].submenu : {} // submenu
-
-			// choose from the options (upgrade, sell, etc.)
-			if (gameMenu.options) {
-				var optionType = Object.keys(defaultOptions)[menuXBlock]
-				var upgradeable = players[user].buildings[buildingIndex].level < 3 ? true : false
-
-				// select repair instead
-				if (optionType == 'upgrade' && !upgradeable) optionType = 'repair'
-
+			if (!buildingIndex && Number.isInteger(gameMenu.buildingIndex)) buildingIndex = gameMenu.buildingIndex
+			
+			building = player.buildings[buildingIndex]
+			
+			var optionType = Object.keys(defaultOptions)[menuXBlock]
+			var upgradeable = players[user].buildings[buildingIndex].level < 3 ? true : false
+			var type = players[user].buildings[buildingIndex].type
+			
+			// select repair instead
+			if (optionType == 'upgrade' && !upgradeable) optionType = 'repair'
+			
+			if (
+					optionType == 'upgrade' &&
+					building.offensive &&
+					!Number.isInteger(gameMenu.buildingIndex)
+			) {
+				
+				gameMenu.pattern = 'upgrade' in building.submenu ? defaultPatterns : building.submenu
+				gameMenu.isMenuOpen = false
+				gameMenu.buildingIndex = buildingIndex
+				createMenu(event)
+			}
+			
+			else if (Number.isInteger(gameMenu.buildingIndex)) {
+				optionType = Object.keys('upgrade' in building.submenu ? defaultPatterns : building.submenu)[menuXBlock]
+				
+				var pattern = 'upgrade' in building.submenu ? defaultPatterns[optionType].pattern : building.submenu[optionType].pattern
+				var submenu = 'upgrade' in building.submenu ? defaultPatterns[optionType].submenu : building.submenu[optionType]
+				
+				var message = {
+					action: defaultOptions.upgrade.action,
+					data: {
+						playerId: user,
+						buildingIndex: buildingIndex,
+						pattern: pattern,
+						submenu: submenu
+					}
+				}
+				
+				socket.emit('message', message)
+			
+				gameMenu = {}
+			}
+			
+			else {
 				var message = {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex }
 				}
-
+			
 				socket.emit('message', message)
-
-				// leave the menu open if there are more upgrades left
-				if (building.level > 2) {
-					gameMenu = {}
-					canvas.selection.clearRect(0, 0, w, h)
-				}
-				else {
-					gameMenu.upgrading = true
-				}
-			}
-
-			// choose from a second level popup
-			else if (gameMenu.submenu) {
-				var message = selectFromPopup({
-					player: player,
-					side: side,
-					resources: resources,
-					buildings: gameMenu.submenu,
-					building: building,
-					gameMenu: gameMenu,
-					xBlock: menuXBlock,
-					gm: gm,
-					type: type
-				})
-
-				socket.emit('message', message)
-
+			
 				gameMenu = {}
-				canvas.selection.clearRect(0, 0, w, h)
-			}
-
-			// if a building has no options
-			else if (!submenu) {
-
-				// select from the first level popup
-				var message = selectFromPopup({
-					player: player,
-					side: side,
-					resources: resources,
-					buildings: defaultBuildings,
-					gameMenu: gameMenu,
-					xBlock: menuXBlock,
-					gm: gm,
-					type: type
-				})
-
-				socket.emit('message', message)
-
-				gameMenu = {}
-				canvas.selection.clearRect(0, 0, w, h)
-			}
-
-			else {
-				canvas.selection.clearRect(0, 0, w, h)
-
-				//highlight the selected building block
-				rectangle({
-					ctx: canvas.selection,
-					shape: defaultShapes.light,
-					x1: gameMenu.xBlock * blockWidth,
-					y1: gameMenu.yBlock * blockHeight,
-					width: blockWidth,
-					height: blockHeight,
-					alpha: 0.1
-				})
-
-				// build a second level popup
-				buildPopup({
-					canvas: canvas,
-					buildings: submenu,
-					blockWidth: blockWidth,
-					blockHeight: blockHeight,
-					xBlock: xBlock,
-					yBlock: yBlock,
-					side: side,
-					width: w,
-					height: (h + marginBottom) / smallVertical,
-					vertical: vertical,
-					gm: gm
-				})
-
-				gameMenu.submenu = submenu
 			}
 		}
-
-		// menu for upgrade, sell etc.
-		else if (player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]) {
+		
+		else if (
+				gameMenu.isMenuOpen &&
+				bottom
+			) {
+				// select from the first level popup
+				var selectedBuildings = Object.keys(gameMenu.submenu ? gameMenu.submenu : defaultBuildings)
+				var type = selectedBuildings[menuXBlock]				
+				
+				var message = selectFromPopup({
+					player: player,
+					side: side,
+					resources: resources,
+					submenu: !!options ? options : defaultBuildings,
+					gameMenu: gameMenu,
+					xBlock: menuXBlock,
+					gm: gm,
+					type: type
+				})
+		
+				socket.emit('message', message)
+		
+				gameMenu = {}
+				canvas.selection.clearRect(0, 0, w, h)			
+			}
+		
+		//build a first level popup
+		else if (
+				(
+					yBlock < smallVertical &&
+					inCenter
+				)
+			||
+				inBounds
+			||
+				options
+				
+			|| gameMenu.pattern
+		) {
 			canvas.selection.clearRect(0, 0, w, h)
-
+			
 			// make sure we're working with the current building
 			building = player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]
-
-			var buildings = {}
-			var sell = defaultOptions.sell
-			var upgrade = defaultOptions.upgrade
-			var repair = defaultOptions.repair
-
-			if (building) {
-				var cost = building.cost
+			
+			if (!('pattern' in gameMenu) && options && !!building && !!building.level) {
+				var selectedBuildings = Object.keys(defaultOptions)
+				var type = selectedBuildings[menuXBlock]
 				var level = building.level
-
-				buildings.sell = {}
-				buildings.sell.cost = building.level ? sellBackValue({ building: building }) : false
-				buildings.sell.level = level
-
-				buildings.upgrade = {}
-				buildings.upgrade.cost = cost && building.level ? upgradeCost({ building: building }) : false
-				buildings.upgrade.level = level
-
-				buildings.repair = {}
-				buildings.repair.cost = building.initialHealth * building.level - building.health > 0 ? building.initialHealth * building.level - building.health : false
+				
+				options.sell = {}
+				options.sell.cost = level ? sellBackValue({ building: building }) : false
+				options.sell.level = level
+		
+				options.repair = {}
+				options.repair.cost = building.initialHealth * level - building.health > 0 ? building.initialHealth * building.level - building.health : false
+				
+				options.upgrade = {}
+				options.upgrade.cost = building.cost && level ? upgradeCost({ building: building }) : false
+				options.upgrade.level = building.level
 			}
-
-			// build a second level popup
+			
+			var buildings = !!options
+					? options
+					: defaultBuildings
+			
+			buildings = 'pattern' in gameMenu
+				? gameMenu.pattern
+				: buildings
+		
 			buildPopup({
 				canvas: canvas,
+				building: building,
 				buildings: buildings,
 				blockWidth: blockWidth,
 				blockHeight: blockHeight,
@@ -524,41 +530,10 @@ export function game() {
 				vertical: vertical,
 				gm: gm
 			})
-
-			gameMenu = { xBlock: xBlock, yBlock: yBlock, options: true }
+			
+			gameMenu = { xBlock: xBlock, yBlock: yBlock, isMenuOpen: true, options: !!options ? options : null, buildingIndex: gameMenu.buildingIndex }
 		}
-
-		//build a first level popup
-		else if (
-			(
-				!gameMenu.xBlock &&
-				!gameMenu.yBlock &&
-				yBlock < smallVertical &&
-				inCenter
-			)
-			||
-			inBounds
-		) {
-			canvas.selection.clearRect(0, 0, w, h)
-
-			buildPopup({
-				canvas: canvas,
-				building: building,
-				buildings: defaultBuildings,
-				blockWidth: blockWidth,
-				blockHeight: blockHeight,
-				xBlock: xBlock,
-				yBlock: yBlock,
-				side: side,
-				width: w,
-				height: (h + marginBottom) / smallVertical,
-				vertical: vertical,
-				gm: gm
-			})
-
-			gameMenu = { xBlock: xBlock, yBlock: yBlock, menu: true }
-		}
-
+		
 		else if (
 			(
 					dev
@@ -574,7 +549,7 @@ export function game() {
 		) {
 			socket.emit('restart')
 		}
-
+		
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
