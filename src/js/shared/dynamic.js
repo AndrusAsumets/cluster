@@ -52,12 +52,13 @@ export function sellBackValue(o) {
 	var total = 0
 	var index = level
 
-	while(index > 0) {
+	while(index) {
 		total += index * cost
 		index--
 	}
 	
-	return total / 2 * building.health / building.initialHealth * level
+	return total / 2 * (building.health / building.initialHealth / level)
+	return total / 2
 }
 
 export function calculateDamage(level) {

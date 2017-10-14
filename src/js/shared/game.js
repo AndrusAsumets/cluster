@@ -2,7 +2,7 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
-import { defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier } from './defaults'
+import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultIncome } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, isOnResource } from './util'
@@ -12,7 +12,7 @@ import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair, cal
 
 export function game() {
 	// gameplay
-	const tick = 1000 // how often should the events happen
+	const tick = defaultTick // how often should the events happen
 	const fps = 60
 	const speed = convertRange(1 / fps * 2, [0, fps], [0, 100])
 	var charge = 0
@@ -1059,7 +1059,7 @@ export function game() {
 		}
 	}
 
-	function increaseEnergy(player, amount = defaultBuildings.turbine.income) {
+	function increaseEnergy(player, amount = defaultIncome) {
 		players[player.id].energy = players[player.id].energy + amount
 	}
 
@@ -1074,7 +1074,7 @@ export function game() {
 			if (
 				building.producer == true
 			) {
-				increaseEnergy(player, building.level * building.resource / 2)
+				increaseEnergy(player, building.level * building.resource / 4)
 			}
 		}
 	}
