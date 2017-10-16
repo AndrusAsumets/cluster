@@ -81,12 +81,12 @@ canvas {
 
 .scorebar-player1 {
 	right: 0;
-	border-top: 4px solid rgba(255, 74, 61, 0.5);
+	border-top: 4px solid rgba(255, 74, 61, 1);
 }
 
 .scorebar-player2 {
 	left: 0;
-	border-top: 4px solid rgba(0, 190, 229, 0.5);
+	border-top: 4px solid rgba(0, 190, 229, 1);
 }
 
 .player {
@@ -108,5 +108,4 @@ canvas {
 	background-image: url(/public/images/burger.svg);
 	background-repeat: no-repeat;
 	background-position: center center;
-	opacity: 0.75;	
 }

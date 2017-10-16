@@ -244,7 +244,9 @@ export function game() {
 				var buildingIndex = data.buildingIndex
 				var elementIndex = data.elementIndex
 				var damage = data.damage
-				var currentBuildingHealth = players[playerId].buildings[buildingIndex].health
+				var currentBuilding = players[playerId].buildings[buildingIndex]
+				if (!currentBuilding) return
+				var currentBuildingHealth = currentBuilding.health
 				var health = currentBuildingHealth - damage
 				var elementHealth = players[playerId].elements[elementIndex].dynamics.health
 				var extra = 0
@@ -618,28 +620,37 @@ export function game() {
 				!element.path[1] ||
 				!element.path[1].length
 			) {
-				players[player.id].elements[p].inactive = true
+				players[player.id].elements[p].inactive = true	
+			}
+			
+			else {
+				//if (client) buildTrail(element)
 				
-			} else {
-				if (client) {
-					var shape = getSideColor(defaultShapes, element.side)
-					
-					line({
-						ctx: canvas.trail,
-						shape: shape,
-						x1: (element.path[0][0] + 1.5) * blockWidth / gm,
-						y1: (element.path[0][1] + 1.5) * blockHeight / gm,
-						x2: (element.path[1][0] + 1.5) * blockWidth / gm,
-						y2: (element.path[1][1] + 1.5) * blockHeight / gm,
-						lineWidth: (element.path[0][2] / 4) * (element.level * 4),
-						lineDash: [6, 3],
-						alpha: 0.5
-					})
-				}
-
 				players[player.id].elements[p].path.shift()
 			}
 		}
+	}
+	
+	function buildTrail(element) {
+		var shape = getSideColor(defaultShapes, element.side)
+		var lineWidth = (element.path[0][2] / 9) * (element.level * 9)
+		var x1 = (element.path[0][0] + 1) * blockWidth / gm
+		var y1 = (element.path[0][1] + 1) * blockHeight / gm
+		var x2 = (element.path[1][0] + 1) * blockWidth / gm
+		var y2 = (element.path[1][1] + 1) * blockHeight / gm
+		var extra = y1 != y2 ? (blockWidth + blockHeight) / 2 / 1.5 : 0
+		
+		line({
+			ctx: canvas.trail,
+			shape: shape,
+			x1: x1,
+			y1: y1,
+			x2: x2,
+			y2: y2,
+			lineWidth: lineWidth,
+			lineDash: [6, 3],
+			alpha: 0.5
+		})
 	}
 
 	function createPaths(player) {
@@ -1066,6 +1077,22 @@ export function game() {
 					alpha: 1,
 					size: object.level * size / 9
 				})
+				
+				if (dt % 8 === 0) {
+					var lineWidth = (object.path[1][2] / 9) * (object.level * 9)
+					
+					line({
+						ctx: canvas.trail,
+						shape: object.shape,
+						x1: x1 + (blockWidth / 2),
+						y1: y1 + (blockHeight / 2),
+						x2: x2 + (blockWidth / 2),
+						y2: y2 + (blockHeight / 2),
+						lineWidth: lineWidth,
+						lineDash: [6, 4],
+						alpha: 0.33
+					})				
+				}
 			}
 			else {
 				dot({
