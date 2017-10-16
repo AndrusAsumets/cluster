@@ -77,6 +77,7 @@ export function game() {
 
 		canvas = {
 			background: ctx(container, 'background', w, h, false),
+			trail: ctx(container, 'trail', w, h, false),
 			buildings: ctx(container, 'buildings', w, h, true),
 			boundaries: ctx(container, 'boundaries', w, h, false),
 			start: ctx(container, 'start', w, h, false),
@@ -272,11 +273,14 @@ export function game() {
 
 				var side = getSide(playerId)
 				var shape = getSideColor(defaultShapes, side)
+				element.side = side
 				element.shape = shape
 
 				for (var key in players) if (key != playerId) players[key].elements.push(element)
 
 				charge = 0
+				
+				if (client) canvas.trail.clearRect(0, 0, w, h)
 				break
 
 			case SET_UPGRADE:
@@ -465,7 +469,8 @@ export function game() {
 					gameMenu: gameMenu,
 					xBlock: menuXBlock,
 					gm: gm,
-					type: type
+					type: type,
+					horizontal: horizontal
 				})
 		
 				socket.emit('message', message)
@@ -614,7 +619,24 @@ export function game() {
 				!element.path[1].length
 			) {
 				players[player.id].elements[p].inactive = true
+				
 			} else {
+				if (client) {
+					var shape = getSideColor(defaultShapes, element.side)
+					
+					line({
+						ctx: canvas.trail,
+						shape: shape,
+						x1: (element.path[0][0] + 1.5) * blockWidth / gm,
+						y1: (element.path[0][1] + 1.5) * blockHeight / gm,
+						x2: (element.path[1][0] + 1.5) * blockWidth / gm,
+						y2: (element.path[1][1] + 1.5) * blockHeight / gm,
+						lineWidth: (element.path[0][2] / 4) * (element.level * 4),
+						lineDash: [6, 3],
+						alpha: 0.5
+					})
+				}
+
 				players[player.id].elements[p].path.shift()
 			}
 		}
@@ -1121,7 +1143,7 @@ export function game() {
 	}
 
 	function patternizePath(path, pattern) {
-		var patternizedPath = []
+		var patternizedPath = [path[0], path[1]] // add something to the beginning of the path
 		var lastRow = 0
 
 		for (var i = 2; i < path.length; i++) {
@@ -1161,9 +1183,6 @@ export function game() {
 					var start = object.start
 					var end = object.end
 
-					//change direction to right
-					if (r == 'player2') end[0] = horizontal - gm
-
 					// make a temporary hole into the grid
 					grid = setWalkableAt(grid, gm, start[0], start[1], true)
 
@@ -1198,34 +1217,6 @@ export function game() {
 		var share = convertRange(charge, [0, 100], [0, w / 2])
 		left.style.width = share + 'px'
 		right.style.width = share + 'px'
-
-		/*
-		for (var i = 0; i < players[p].buildings.length; i++) {
-			var object = players[p].buildings[i]
-
-			if (!object.offensive) continue
-
-			if (object.charge < 100) object.charge = object.charge + speed
-
-			var size = 3.5
-			var marginY = blockHeight / size
-			var width = blockWidth / size / 3
-			var maxHeight = blockHeight - marginY * 2
-			var height = convertRange(object.charge, [0, 100], [0, -maxHeight])
-
-			rectangle({
-				ctx: canvas.movement,
-				shape: defaultShapes.light,
-				x1: (object.start[0] + gm) * blockWidth / gm - (width * 3 / 2) - (width / 3),
-				y1: object.start[1] * blockHeight / gm + blockHeight - marginY,
-				width: width,
-				height: height,
-				alpha: 0.75
-			})
-
-			players[p].buildings[i].charge = object.charge
-		}
-		*/
 	}
 
 	setInterval(function() {

@@ -244,7 +244,7 @@ export function selectFromPopup(o) {
 	var offensive = submenu[o.type].offensive
 	var damage = offensive == true ? defaultDamage : 0
 	var start = [o.gameMenu.xBlock * o.gm, o.gameMenu.yBlock * o.gm]
-	var end = o.side == 'left' ? [o.horizontal, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
+	var end = o.side == 'left' ? [o.horizontal - o.gm, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 	var resources = o.resources
 	var onResource = isOnResource(resources[o.side], o.gameMenu.xBlock, o.gameMenu.yBlock)
 	
