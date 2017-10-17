@@ -84,8 +84,8 @@ export function buildPopup(o) {
 
 		// don't show buildings that have reached the maximum level
 		
-		//if (key == 'upgrade' && (level > 2 || !!building.offensive)) continue
-		//if (key == 'repair' && !cost) continue
+		if (key == 'upgrade' && (level > 2 || !!building.offensive)) continue
+		if (key == 'repair' && !cost) continue
 
 		// cost label
 		if (
