@@ -1,6 +1,6 @@
 import { isCached } from './helpers'
 import { defaultShapes } from './defaults'
-import { upgradeCost, sellValue } from './dynamic'
+import { upgradeCost, sellValue } from './dynamics'
 
 var PIXEL_RATIO = (function () {
 	try {
@@ -114,6 +114,49 @@ export function chessboard(o) {
 	}
 }
 
+var lines = []
+export function line(o) {
+	var x1 = o.x1
+	var y1 = o.y1
+	var x2 = o.x2
+	var y2 = o.y2
+	var alpha = o.alpha ? o.alpha : 1
+	var strokeStyle = o.shape.strokeStyle(alpha)
+	var lineDash = o.lineDash && o.lineDash.length ? o.lineDash : []
+	var lineWidth = o.lineWidth ? o.lineWidth : 1
+
+	var cacheIndex = isCached(lines, { type: 'line', x1: x1, y1: y1, x2: x2, y2: y2, lineWidth: lineWidth, strokeStyle: strokeStyle, alpha: alpha })
+	
+	if (Number.isInteger(cacheIndex)) return o.ctx.drawImage(lines[cacheIndex].canvas, 0, 0, o.w, o.h)
+
+	var container = document.createElement('div')
+	var c = ctx(container, '', o.w, o.h, false)
+
+	c.setLineDash(lineDash)
+	c.beginPath()
+	c.moveTo(o.x1, o.y1)
+	c.lineTo(o.x2, o.y2)
+	c.lineWidth = lineWidth
+	c.strokeStyle = strokeStyle
+	c.stroke()
+	c.closePath()
+	
+	o.ctx.drawImage(c.canvas, 0, 0, o.w, o.h)
+	
+	lines.push({
+		type: 'line',
+		x1: x1,
+		y1: y1,
+		x2: x2,
+		y2: y2,
+		canvas: c.canvas,
+		lineWidth: lineWidth,
+		strokeStyle: strokeStyle,
+		alpha: alpha,
+	})
+}
+
+/*
 export function line(o) {
 	var alpha = o.alpha ? o.alpha : 1
 
@@ -126,6 +169,7 @@ export function line(o) {
 	o.ctx.stroke()
 	o.ctx.closePath()
 }
+*/
 
 export function rectangle(o) {
 	var alpha = o.alpha ? o.alpha : 1

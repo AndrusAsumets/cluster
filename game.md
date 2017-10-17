@@ -7,8 +7,6 @@ NOW:
 - UI:
 * animate damage dealt by moving the number upwards
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
-* damage animations
-* past trail for patterns
 
 PHASE1:
 * game balance & upgrades
