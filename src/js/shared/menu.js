@@ -57,7 +57,9 @@ export function buildPopup(o) {
 		y1: 4,
 		x2: extra,
 		y2: o.height,
-		alpha: 0.075
+		alpha: 0.075,
+		w: o.w,
+		h: o.h
 	})
 
 	// a tiny separator for the end
@@ -68,7 +70,9 @@ export function buildPopup(o) {
 		y1: 4,
 		x2: o.width / 2 + extra,
 		y2: o.height,
-		alpha: 0.075
+		alpha: 0.075,
+		w: o.w,
+		h: o.h
 	})
 
 	var index = 0
@@ -80,8 +84,8 @@ export function buildPopup(o) {
 
 		// don't show buildings that have reached the maximum level
 		
-		if (key == 'upgrade' && (level > 2 || !!building.offensive)) continue
-		if (key == 'repair' && !cost) continue
+		//if (key == 'upgrade' && (level > 2 || !!building.offensive)) continue
+		//if (key == 'repair' && !cost) continue
 
 		// cost label
 		if (
@@ -230,7 +234,9 @@ export function buildPopup(o) {
 			y1: 4,
 			x2: extra + o.height + o.height * index,
 			y2: o.height,
-			alpha: 0.075
+			alpha: 0.075,
+			w: o.w,
+			h: o.h
 		})
 
 		index++

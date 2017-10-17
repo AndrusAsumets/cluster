@@ -80,7 +80,8 @@ export function game() {
 		this.energy = defaultEnergy
 		this.boundaries = []
 	}
-
+	
+	//ui
 	var canvas = {}
 
 	if (client) {
@@ -88,7 +89,7 @@ export function game() {
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
 		
-		var canvas = {
+		canvas = {
 			background: ctx(container, 'background', w, h),
 			trail: ctx(container, 'trail', w, h),
 			buildings: ctx(container, 'buildings', w, h, true),
@@ -608,7 +609,9 @@ export function game() {
 				width: w,
 				height: (h + marginBottom) / smallVertical,
 				vertical: vertical,
-				gm: gm
+				gm: gm,
+				w: w,
+				h: h
 			})
 			
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, isMenuOpen: true, options: !!options ? options : null, buildingIndex: gameMenu.buildingIndex }
