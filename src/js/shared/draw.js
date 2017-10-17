@@ -114,6 +114,7 @@ export function chessboard(o) {
 	}
 }
 
+/*
 var lines = []
 export function line(o) {
 	var x1 = o.x1
@@ -155,8 +156,8 @@ export function line(o) {
 		alpha: alpha,
 	})
 }
+*/
 
-/*
 export function line(o) {
 	var alpha = o.alpha ? o.alpha : 1
 
@@ -169,7 +170,6 @@ export function line(o) {
 	o.ctx.stroke()
 	o.ctx.closePath()
 }
-*/
 
 export function rectangle(o) {
 	var alpha = o.alpha ? o.alpha : 1
