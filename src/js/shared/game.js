@@ -16,7 +16,9 @@ import { deepHit } from './dynamics/deep-hit'
 import { checkHealth } from './dynamics/check-health'
 import { resetProjectiles } from './dynamics/reset-projectiles'
 
-import { createMatrix, ctx, chessboard, line, rectangle, circle, dot, donut, image, label, drawBoundaries } from './draw'
+import { ctx, createMatrix } from './draw'
+import { createBoard} from './draw/create-board'
+import { drawBoundaries } from './draw/draw-boundaries'
 import { refreshBuildings } from './draw/refresh-buildings'
 import { move } from './draw/move'
 import { showStartingPosition } from './draw/show-starting-position'
@@ -85,74 +87,30 @@ export function game() {
 		var container = document.createElement('div')
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
-
-		canvas = {
-			background: ctx(container, 'background', w, h, false),
-			trail: ctx(container, 'trail', w, h, false),
+		
+		var canvas = {
+			background: ctx(container, 'background', w, h),
+			trail: ctx(container, 'trail', w, h),
 			buildings: ctx(container, 'buildings', w, h, true),
-			boundaries: ctx(container, 'boundaries', w, h, false),
-			start: ctx(container, 'start', w, h, false),
-			selection: ctx(container, 'selection', w, h, false),
+			boundaries: ctx(container, 'boundaries', w, h),
+			start: ctx(container, 'start', w, h),
+			selection: ctx(container, 'selection', w, h),
 			movement: ctx(container, 'movement', w, h, true),
 			menu: ctx(container, 'menu', w, (h + marginBottom) / smallVertical, true)
 		}
 
-		// create a visual UI grid
-		/*
-		chessboard({
-			canvas: canvas.background,
-			shape1: defaultShapes.dark,
-			shape2: defaultShapes.background,
+		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
+		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
+	
+		createBoard({
+			canvas: canvas,
+			w: w,
+			h: h,
 			smallHorizontal: smallHorizontal,
 			smallVertical: smallVertical,
 			blockWidth: blockWidth,
-			blockHeight: blockHeight,
-			alpha: 0.25
+			blockHeight: blockHeight
 		})
-		*/
-
-		for (var i = 0; i < smallHorizontal + 2; i++) {
-			line({
-				ctx: canvas.background,
-				shape: defaultShapes.light,
-				x1: blockWidth * i,
-				y1: 0,
-				x2: blockWidth * i,
-				y2: h,
-				w: w,
-				h: h,
-				alpha: 0.075
-			})
-		}
-
-		for (var i = 0; i < smallVertical + 2; i++) {
-			line({
-				ctx: canvas.background,
-				shape: defaultShapes.light,
-				x1: 0,
-				y1: blockHeight * i,
-				x2: w,
-				y2: blockHeight * i,
-				w: w,
-				h: h,
-				alpha: 0.075
-			})
-		}
-
-		line({
-			ctx: canvas.background,
-			shape: defaultShapes.dark,
-			x1: w / 2,
-			y1: 0,
-			x2: w / 2,
-			y2: h,
-			w: w,
-			h: h,
-			alpha: 0.75
-		})
-
-		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
-		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
 	}
 
 	// networking
