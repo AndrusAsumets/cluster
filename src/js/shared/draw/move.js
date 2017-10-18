@@ -1,4 +1,4 @@
-import { line, donut } from './../draw'
+import { line, donut, dot } from './../draw'
 import { convertRange } from './../helpers'
 
 export function move(o) {
@@ -55,7 +55,20 @@ export function move(o) {
 		})
 		
 		// trail
+		dot({
+			ctx: canvas.trail,
+			shape: object.shape,
+			percentage: percentage,
+			x1: dx,
+			y1: dy,
+			width: blockWidth,
+			height: blockHeight,
+			alpha: 0.1,
+			size: (object.level * size / 9) * (object.path[1][2] / 9)
+		})
+		
 		if (dt % 8 === 0) {
+			/*
 			var lineWidth = (object.path[1][2] / 9) * (object.level * 9)
 			
 			line({
@@ -69,8 +82,9 @@ export function move(o) {
 				h: h,
 				lineWidth: lineWidth,
 				lineDash: [6, 4],
-				alpha: 0.4
-			})				
+				alpha: 1
+			})
+			*/
 		}
 	}
 }

@@ -1,4 +1,4 @@
-import { defaultDamage } from './defaults'
+import { defaultDamage, defaultDamageMultiplier } from './defaults'
 
 export function upgrade(o) {
 	var player = o.player
@@ -17,7 +17,7 @@ export function upgrade(o) {
 	if (building && building.level) {
 		player.buildings[buildingIndex].level = level
 		player.buildings[buildingIndex].health = building.health + building.initialHealth * building.resource
-		player.buildings[buildingIndex].damage = (damage + damage) * building.resource
+		player.buildings[buildingIndex].damage = (damage * defaultDamageMultiplier) * building.resource
 	}
 	return player
 }
@@ -58,7 +58,6 @@ export function sellBackValue(o) {
 	}
 	
 	return total / 2 * (building.health / building.initialHealth / level)
-	return total / 2
 }
 
 export function calculateDamage(level) {
