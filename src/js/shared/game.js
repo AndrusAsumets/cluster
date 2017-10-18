@@ -246,11 +246,19 @@ export function game() {
 
 			case SET_BUILDING_DAMAGE:
 				var playerId = data.playerId
-				var buildingIndex = data.buildingIndex
+				var buildingId = data.buildingId
+				var buildingIndex = null
+				
+				var buildings = players[playerId].buildings
+				for (var i = 0; i < buildings.length; i++) {
+					if (buildings[i].id == buildingId) buildingIndex = i
+				}
+				
+				if (!Number.isInteger(buildingIndex)) return console.log('building not found')
+				
 				var elementIndex = data.elementIndex
 				var damage = data.damage
 				var currentBuilding = players[playerId].buildings[buildingIndex]
-				if (!currentBuilding) return
 				var currentBuildingHealth = currentBuilding.health
 				var health = currentBuildingHealth - damage
 				var elementHealth = players[playerId].elements[elementIndex].dynamics.health
@@ -700,6 +708,9 @@ export function game() {
 		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
 			players = elementCollision(players, p)
+		}
+		
+		for (var p in players) {
 			buildingCollision({ players: players, p: p, host: host, socket: socket })
 
 			if (!gameOver) {

@@ -43,7 +43,7 @@ export function buildingCollision(o) {
 				if (!positionB.length) continue
 
 				if (isNear(1, positionA, positionB)) {
-					if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingIndex: r2, damage: damage, elementIndex: r } })
+					if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r } })
 
 					break
 				}

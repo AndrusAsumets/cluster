@@ -253,12 +253,14 @@ export function selectFromPopup(o) {
 	var end = o.side == 'left' ? [o.horizontal - o.gm, o.gameMenu.yBlock * o.gm] : [0, o.gameMenu.yBlock * o.gm]
 	var resources = o.resources
 	var onResource = isOnResource(resources[o.side], o.gameMenu.xBlock, o.gameMenu.yBlock)
+	var id = parseInt(String(Math.random()).split('.')[1])
 	
 	health = onResource ? health * defaultResourceMultiplier : health
 	damage = onResource ? damage * defaultResourceMultiplier : health
 
 	var building = {
 		playerId: o.player.id,
+		id: id,
 		level: level,
 		health: health,
 		damage: damage,
