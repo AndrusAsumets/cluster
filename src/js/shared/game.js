@@ -2,7 +2,7 @@ var io = require('socket.io-client')
 var PF = require('pathfinding')
 
 import { CONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
-import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultIncome } from './defaults'
+import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
 import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource } from './util'
@@ -648,7 +648,7 @@ export function game() {
 		}
 	}
 
-	function increaseEnergy(player, amount = defaultIncome) {
+	function increaseEnergy(player, amount = 1) {
 		players[player.id].energy = players[player.id].energy + amount
 	}
 
@@ -663,7 +663,7 @@ export function game() {
 			if (
 				building.producer == true
 			) {
-				increaseEnergy(player, building.level * building.resource / 4)
+				increaseEnergy(player, building.level * building.resource / defaultEnergyMultiplier)
 			}
 		}
 	}

@@ -14,10 +14,10 @@ import { SET_UPGRADE, SET_SELL, SET_REPAIR } from './actions'
 
 export const defaultTick = 675 // how often should the events happen
 export const defaultEnergy = 500
-export const defaultHealth = 30
+export const defaultHealth = 50
 export const defaultDamage = 10
 export const defaultDamageMultiplier = 3
-export const defaultIncome = 0.1 // per tick
+export const defaultEnergyMultiplier = 5
 export const defaultResourceCount = 2
 export const defaultResourceMultiplier = 5
 
