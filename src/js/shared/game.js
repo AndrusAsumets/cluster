@@ -14,6 +14,7 @@ import { buildingCollision } from './dynamics/building-collision'
 import { elementCollision } from './dynamics/element-collision'
 import { deepHit } from './dynamics/deep-hit'
 import { checkHealth } from './dynamics/check-health'
+import { resetElements } from './dynamics/reset-elements'
 import { resetProjectiles } from './dynamics/reset-projectiles'
 
 import { ctx, createMatrix } from './draw'
@@ -697,6 +698,8 @@ export function game() {
 
 	setInterval(function() {
 		time = (new Date).getTime()
+		
+		for (var p in players) players = resetElements(players, players[p])
 
 		for (var p in players) {
 			players = deepHit(players, players[p])
@@ -708,9 +711,6 @@ export function game() {
 		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
 			players = elementCollision(players, p)
-		}
-		
-		for (var p in players) {
 			buildingCollision({ players: players, p: p, host: host, socket: socket })
 
 			if (!gameOver) {
