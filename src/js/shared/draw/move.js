@@ -66,25 +66,5 @@ export function move(o) {
 			alpha: 0.1,
 			size: (object.level * size / 9) * (object.path[1][2] / 9)
 		})
-		
-		if (dt % 8 === 0) {
-			/*
-			var lineWidth = (object.path[1][2] / 9) * (object.level * 9)
-			
-			line({
-				ctx: canvas.trail,
-				shape: object.shape,
-				x1: x1 + (blockWidth / 2),
-				y1: y1 + (blockHeight / 2),
-				x2: x2 + (blockWidth / 2),
-				y2: y2 + (blockHeight / 2),
-				w: w,
-				h: h,
-				lineWidth: lineWidth,
-				lineDash: [6, 4],
-				alpha: 1
-			})
-			*/
-		}
 	}
 }
