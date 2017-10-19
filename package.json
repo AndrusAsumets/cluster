@@ -8,7 +8,7 @@
     "client": "node development.js",
     "env": "cp .env.default .env",
     "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
-    "production": "forever -w --watchDirectory src transpile-production.js",
+    "production": "forever -w --watchDirectory src transpile-production.js"
   },
   "author": "Andrus Asumets <andrus@asumets.ee>",
   "license": "",
