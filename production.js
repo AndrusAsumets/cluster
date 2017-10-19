@@ -32,6 +32,10 @@ io.on('message', (context, data) => {
 	io.broadcast('message', data)
 })
 
+io.on('restart', (context, data) => {
+	require('child_process').exec('kill -HUP ' +  process.pid)
+})
+
 app.use(serve('./public'), { hidden: true })
 app.listen(PORT)
 
