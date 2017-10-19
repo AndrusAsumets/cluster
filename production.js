@@ -29,9 +29,10 @@ io.on('connection', context => {
 
 io.on('message', (context, data) => {
 	console.log(data)
-	io.broadcast('message', data)	
+	io.broadcast('message', data)
 })
 
+app.use(serve('./public'), { hidden: true })
 app.listen(PORT)
 
 global.window = null

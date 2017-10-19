@@ -39,7 +39,8 @@ module.exports = function() {
 	    plugins: [
 	    	new ExtractTextPlugin('build/bundle.min.css'),
 	        new CopyWebpackPlugin([
-	            { from: 'index.production.html', to: 'build/index.html' }
+	            { from: 'index.production.html', to: 'build/index.html' },
+				{ from: 'public', to: 'build/public' }
 	        ]),
 	        new webpack.DefinePlugin({
 	            "process.env": {
