@@ -4,11 +4,11 @@
   "description": "",
   "main": "init.js",
   "scripts": {
-    "server": "forever -w --watchDirectory src transpile-server.js ",
+    "server": "forever -w --watchDirectory src transpile-server.js",
     "client": "node development.js",
     "env": "cp .env.default .env",
     "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
-    "production": "node transpile-production"
+    "production": "forever -w --watchDirectory src transpile-production.js",
   },
   "author": "Andrus Asumets <andrus@asumets.ee>",
   "license": "",
