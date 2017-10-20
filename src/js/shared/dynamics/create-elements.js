@@ -11,6 +11,8 @@ export function createElements(o) {
 	var roomId = o.roomId
 	
 	var objects = players[p].buildings
+	
+	var result = {}
 
 	for (var i = 0; i < objects.length; i++) {
 		var object = objects[i]
@@ -19,6 +21,8 @@ export function createElements(o) {
 
 		for (var r in players) {
 			if (p != r) {
+				if (!(p in result)) result[p] = []
+				
 				var start = object.start
 				var end = object.end
 
@@ -42,9 +46,11 @@ export function createElements(o) {
 						damage: object.damage
 					}
 				}
-
-				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i }, roomId: roomId })
+				
+				result[p].push(element)
 			}
 		}
 	}
+	
+	return result
 }

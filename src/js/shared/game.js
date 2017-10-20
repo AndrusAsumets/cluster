@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
+import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENTS, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
@@ -308,17 +308,21 @@ export function game(roomId) {
 				}
 				break
 
-			case SET_ELEMENT:
-				var element = data.element
-				var playerId = element.playerId
-				var buildingIndex = data.buildingIndex
+			case SET_ELEMENTS:
+				var playerId = data.playerId
+				var elements = data.elements[playerId]
+				
+				if (!elements) return
 
 				var side = getSide(players, playerId)
 				var shape = getSideColor(defaultShapes, side)
-				element.side = side
-				element.shape = shape
+				
+				for (var i = 0; i < elements.length; i++) {
+					elements[i].side = side
+					elements[i].shape = shape
+				}
 
-				for (var key in players) if (key != playerId) players[key].elements.push(element)
+				for (var key in players) if (key != playerId) players[key].elements = elements
 
 				charge = 0
 				
@@ -783,15 +787,19 @@ export function game(roomId) {
 			if (Math.ceil(charge) >= 100) {
 				charge = 0
 
-				for (var p in players) createElements({
-					players: players,
-					p: p,
-					finder: finder,
-					grid: grid,
-					gm: gm,
-					socket: socket,
-					roomId: roomId
-				})
+				for (var p in players) {
+					var elements = createElements({
+						players: players,
+						p: p,
+						finder: finder,
+						grid: grid,
+						gm: gm,
+						socket: socket,
+						roomId: roomId
+					})
+					
+					socket.emit('message', { action: SET_ELEMENTS, data: { elements: elements, playerId: p }, roomId: roomId })
+				}
 			}
 		}, tick / fps)
 	}
