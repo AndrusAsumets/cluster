@@ -1,7 +1,9 @@
 require('dotenv').config()
 
+var compression = require('compression')
 var express = require('express')
 const app = express()
+app.use(compression())
 app.use(express.static('build'))
 app.use(express.static('public'))
 var server = require('http').Server(app)
