@@ -50,14 +50,14 @@ io.on('connection', socket => {
 					: { side: 'right', id: joined.room.id }
 				socket.emit('message', { action: ON_JOIN, data: query })
 				
-				console.log('player joined to room', roomId, new Date())
+				console.log('player (' + joined.room[query.side].id + ') joined to room (' + roomId + ') ', new Date())
 				break
 				
 			case HOST:
 				roomId = data
 				socket.join(roomId)
 				
-				console.log('host joined to room', roomId, new Date())
+				console.log('host joined to room (' + roomId + ')', new Date())
 				break
 				
 			default:
