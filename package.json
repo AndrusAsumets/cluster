@@ -7,7 +7,7 @@
     "server": "echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p && forever -w transpile-server.js",
     "client": "node development.js",
     "env": "cp .env.default .env",
-    "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors",
+    "build": "NODE_ENV=build webpack --config scripts/webpack.config.js -p --progress --colors"
   },
   "author": "Andrus Asumets <andrus@asumets.ee>",
   "license": "",
