@@ -1,6 +1,9 @@
 require('dotenv').config()
 
-const app = require('express')()
+var express = require('express')
+const app = express()
+app.use(express.static('build'))
+app.use(express.static('public'))
 var server = require('http').Server(app)
 
 // ws
@@ -17,6 +20,10 @@ import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT } from './src/js/shared/action
 import { join } from './src/js/backend/join'
 var timeout = 60 * 1000
 var rooms = {}
+
+app.get('/', function(req, res) {
+    res.sendFile(fs.readFileSync('./build/index.html', 'utf8'))
+})
 
 io.on('connection', socket => {
 	socket.emit('message', { action: CONNECT })
