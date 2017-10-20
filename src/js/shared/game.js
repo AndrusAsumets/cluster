@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, JOIN, ON_JOIN, HOST, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
+import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENT, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
@@ -30,7 +30,6 @@ export function game(roomId) {
 	const fps = 60
 	const speed = convertRange(1 / fps * 2, [0, fps], [0, 100])
 	var charge = 0
-	var gameOver = false
 	var time = (new Date).getTime()
 	var players = {}
 
@@ -134,7 +133,7 @@ export function game(roomId) {
 	var uri = process.env.WS_SERVER && process.env.WS_PORT
 		? 'ws://' + process.env.WS_SERVER + ':' + process.env.WS_PORT
 		: 'ws://localhost:1337'
-	var socket = io.connect(uri)
+	var socket = io.connect(uri, { forceNew: true, transports: ['websocket'] })
 
 	if (client) {
 		socket.on('reconnect', function () {
@@ -159,7 +158,7 @@ export function game(roomId) {
 					if (data.side == 'left') me = 'player1'
 					else me = 'player2'
 					
-					roomId = data.room.id
+					roomId = data.id
 					players[me] = new Player({ id: me })
 					socket.emit('message', { action: GET_STATE, data: me, roomId: roomId })
 				}
@@ -395,13 +394,15 @@ export function game(roomId) {
 					})
 				}
 				break
+				
+			case DISCONNECT:
+				if (client) location.reload()
 		}
 	})
 
 	var gameMenu = {}
 	function createMenu(originalEvent) {
 		var event = originalEvent
-		if (gameOver) return
 
 		event.preventDefault()
 		if ('touches' in originalEvent) event = event.touches[0]
@@ -543,7 +544,8 @@ export function game(roomId) {
 				var message = {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex },
-					roomId: roomId
+					roomId: roomId,
+					side: getSide(user)
 				}
 			
 				socket.emit('message', message)
@@ -573,6 +575,7 @@ export function game(roomId) {
 				})
 				
 				message.roomId = roomId
+				message.side = getSide(player.id)
 		
 				socket.emit('message', message)
 		
@@ -700,8 +703,8 @@ export function game(roomId) {
 		socket.emit('message', { action: SET_ENERGY, data: currentPlayer, roomId: roomId })
 	}
 
-	function end(player) {
-		if (player.energy < 0) gameOver = true
+	function isGameOver(player) {
+		//if (player.energy < 0) gameOver = true
 	}
 
 	function boundaries(o) {
@@ -732,14 +735,17 @@ export function game(roomId) {
 		for (var p in players) {
 			players = elementCollision(players, p)
 			buildingCollision({ players: players, p: p, host: host, socket: socket, roomId: roomId })
-
+		}
+		
+		var gameOver = []
+		for (var p in players) {
 			if (!gameOver) {
-				energy(players[p])
-				end(players[p])
+				//energy(players[p])
+				if (host) gameOver.push(isGameOver(players[p]))
 			}
 		}
 
-		if (host && !gameOver) broadcastEnergy()
+		//if (host && !gameOver) broadcastEnergy()
 	}, tick)
 
 	// render

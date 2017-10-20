@@ -13,12 +13,15 @@
   "author": "Andrus Asumets <andrus@asumets.ee>",
   "license": "",
   "dependencies": {
+    "deferred-interval": "^0.1.2",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
     "jquery": "^3.2.1",
     "pathfinding": "^0.4.18",
     "pouchdb": "^6.3.4",
-    "socket.io-client": "^2.0.3"
+    "socket.io": "^2.0.3",
+    "socket.io-client": "^2.0.3",
+    "tick-tock": "^1.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.25.0",

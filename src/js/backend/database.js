@@ -18,7 +18,7 @@ export function Database(uri) {
 		if (_rev) data._rev = _rev
 		
 		// do the edits for the object inside database
-		let updated = await database.put(Object.assign({}, found, data)).catch( () => null )
+		let updated = await database.put(Object.assign({}, found, data)).catch( (err) => { return { error: err }} )
 		if (!updated) return null
 		
 		// return the updated object
