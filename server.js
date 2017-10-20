@@ -66,6 +66,8 @@ io.on('connection', socket => {
 })
 
 setInterval(function () {
+	const epoch = (new Date).getTime()
+	
 	for (var roomId in rooms) {
 		const room = rooms[roomId]
 		const maxInactivity = timeout
@@ -79,9 +81,9 @@ setInterval(function () {
 			: false
 			
 		if (!leftActive || !rightActive) {
-			if (room.left) room.left.socket.emit('disconnect')
-			if (room.right) room.right.socket.emit('message', { action: DISCONNECT })
 			delete rooms[roomId]
+			if (room.left) room.left.socket.emit('message', { action: DISCONNECT })
+			if (room.right) room.right.socket.emit('message', { action: DISCONNECT })
 		}
 	}	
 
