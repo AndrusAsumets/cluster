@@ -75,7 +75,6 @@ export function game(roomId) {
 		this.id = options.id
 		this.buildings = []
 		this.elements = []
-		this.projectiles = []
 		this.deepProjectiles = []
 		this.energy = defaultEnergy
 		this.boundaries = []
@@ -177,6 +176,8 @@ export function game(roomId) {
 
 					for (var key in data.players) {
 						if (!players[key]) players[key] = new Player({ id: key })
+						
+						var left = document.getElementsByClassName('name-' + key)[0].innerHTML = key
 
 						players[key].buildings = data.players[key].buildings
 						players[key].elements = data.players[key].elements
