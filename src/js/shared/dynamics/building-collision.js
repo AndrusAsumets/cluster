@@ -6,6 +6,7 @@ export function buildingCollision(o) {
 	var p = o.p
 	var host = o.host
 	var socket = o.socket
+	var roomId = o.roomId
 	
 	var player = players[p]
 	var a = 0
@@ -43,7 +44,7 @@ export function buildingCollision(o) {
 				if (!positionB.length) continue
 
 				if (isNear(1, positionA, positionB)) {
-					if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r } })
+					if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r }, roomId: roomId })
 
 					break
 				}

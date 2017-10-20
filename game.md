@@ -136,3 +136,8 @@ a.difference(b)
 * avoid duplicate links
 * save links to host
 * sync time
+
+mount to osx: sshfs root@178.62.251.24:/root ~/Desktop/cluster -ovolname=cluster
+tunnel for futon: ssh -L 5984:127.0.0.1:5984 root@178.62.251.168
+
+fix for ENOSPC for forever's watch on linux: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p

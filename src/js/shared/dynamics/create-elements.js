@@ -8,6 +8,7 @@ export function createElements(o) {
 	var grid = o.grid
 	var gm = o.gm
 	var socket = o.socket
+	var roomId = o.roomId
 	
 	var objects = players[p].buildings
 
@@ -42,7 +43,7 @@ export function createElements(o) {
 					}
 				}
 
-				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i } })
+				socket.emit('message', { action: SET_ELEMENT, data: { element: element, buildingIndex: i }, roomId: roomId })
 			}
 		}
 	}

@@ -14,7 +14,7 @@ export function showStartingPosition(o) {
 	
 	canvas.start.clearRect(0, 0, w, h)
 
-	if (!players[me].buildings.length) {
+	if (players[me] && !players[me].buildings.length) {
 		var position = me == 'player1'
 			? [Math.floor(smallHorizontal / 4), Math.floor(smallVertical / 2)]
 			: [Math.floor(smallHorizontal * 3 / 4), Math.floor(smallVertical / 2)]

@@ -12,11 +12,6 @@ export function size() {
 	return { x: x, y: y }
 }
 
-export function getUrlParams(parameter) {
-	var url = new URL(window.location.href)
-	return url.searchParams.get(parameter)	
-}
-
 export function isCached(objects, object) {
 	for (var i = 0; i < objects.length; i++) {
 		var count = Object.keys(object).length
@@ -28,4 +23,28 @@ export function isCached(objects, object) {
 
 		if (found == count) return i
 	}
+}
+
+export function decodeQuery() {
+    var query = location.search.substr(1)
+    var result = {}
+    query.split('&').forEach((part) => {
+        var item = part.split('=')
+        result[item[0]] = decodeURIComponent(item[1])
+    })
+    return result
+}
+
+export function encodeQuery(query) {
+    let parameters = ''
+    let index = 0
+    for (var key in query) {
+        if (key && query[key]) {
+            if (index == 0) parameters += '?'
+            else parameters += '&'
+            parameters += key + "=" + query[key]
+            index++
+        }
+    }
+    return parameters
 }
