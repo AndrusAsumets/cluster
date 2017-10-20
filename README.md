@@ -12,6 +12,4 @@ Browse: ```http://localhost:3000/?me=player2``` (Connects a player that controls
 For production:  
 ```npm run env``` (Copies .env.default to .env file that dot.env module will read [Fill it relevantly, if need be])  
 ```npm run build``` (Bundles the client into /build)  
-```npm run production``` (Runs a Koa.js instance that servers the bundle as well as a Socket.io instance)  
-Browse: ```http://{{WS_PRODUCTION_SERVER from .env}}:{{WS_PRODUCTION_PORT from .env}}/?me=player1``` (Connects a player that controls left side of the screen)  
-Browse: ```http://{{WS_PRODUCTION_SERVER from .env}}:{{WS_PRODUCTION_PORT from .env}}/?me=player2``` (Connects a player that controls right side of the screen)  
+```npm run server```  
