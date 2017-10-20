@@ -216,12 +216,7 @@ export function game(roomId) {
 
 			case SET_ENERGY:
 				if (client) {
-					for (var key in data) {
-						if (!players[key]) continue
 
-						players[key].energy = data[key].energy
-						document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(data[key].energy)
-					}
 				}
 				break
 
@@ -252,6 +247,8 @@ export function game(roomId) {
 						h: h,
 						gm: gm
 					})
+					
+					displayEnergy(players)
 				}
 
 				// find boundaries where the player would be able to build
@@ -341,6 +338,8 @@ export function game(roomId) {
 						gm: gm
 						
 					})
+					
+					displayEnergy(players)
 				}
 				break
 
@@ -374,6 +373,8 @@ export function game(roomId) {
 						h: h,
 						gm: gm
 					})
+					
+					displayEnergy(players)
 				}
 				break
 
@@ -392,6 +393,8 @@ export function game(roomId) {
 						gm: gm
 						
 					})
+					
+					displayEnergy(players)
 				}
 				break
 				
@@ -692,19 +695,15 @@ export function game(roomId) {
 		}
 	}
 
-	function broadcastEnergy() {
+	function displayEnergy(players) {
 		var currentPlayer = {}
 
-		for (var p in players) {
-			currentPlayer[p] = {}
-			currentPlayer[p].energy = players[p].energy
+		var left = document.getElementsByClassName('scorebar-player1')[0]
+		var right = document.getElementsByClassName('scorebar-player2')[0]
+		
+		for (var key in players) {
+			document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(players[key].energy)
 		}
-
-		socket.emit('message', { action: SET_ENERGY, data: currentPlayer, roomId: roomId })
-	}
-
-	function isGameOver(player) {
-		//if (player.energy < 0) gameOver = true
 	}
 
 	function boundaries(o) {
@@ -736,16 +735,6 @@ export function game(roomId) {
 			players = elementCollision(players, p)
 			buildingCollision({ players: players, p: p, host: host, socket: socket, roomId: roomId })
 		}
-		
-		var gameOver = []
-		for (var p in players) {
-			if (!gameOver) {
-				//energy(players[p])
-				if (host) gameOver.push(isGameOver(players[p]))
-			}
-		}
-
-		//if (host && !gameOver) broadcastEnergy()
 	}, tick)
 
 	// render
