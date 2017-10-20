@@ -179,6 +179,8 @@ export function game(roomId) {
 
 						players[key].buildings = data.players[key].buildings
 						players[key].elements = data.players[key].elements
+						players[key].energy = data.players[key].energy
+						
 						boundaries({ playerId: key })
 
 						for (var i = 0; i < players[key].elements.length; i++) {
@@ -212,6 +214,8 @@ export function game(roomId) {
 						
 						i++
 					}
+					
+					displayEnergy(players)
 				}
 				break
 
