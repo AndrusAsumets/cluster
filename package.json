@@ -16,11 +16,6 @@
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
     "jquery": "^3.2.1",
-    "koa": "^2.2.0",
-    "koa-bodyparser": "^4.2.0",
-    "koa-router": "^7.2.1",
-    "koa-socket": "^4.4.0",
-    "koa-static": "^4.0.1",
     "pathfinding": "^0.4.18",
     "pouchdb": "^6.3.4",
     "socket.io-client": "^2.0.3"
