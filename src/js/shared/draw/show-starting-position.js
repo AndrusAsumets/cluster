@@ -1,5 +1,6 @@
 import { defaultShapes } from './../defaults'
 import { rectangle } from './../draw'
+import { getSide } from './../util'
 
 export function showStartingPosition(o) {
 	var canvas = o.canvas
@@ -11,11 +12,12 @@ export function showStartingPosition(o) {
 	var smallVertical = o.smallVertical
 	var blockWidth = o.blockWidth
 	var blockHeight = o.blockHeight
+	var side = getSide(players, me)
 	
 	canvas.start.clearRect(0, 0, w, h)
 
 	if (players[me] && !players[me].buildings.length) {
-		var position = me == 'player1'
+		var position = side == 'left'
 			? [Math.floor(smallHorizontal / 4), Math.floor(smallVertical / 2)]
 			: [Math.floor(smallHorizontal * 3 / 4), Math.floor(smallVertical / 2)]
 
