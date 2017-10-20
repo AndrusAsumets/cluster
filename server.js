@@ -23,6 +23,9 @@ import { join } from './src/js/backend/join'
 var timeout = 60 * 1000
 var rooms = {}
 
+// game
+global.window = null
+
 app.get('/', function(req, res) {
     res.sendFile(fs.readFileSync('./build/index.html', 'utf8'))
 })
@@ -74,31 +77,31 @@ io.on('connection', socket => {
 	})
 })
 
-setInterval(function () {
-	const epoch = (new Date).getTime()
-	
-	for (var roomId in rooms) {
-		const room = rooms[roomId]
-		const maxInactivity = timeout
+if (process.env.NODE_ENV == 'PRODUCTION') {
+	setInterval(function () {
+		const epoch = (new Date).getTime()
 		
-		var leftActive = room && room.left
-			? !(room.left.seen < epoch - maxInactivity)
-			: false
+		for (var roomId in rooms) {
+			const room = rooms[roomId]
+			const maxInactivity = timeout
 			
-		var rightActive = room && room.right
-			? !(room.right.seen < epoch - maxInactivity)
-			: false
-			
-		if (!leftActive || !rightActive) {
-			delete rooms[roomId]
-			if (room.left) room.left.socket.emit('message', { action: DISCONNECT })
-			if (room.right) room.right.socket.emit('message', { action: DISCONNECT })
-		}
-	}	
-
-}, timeout)
-
-global.window = null
+			var leftActive = room && room.left
+				? !(room.left.seen < epoch - maxInactivity)
+				: false
+				
+			var rightActive = room && room.right
+				? !(room.right.seen < epoch - maxInactivity)
+				: false
+				
+			if (!leftActive || !rightActive) {
+				delete rooms[roomId]
+				if (room.left) room.left.socket.emit('message', { action: DISCONNECT })
+				if (room.right) room.right.socket.emit('message', { action: DISCONNECT })
+			}
+		}	
+	
+	}, timeout)
+}
 
 const PORT = process.env.WS_DEVELOPMENT_PORT || 1337
 server.listen(PORT)
