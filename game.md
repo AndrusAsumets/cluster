@@ -3,12 +3,14 @@ cluster.game
 
 NOW:
 - gameplay:
+* tutorial
 
 - UI:
 * animate damage dealt by moving the number upwards
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 
 PHASE1:
+* portrait mode
 * game balance & upgrades
 * store game data to file/database & playback
 * game rooms

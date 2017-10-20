@@ -122,7 +122,7 @@ export function game(roomId) {
 		
 		if (!me) {
 			me = String(Math.random()).split('.')[1]
-			window.location.search = encodeQuery({ me: me })
+			window.location.search = encodeQuery(Object.assign({}, params, { me: me } ))
 		}
 	}
 
@@ -154,12 +154,9 @@ export function game(roomId) {
 				
 			case ON_JOIN:
 				if (client) {
-					if (data.side == 'left') me = 'player1'
-					else me = 'player2'
-					
 					roomId = data.id
-					players[me] = new Player({ id: me })
-					socket.emit('message', { action: GET_STATE, data: me, roomId: roomId })
+					players[data.me] = new Player({ id: data.me })
+					socket.emit('message', { action: GET_STATE, data: data.me, roomId: roomId })
 				}
 
 			case GET_STATE:
@@ -173,11 +170,12 @@ export function game(roomId) {
 			case SET_STATE:
 				if (client) {
 					resources = data.resources
-
+					
+					var i = 0
 					for (var key in data.players) {
 						if (!players[key]) players[key] = new Player({ id: key })
 						
-						var left = document.getElementsByClassName('name-' + key)[0].innerHTML = key
+						document.getElementsByClassName('name')[i].innerHTML = key
 
 						players[key].buildings = data.players[key].buildings
 						players[key].elements = data.players[key].elements
@@ -211,6 +209,8 @@ export function game(roomId) {
 							h: h,
 							gm: gm
 						})
+						
+						i++
 					}
 				}
 				break
@@ -309,7 +309,7 @@ export function game(roomId) {
 				var playerId = element.playerId
 				var buildingIndex = data.buildingIndex
 
-				var side = getSide(playerId)
+				var side = getSide(players, playerId)
 				var shape = getSideColor(defaultShapes, side)
 				element.side = side
 				element.shape = shape
@@ -406,6 +406,8 @@ export function game(roomId) {
 
 	var gameMenu = {}
 	function createMenu(originalEvent) {
+		if (Object.keys(players).length != 2) return
+		
 		var event = originalEvent
 
 		event.preventDefault()
@@ -427,18 +429,29 @@ export function game(roomId) {
 
 		var x = event.clientX
 		var y = event.clientY
-
-		var user = dev
-			? x < w / 2
-				? 'player1'
-				: 'player2'
-			: me
-
-		var side = getSide(user)
+			
+		var side = (function () {
+			if (dev) {
+				if (x < w / 2) return 'left'
+				else return 'right'
+			}
+			else {
+				return getSide(players, me)
+			}
+		})()
+		
+		var user = (function () {
+			if (dev) {
+				if (x < w / 2) return players[Object.keys(players)[0]].id
+				else return players[Object.keys(players)[1]].id
+			}
+			else {
+				if (players[Object.keys(players)[0]].id == me) return players[Object.keys(players)[0]].id
+				else return players[Object.keys(players)[1]].id
+			}
+		})()
+		
 		var player = players[user]
-		
-		if (!player) return
-		
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var menuXBlock = side == 'left'
@@ -469,14 +482,14 @@ export function game(roomId) {
 
 		var inCenter
 		if (
-			user == 'player1' &&
+			user == players[Object.keys(players)[0]].id &&
 			xBlock == Math.floor(smallHorizontal / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
 
 		else if (
-			user == 'player2' &&
+			user == players[Object.keys(players)[1]].id &&
 			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
@@ -549,7 +562,7 @@ export function game(roomId) {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex },
 					roomId: roomId,
-					side: getSide(user)
+					side: getSide(players, user)
 				}
 			
 				socket.emit('message', message)
@@ -579,7 +592,7 @@ export function game(roomId) {
 				})
 				
 				message.roomId = roomId
-				message.side = getSide(player.id)
+				message.side = getSide(players, player.id)
 		
 				socket.emit('message', message)
 		
@@ -697,18 +710,15 @@ export function game(roomId) {
 	}
 
 	function displayEnergy(players) {
-		var currentPlayer = {}
-
-		var left = document.getElementsByClassName('scorebar-player1')[0]
-		var right = document.getElementsByClassName('scorebar-player2')[0]
-		
+		var i = 0
 		for (var key in players) {
-			document.getElementsByClassName('score-' + key)[0].innerHTML = Math.floor(players[key].energy)
+			document.getElementsByClassName('score')[i].innerHTML = Math.floor(players[key].energy)
+			i++
 		}
 	}
 
 	function boundaries(o) {
-		var side = getSide(o.playerId)
+		var side = getSide(players, o.playerId)
 		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
 		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}

@@ -276,7 +276,7 @@ export function selectFromPopup(o) {
 	var message = {
 		action: SET_BUILDING,
 		data: {
-			playerId: o.me,
+			playerId: o.player.id,
 			building: Object.assign({}, submenu[o.type], building),
 			menu: submenu
 		}

@@ -85,8 +85,9 @@ function displayBuildings(o) {
 	var objects = players[key][type] ? players[key][type] : []
 
 	for (var p = 0; p < objects.length; p++) {
-		var side = getSide(key)
 		var object = objects[p]
+		var side = getSide(players, object.playerId)
+		var shape = getSideColor(defaultShapes, side)
 		var pattern = object.pattern
 		var size = 3.5
 		var level = object.level
@@ -130,9 +131,6 @@ function displayBuildings(o) {
 							}
 						}
 					}
-
-					var side = getSide(key)
-					var shape = getSideColor(defaultShapes, side)
 
 					dotGroup({
 						count: count,
