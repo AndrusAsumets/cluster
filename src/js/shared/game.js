@@ -215,13 +215,15 @@ export function game(roomId) {
 						i++
 					}
 					
-					displayEnergy(players)
+					if (client) displayEnergy(players)
 				}
 				break
 
 			case SET_ENERGY:
+				energy(players[data.playerId])
 				if (client) {
-
+					displayEnergy(players)
+					charge = 0
 				}
 				break
 
@@ -323,8 +325,6 @@ export function game(roomId) {
 				}
 
 				for (var key in players) if (key != playerId) players[key].elements = elements
-
-				charge = 0
 				
 				if (client) canvas.trail.clearRect(0, 0, w, h)
 				break
@@ -712,7 +712,7 @@ export function game(roomId) {
 			if (
 				building.producer == true
 			) {
-				increaseEnergy(player, building.level * building.resource / defaultEnergyMultiplier)
+				increaseEnergy(player, building.level * building.resource * defaultEnergyMultiplier)
 			}
 		}
 	}
@@ -799,6 +799,8 @@ export function game(roomId) {
 					})
 					
 					socket.emit('message', { action: SET_ELEMENTS, data: { elements: elements, playerId: p }, roomId: roomId })
+					
+					socket.emit('message', { action: SET_ENERGY, data: { playerId: p }, roomId: roomId })
 				}
 			}
 		}, tick / fps)
