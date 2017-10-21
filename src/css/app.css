@@ -54,8 +54,8 @@ canvas {
 	padding: 16px;
 }
 
-.container > .score-player1,
-.container > .score-player2 {
+.container > .score-left,
+.container > .score-right {
 	display: flex;
 }
 
@@ -64,7 +64,7 @@ canvas {
 	align-items: center;
 }
 
-.score-player1,
+.score-left,
 .container:nth-child(4) > .name {
 	margin-left: auto;
 }
@@ -73,18 +73,18 @@ canvas {
 	display: flex;
 }
 
-.scorebar-player1,
-.scorebar-player2 {
+.scorebar-left,
+.scorebar-right {
 	position: absolute;
 	top: 0;
 }
 
-.scorebar-player1 {
+.scorebar-left {
 	right: 0;
 	border-top: 4px solid rgba(255, 74, 61, 1);
 }
 
-.scorebar-player2 {
+.scorebar-right {
 	left: 0;
 	border-top: 4px solid rgba(0, 190, 229, 1);
 }

@@ -106,9 +106,10 @@ export function findBoundary(results, position) {
 	return false
 }
 
-export function getSide(players, me) {
-	if (players[Object.keys(players)[0]].id == me) return 'left'
-	else return 'right'
+export function getSide(players, key) {
+	return players && players[key]
+		? players[key].side
+		: null
 }
 
 export function getSideColor(defaultShapes, side) {
@@ -138,4 +139,9 @@ export function isOnResource(resources, x1, y1) {
 	}
 	
 	return false
+}
+
+export function sortPlayers(players, me) {
+	if (Object.keys(players)[0] == me) return players
+	else return { [me]: players[me], [Object.keys(players)[0]]: players[Object.keys(players)[0]] }
 }

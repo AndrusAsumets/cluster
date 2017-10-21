@@ -34,7 +34,7 @@ export function createElements(o) {
 
 				var element = {
 					id: players[r].elements.length,
-					playerId: p,
+					playerId: Object.keys(players)[p],
 					active: true,
 					type: object.type,
 					start: patternizedPath[0],

@@ -5,7 +5,7 @@ import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, RESTART, GET_STATE, SET_STATE
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource } from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, sortPlayers } from './util'
 
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair, calculateRepairCost } from './dynamics'
 import { createElements } from './dynamics/create-elements'
@@ -73,6 +73,7 @@ export function game(roomId) {
 	// player
 	function Player (options) {
 		this.id = options.id
+		this.side = options.side
 		this.buildings = []
 		this.elements = []
 		this.deepProjectiles = []
@@ -156,13 +157,13 @@ export function game(roomId) {
 			case ON_JOIN:
 				if (client) {
 					roomId = data.id
-					players[data.me] = new Player({ id: data.me })
-					socket.emit('message', { action: GET_STATE, data: data.me, roomId: roomId })
+					players[data.me] = new Player({ id: data.me, side: data.side })
+					socket.emit('message', { action: GET_STATE, data: { me: data.me, side: data.side }, roomId: roomId })
 				}
 
 			case GET_STATE:
 				if (host) {
-					if (!players[data]) players[data] = new Player({ id: data })
+					if (!players[data.me]) players[data.me] = new Player({ id: data.me, side: data.side })
 
 					socket.emit('message', { action: SET_STATE, data: { players: players, resources: resources }, roomId: roomId })
 				}
@@ -172,11 +173,14 @@ export function game(roomId) {
 				if (client) {
 					resources = data.resources
 					
+					players = sortPlayers(players, me)
+					data.players = sortPlayers(data.players, me)
+					
 					var i = 0
 					for (var key in data.players) {
-						if (!players[key]) players[key] = new Player({ id: key })
+						if (!players[key]) players[key] = new Player({ id: key, side: data.players[key].side })
 						
-						document.getElementsByClassName('name')[i].innerHTML = key
+						document.getElementsByClassName('name-' + data.players[key].side)[0].innerHTML = key
 
 						players[key].buildings = data.players[key].buildings
 						players[key].elements = data.players[key].elements
@@ -184,10 +188,10 @@ export function game(roomId) {
 						
 						boundaries({ playerId: key })
 
-						for (var i = 0; i < players[key].elements.length; i++) {
-							var side = getSide(key)
+						for (var j = 0; j < players[key].elements.length; j++) {
+							var side = getSide(players, key)
 							var shape = getSideColor(defaultShapes, side == 'left' ? 'right' : 'left')
-							players[key].elements[i].shape = shape
+							players[key].elements[j].shape = shape
 						}
 
 						if (key == me) showStartingPosition({
@@ -455,8 +459,7 @@ export function game(roomId) {
 				else return players[Object.keys(players)[1]].id
 			}
 			else {
-				if (players[Object.keys(players)[0]].id == me) return players[Object.keys(players)[0]].id
-				else return players[Object.keys(players)[1]].id
+				return me
 			}
 		})()
 		
@@ -491,14 +494,12 @@ export function game(roomId) {
 
 		var inCenter
 		if (
-			user == players[Object.keys(players)[0]].id &&
 			xBlock == Math.floor(smallHorizontal / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
 		) inCenter = true
 
 		else if (
-			user == players[Object.keys(players)[1]].id &&
 			xBlock == Math.floor(smallHorizontal * 3 / 4) &&
 			yBlock == Math.floor(smallVertical / 2) &&
 			!buildingIsFound
@@ -709,6 +710,8 @@ export function game(roomId) {
 	}
 
 	function energy(player) {
+		if (!player) return
+		
 		for (var i = 0; i < player.buildings.length; i++) {
 			var building = player.buildings[i]
 
@@ -721,15 +724,14 @@ export function game(roomId) {
 	}
 
 	function displayEnergy(players) {
-		var i = 0
 		for (var key in players) {
-			document.getElementsByClassName('score')[i].innerHTML = Math.floor(players[key].energy)
-			i++
+			document.getElementsByClassName('score-' + players[key].side)[0].innerHTML = Math.floor(players[key].energy)
 		}
 	}
 
 	function boundaries(o) {
 		var side = getSide(players, o.playerId)
+		
 		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
 		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}
@@ -811,8 +813,8 @@ export function game(roomId) {
 
 	// display charge bar
 	if (client) {
-		var left = document.getElementsByClassName('scorebar-player1')[0]
-		var right = document.getElementsByClassName('scorebar-player2')[0]
+		var left = document.getElementsByClassName('scorebar-left')[0]
+		var right = document.getElementsByClassName('scorebar-right')[0]
 		var slow = 5
 
 		setInterval(function() {

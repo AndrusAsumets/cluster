@@ -86,7 +86,7 @@ function displayBuildings(o) {
 
 	for (var p = 0; p < objects.length; p++) {
 		var object = objects[p]
-		var side = getSide(players, object.playerId)
+		var side = players[object.playerId].side
 		var shape = getSideColor(defaultShapes, side)
 		var pattern = object.pattern
 		var size = 3.5
@@ -97,7 +97,16 @@ function displayBuildings(o) {
 		var height = blockHeight / size / 3
 		var maxWidth = blockWidth - marginX * 2
 		var maxHeight = blockHeight - marginY * 2
-		var onResource = isOnResource(resources[side], object.start[0] / gm, object.start[1] / gm)
+
+		var resource = null
+		var positions = ['left', 'right']
+		var i = 0
+		for (var r in resources) {
+			if (r == positions[i]) resource = resources[positions[i]]
+			i++
+		}
+		
+		var onResource = isOnResource(resource, object.start[0] / gm, object.start[1] / gm)
 		var initialHealth = onResource ? object.initialHealth * defaultResourceMultiplier : object.initialHealth
 
 		// show pattern

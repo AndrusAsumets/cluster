@@ -62,10 +62,9 @@ io.on('connection', socket => {
 				rooms[roomId] = room
 				
 				const query = joined.side == 'left'
-					? { side: 'left', id: joined.room.id, me: me }
-					: { side: 'right', id: joined.room.id, me: me }
+					? { side: 'left', id: joined.room.id, me: me, side: 'left' }
+					: { side: 'right', id: joined.room.id, me: me, side: 'right' }
 				socket.emit('message', { action: ON_JOIN, data: query })
-				
 				
 				console.log('player (' + joined.room[query.side].id + ') joined to room (' + roomId + ') ', new Date())
 				break
