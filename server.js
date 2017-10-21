@@ -22,7 +22,7 @@ import { CONNECT, RESTART, JOIN, ON_JOIN, HOST, DISCONNECT } from './src/js/shar
 import { join } from './src/js/backend/join'
 var rooms = {}
 var players = {}
-const timeout = 45 * 1000
+const timeout = 90 * 1000
 const maxWarnings = 3
 const disabledDuration = timeout * 2
 
@@ -88,6 +88,7 @@ io.on('connection', socket => {
 					const side = rooms[roomId].left.id == user 
 						? 'left'
 						: 'right'
+						
 					players[playerId].seen = epoch
 					players[playerId].warnings = 0
 					rooms[roomId][side].seen = epoch
@@ -105,18 +106,17 @@ if (process.env.NODE_ENV == 'PRODUCTION') {
 		
 		for (var roomId in rooms) {
 			const room = rooms[roomId]
-			const maxIdle = timeout
 			
 			//detect idle
 			var leftIdle = room && room.left
 				? (() => {
-					if (room.left.seen > epoch - maxIdle) return 'left'
+					if (room.left.seen + timeout < epoch) return 'left'
 					})()
 				: false
 				
 			var rightIdle = room && room.right
 				? (() => {
-					if (room.right.seen > epoch - maxIdle) return 'right'
+					if (room.right.seen + timeout < epoch) return 'right'
 					})()
 				: false
 				
