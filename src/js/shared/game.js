@@ -5,7 +5,7 @@ import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, RESTART, GET_STATE, SET_STATE
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
-import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource, sortPlayers } from './util'
+import { isNear, setWalkableAt, findOpenPath, findBuildingIndex, createBoundaries, findBoundary, getSide, getSideColor, createResource } from './util'
 
 import { upgrade, sell, upgradeCost, sellBackValue, calculateDamage, repair, calculateRepairCost } from './dynamics'
 import { createElements } from './dynamics/create-elements'
@@ -172,9 +172,6 @@ export function game(roomId) {
 			case SET_STATE:
 				if (client) {
 					resources = data.resources
-					
-					players = sortPlayers(players, me)
-					data.players = sortPlayers(data.players, me)
 					
 					var i = 0
 					for (var key in data.players) {

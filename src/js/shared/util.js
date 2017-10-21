@@ -140,8 +140,3 @@ export function isOnResource(resources, x1, y1) {
 	
 	return false
 }
-
-export function sortPlayers(players, me) {
-	if (Object.keys(players)[0] == me) return players
-	else return { [me]: players[me], [Object.keys(players)[0]]: players[Object.keys(players)[0]] }
-}
