@@ -128,7 +128,8 @@ export function game(roomId) {
 
 	// development
 	var dev = client && decodeQuery() && decodeQuery().dev ? true : false
-
+	
+	// websocket
 	var uri = process.env.WS_SERVER && process.env.WS_PORT
 		? 'ws://' + process.env.WS_SERVER + ':' + process.env.WS_PORT
 		: 'ws://localhost:1337'

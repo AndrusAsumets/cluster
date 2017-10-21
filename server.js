@@ -26,10 +26,6 @@ var rooms = {}
 // game
 global.window = null
 
-app.get('/', function(req, res) {
-    res.sendFile(fs.readFileSync('./build/index.html', 'utf8'))
-})
-
 io.on('connection', socket => {
 	socket.emit('message', { action: CONNECT })
 	
@@ -86,11 +82,11 @@ if (process.env.NODE_ENV == 'PRODUCTION') {
 			const maxInactivity = timeout
 			
 			var leftActive = room && room.left
-				? !(room.left.seen < epoch - maxInactivity)
+				? room.left.seen > epoch - maxInactivity
 				: false
 				
 			var rightActive = room && room.right
-				? !(room.right.seen < epoch - maxInactivity)
+				? room.right.seen > epoch - maxInactivity
 				: false
 				
 			if (!leftActive || !rightActive) {
@@ -100,7 +96,7 @@ if (process.env.NODE_ENV == 'PRODUCTION') {
 			}
 		}	
 	
-	}, timeout)
+	}, 10000)
 }
 
 const PORT = process.env.WS_DEVELOPMENT_PORT || 1337
