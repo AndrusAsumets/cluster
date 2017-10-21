@@ -22,8 +22,8 @@ import { CONNECT, RESTART, JOIN, ON_JOIN, HOST, DISCONNECT } from './src/js/shar
 import { join } from './src/js/backend/join'
 var rooms = {}
 var players = {}
-const timeout = 90 * 1000
-const maxWarnings = 3
+const timeout = 60 * 1000
+const maxWarnings = 2
 const disabledDuration = timeout * 2
 
 // game
