@@ -5,6 +5,8 @@ NOW:
 - gameplay:
 * tutorial
 * game over event
+* scooring
+* resources can not be repaired
 
 - UI:
 * animate damage dealt by moving the number upwards
