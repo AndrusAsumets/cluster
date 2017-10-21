@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENTS, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
+import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, RESTART, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENTS, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
@@ -135,7 +135,7 @@ export function game(roomId) {
 		: 'ws://localhost:1337'
 	var socket = io.connect(uri, { forceNew: true, transports: ['websocket'] })
 
-	if (client) {
+	if (client && dev) {
 		socket.on('reconnect', function () {
 			// for dev purposes, reload the page after reconnect
 			location.reload()
@@ -558,7 +558,8 @@ export function game(roomId) {
 						pattern: pattern,
 						submenu: submenu
 					}, 
-					roomId: roomId
+					roomId: roomId,
+					me: user
 				}
 				
 				socket.emit('message', message)
@@ -570,9 +571,10 @@ export function game(roomId) {
 				var message = {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex },
-					roomId: roomId,
-					side: getSide(players, user)
+					roomId: roomId
 				}
+				
+				message.user = user
 			
 				socket.emit('message', message)
 			
@@ -601,7 +603,7 @@ export function game(roomId) {
 				})
 				
 				message.roomId = roomId
-				message.side = getSide(players, player.id)
+				message.user = player.id
 		
 				socket.emit('message', message)
 		
@@ -688,7 +690,7 @@ export function game(roomId) {
 					bottom
 			)
 		) {
-			socket.emit('restart')
+			socket.emit('message', { action: RESTART })
 		}
 		
 		// otherwise just clear the menu

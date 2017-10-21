@@ -10,6 +10,7 @@ NOW:
 * kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
 
 PHASE1:
+* y-scale patterns
 * portrait mode
 * game balance & upgrades
 * store game data to file/database & playback
