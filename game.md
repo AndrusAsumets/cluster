@@ -4,6 +4,7 @@ cluster.game
 NOW:
 - gameplay:
 * tutorial
+* game over event
 
 - UI:
 * animate damage dealt by moving the number upwards

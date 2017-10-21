@@ -334,8 +334,8 @@ export function game(roomId) {
 			case SET_UPGRADE:
 				players[data.playerId] = upgrade({ player: players[data.playerId], buildingIndex: data.buildingIndex })
 
-				if (!!data.pattern) players[data.playerId].buildings[data.buildingIndex].pattern = data.pattern
-				if (!!data.submenu) players[data.playerId].buildings[data.buildingIndex].submenu = data.submenu
+				if (!!data.pattern && players[data.playerId]) players[data.playerId].buildings[data.buildingIndex].pattern = data.pattern
+				if (!!data.submenu && players[data.playerId]) players[data.playerId].buildings[data.buildingIndex].submenu = data.submenu
 
 				if (client) {
 					refreshBuildings({

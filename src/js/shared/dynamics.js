@@ -5,7 +5,7 @@ export function upgrade(o) {
 	var buildingIndex = o.buildingIndex
 	var buildings = player.buildings
 	var building = buildings[buildingIndex]
-	if (!building) return
+	if (!building) return player
 	var damage = building.damage
 	var energy = player.energy
 	var level = building.level + 1
