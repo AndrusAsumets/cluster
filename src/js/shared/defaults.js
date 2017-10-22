@@ -17,7 +17,7 @@ export const defaultEnergy = 200
 export const defaultHealth = 50
 export const defaultDamage = 10
 export const defaultDamageMultiplier = 5
-export const defaultEnergyMultiplier = 5
+export const defaultEnergyMultiplier = 25
 export const defaultResourceCount = 2
 export const defaultResourceMultiplier = 5
 
