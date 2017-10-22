@@ -221,11 +221,9 @@ export function game(roomId) {
 				break
 
 			case SET_ENERGY:
+				charge = 0
 				energy(players[data.playerId])
-				if (client) {
-					displayEnergy(players)
-					charge = 0
-				}
+				if (client) displayEnergy(players)
 				break
 
 			case SET_BUILDING:
@@ -796,7 +794,6 @@ export function game(roomId) {
 					})
 					
 					socket.emit('message', { action: SET_ELEMENTS, data: { elements: elements, playerId: p }, roomId: roomId })
-					
 					socket.emit('message', { action: SET_ENERGY, data: { playerId: p }, roomId: roomId })
 				}
 			}

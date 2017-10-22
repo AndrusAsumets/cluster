@@ -3,24 +3,22 @@ cluster.game
 
 NOW:
 - gameplay:
+* show waiting for a player when alone
 * tutorial
 * game over event
 * scoring
-* resources can not be repaired
-* show waiting for a player when alone
 * game over event/display
-* sticky position
 * toggle repairing by double tap
 
 - UI:
 * animate damage dealt by moving the number upwards
-* kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal.  skoorist allapoole +n
 * uuenda menüüd after turn
 * näita raha kui menüü lahti
 
 PHASE1:
 * y-scale patterns
 * portrait mode
+* sticky and user modifiable side
 * game balance & upgrades
 * replay playback
 * lobby
