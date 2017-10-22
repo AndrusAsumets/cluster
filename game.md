@@ -5,21 +5,27 @@ NOW:
 - gameplay:
 * tutorial
 * game over event
-* scooring
+* scoring
 * resources can not be repaired
+* show waiting for a player when alone
+* game over event/display
+* sticky position
+* toggle repairing by double tap
 
 - UI:
 * animate damage dealt by moving the number upwards
-* kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal
+* kui palju mine raha teenib ja kuidas sellest aru saada? näita sell, upgrade menüüst paremal.  skoorist allapoole +n
+* uuenda menüüd after turn
+* näita raha kui menüü lahti
 
 PHASE1:
 * y-scale patterns
 * portrait mode
 * game balance & upgrades
-* store game data to file/database & playback
-* game rooms
+* replay playback
 * lobby
 * deployment
+* automated testing
 * human testing
 
 PHASE2:

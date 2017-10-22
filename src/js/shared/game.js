@@ -136,9 +136,8 @@ export function game(roomId) {
 		: 'ws://localhost:1337'
 	var socket = io.connect(uri, { forceNew: true, transports: ['websocket'] })
 
-	if (client && dev) {
+	if (client) {
 		socket.on('reconnect', function () {
-			// for dev purposes, reload the page after reconnect
 			location.reload()
 		})
 	}
@@ -277,11 +276,13 @@ export function game(roomId) {
 				if (!Number.isInteger(buildingIndex)) return console.log('building not found')
 				
 				var elementIndex = data.elementIndex
+				var building = players[playerId].elements[elementIndex]
+				if (!building) return
 				var damage = data.damage
 				var currentBuilding = players[playerId].buildings[buildingIndex]
 				var currentBuildingHealth = currentBuilding.health
 				var health = currentBuildingHealth - damage
-				var elementHealth = players[playerId].elements[elementIndex].dynamics.health
+				var elementHealth = building.dynamics.health
 				var extra = 0
 
 				if (health < 1) {
@@ -292,8 +293,8 @@ export function game(roomId) {
 					players[playerId].buildings[buildingIndex].health = health
 				}
 
-				if (elementHealth < 1) players[playerId].elements[elementIndex].path = []
-				else players[playerId].elements[elementIndex].dynamics.health = elementHealth - damage + extra
+				if (elementHealth < 1) building.path = []
+				else building.dynamics.health = elementHealth - damage + extra
 
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: playerId })
@@ -722,8 +723,36 @@ export function game(roomId) {
 
 	function displayEnergy(players) {
 		for (var key in players) {
-			document.getElementsByClassName('score-' + players[key].side)[0].innerHTML = Math.floor(players[key].energy)
+			document.getElementsByClassName('energy-' + players[key].side)[0].innerHTML = Math.floor(players[key].energy)
 		}
+		
+		displayUpkeep(players)
+	}
+	
+	function displayUpkeep(players) {
+		for (var key in players) {
+			var upkeep = Math.floor(getUpkeep(players[key]))
+			if (upkeep) {
+				var string = 'Upkeep: +' + upkeep
+				document.getElementsByClassName('upkeep-' + players[key].side)[0].innerHTML = string
+			}
+		}
+	}
+	
+	function getUpkeep(player) {
+		if (!player) return
+		
+		var upkeep = 0
+		for (var i = 0; i < player.buildings.length; i++) {
+			var building = player.buildings[i]
+
+			if (
+				building.producer == true
+			) {
+				upkeep = upkeep + building.level * building.resource * defaultEnergyMultiplier
+			}
+		}
+		return upkeep
 	}
 
 	function boundaries(o) {

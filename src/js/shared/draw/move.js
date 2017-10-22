@@ -55,16 +55,19 @@ export function move(o) {
 		})
 		
 		// trail
-		dot({
-			ctx: canvas.trail,
-			shape: object.shape,
-			percentage: percentage,
-			x1: dx,
-			y1: dy,
-			width: blockWidth,
-			height: blockHeight,
-			alpha: 0.1,
-			size: (object.level * size / 9) * (object.path[1][2] / 9)
-		})
+		var weight = path[1][2]
+		if (weight == 9) {
+			dot({
+				ctx: canvas.trail,
+				shape: object.shape,
+				percentage: percentage,
+				x1: dx,
+				y1: dy,
+				width: blockWidth,
+				height: blockHeight,
+				alpha: 0.1,
+				size: (object.level * size / 9) * (object.path[1][2] / 9)
+			})
+		}
 	}
 }

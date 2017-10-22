@@ -225,7 +225,7 @@ function displayBuildings(o) {
 		// health label
 		label({
 			ctx: canvas[layer],
-			string: object.health + ' / ' + (initialHealth * object.level),
+			string: object.health + ' / ' + (initialHealth * object.level * object.resource),
 			shape: defaultShapes.light,
 			x1: object.start[0] * blockWidth / gm + blockWidth / 2,
 			y1: (object.start[1] + gm) * blockHeight / gm - blockHeight / 7,

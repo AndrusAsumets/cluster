@@ -24,7 +24,7 @@ var rooms = {}
 var players = {}
 const timeout = 90 * 1000
 const maxWarnings = 2
-const disabledDuration = timeout * 2
+const disabledDuration = timeout
 
 // game
 global.window = null
@@ -83,14 +83,14 @@ io.on('connection', socket => {
 			default:
 				io.sockets.in(roomId).emit('message', message)
 				
-				if (user) { // on menu action, reset
+				if (user) {
 					const playerId = user
 					const side = rooms[roomId].left.id == user 
 						? 'left'
 						: 'right'
 						
 					players[playerId].seen = epoch
-					players[playerId].warnings = 0
+					players[playerId].warnings = 0 // on menu action, reset
 					rooms[roomId][side].seen = epoch
 				}
 		}

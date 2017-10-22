@@ -56,7 +56,7 @@ canvas {
 
 .container > .score-left,
 .container > .score-right {
-	display: flex;
+	display: block;
 }
 
 .container > .name {
@@ -87,6 +87,18 @@ canvas {
 .scorebar-right {
 	left: 0;
 	border-top: 4px solid rgba(0, 190, 229, 1);
+}
+
+.energy-left {
+	text-align: right;
+}
+
+.upkeep {
+	font-size: 14px;
+}
+
+.upkeep-left {
+	text-align: right;
 }
 
 .player {
