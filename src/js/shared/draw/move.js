@@ -1,6 +1,16 @@
 import { line, donut, dot } from './../draw'
 import { convertRange } from './../helpers'
 
+// doing the minimal change right now to make it a bit better to read for myself
+// maybe we can change the whole path object later, bends my mind to use 2dimensional arrays
+function pathElement(pathElem) {
+	return {
+		x: pathElem[0],
+		y: pathElem[1],
+		size: pathElem[2]
+	}
+}
+
 export function move(o) {
 	var layer = o.layer
 	var type = o.type
@@ -27,20 +37,32 @@ export function move(o) {
 		if (
 			!path ||
 			!path[1] ||
-			!path[1].length
+			!path[1].length // when does this happen?
 		) continue
 
-		var x1 = path[0][0] * width
-		var y1 = path[0][1] * height
-		var x2 = path[1][0] * width
-		var y2 = path[1][1] * height
+		var startPos = pathElement(path[0])
+		var endPos = pathElement(path[1])
+		var sizeFactor = object.level / 9
+
+		// calculate speeds for both axis
+		var startX = startPos.x * width
+		var startY = startPos.y * height
+		var startS = startPos.size * sizeFactor
+		var speedX = (endPos.x - startPos.x) * width / tick
+		var speedY = (endPos.y - startPos.y) * height / tick
+		var speedS = (endPos.size - startPos.size) / tick // we don't want object level right now for trails
+
+		console.log('ss', startPos.s, startPos.x)
+		
+		// calculate position based on speed and time
 		var dt = newTime - time
-		var dx = x1 - (x1 - x2) * dt / tick
-		var dy = y1 - (y1 - y2) * dt / tick
+		var dx = startX + speedX * dt
+		var dy = startY + speedY * dt 
+		var ds = startS + speedS * dt
 
 		var health = object.dynamics.health >= 0 ? object.dynamics.health : 0
 		var percentage = convertRange(health, [0, object.dynamics.totalHealth], [0, 100])
-		var size = path[1][2] | 0
+		//var size = endPos.weight | 0
 
 		donut({
 			ctx: canvas[layer],
@@ -51,12 +73,12 @@ export function move(o) {
 			width: blockWidth,
 			height: blockHeight,
 			alpha: 1,
-			size: object.level * size / 9
+			size: ds * sizeFactor 
 		})
 		
 		// trail
-		var weight = path[1][2]
-		if (weight == 9) {
+		var weight = endPos.size
+		if (true) {
 			dot({
 				ctx: canvas.trail,
 				shape: object.shape,
@@ -66,7 +88,7 @@ export function move(o) {
 				width: blockWidth,
 				height: blockHeight,
 				alpha: 0.1,
-				size: (object.level * size / 9) * (object.path[1][2] / 9)
+				size: ds * ds * ds / 9
 			})
 		}
 	}
