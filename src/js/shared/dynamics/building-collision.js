@@ -4,7 +4,6 @@ import { SET_BUILDING_DAMAGE } from './../actions'
 export function buildingCollision(o) {
 	var players = o.players
 	var p = o.p
-	var host = o.host
 	var socket = o.socket
 	var roomId = o.roomId
 	
@@ -44,11 +43,52 @@ export function buildingCollision(o) {
 				if (!positionB.length) continue
 
 				if (isNear(1, positionA, positionB)) {
-					if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r }, roomId: roomId })
+					//if (host) socket.emit('message', { action: SET_BUILDING_DAMAGE, data: { playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r }, roomId: roomId })
+					
+					players = setBuildingDamage({ players: players, playerId: p, buildingId: anotherPlayer.buildings[r2].id, damage: damage, elementIndex: r })
 
 					break
 				}
 			}
 		}
 	}
+	
+	return players
+}
+
+function setBuildingDamage(data) {
+	var players = data.players
+	var playerId = data.playerId
+	var buildingId = data.buildingId
+	var buildingIndex = null
+	
+	var buildings = players[playerId].buildings
+	for (var i = 0; i < buildings.length; i++) {
+		if (buildings[i].id == buildingId) buildingIndex = i
+	}
+	
+	if (!Number.isInteger(buildingIndex)) return console.log('building not found')
+	
+	var elementIndex = data.elementIndex
+	var building = players[playerId].elements[elementIndex]
+	if (!building) return
+	var damage = data.damage
+	var currentBuilding = players[playerId].buildings[buildingIndex]
+	var currentBuildingHealth = currentBuilding.health
+	var health = currentBuildingHealth - damage
+	var elementHealth = building.dynamics.health
+	var extra = 0
+
+	if (health < 1) {
+		players[playerId].buildings.splice(buildingIndex, 1)
+		extra = Math.abs(health) // but don't destroy the element just yet
+	}
+	else {
+		players[playerId].buildings[buildingIndex].health = health
+	}
+
+	if (elementHealth < 1) building.path = []
+	else building.dynamics.health = elementHealth - damage + extra
+	
+	return players
 }

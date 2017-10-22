@@ -1,7 +1,7 @@
 var io = require('socket.io-client')
 var PF = require('pathfinding')
 
-import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, RESTART, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENTS, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR, SET_BUILDING_DAMAGE } from './actions'
+import { CONNECT, JOIN, ON_JOIN, HOST, DISCONNECT, RESTART, GET_STATE, SET_STATE, SET_ENERGY, SET_ELEMENTS, SET_BUILDING, SET_UPGRADE, SET_SELL, SET_REPAIR } from './actions'
 import { defaultTick, defaultEnergy, defaultHealth, defaultDamage, defaultShapes, defaultBuildings, defaultOptions, defaultPatterns, defaultResourceCount, defaultResourceMultiplier, defaultEnergyMultiplier } from './defaults'
 import { decodeQuery, encodeQuery, convertRange, size, getUrlParams } from './helpers'
 import { buildPopup, selectFromPopup } from './menu'
@@ -261,56 +261,6 @@ export function game(roomId) {
 
 				// find boundaries where the player would be able to build
 				boundaries({ playerId: building.playerId })
-				break
-
-			case SET_BUILDING_DAMAGE:
-				var playerId = data.playerId
-				var buildingId = data.buildingId
-				var buildingIndex = null
-				
-				var buildings = players[playerId].buildings
-				for (var i = 0; i < buildings.length; i++) {
-					if (buildings[i].id == buildingId) buildingIndex = i
-				}
-				
-				if (!Number.isInteger(buildingIndex)) return console.log('building not found')
-				
-				var elementIndex = data.elementIndex
-				var building = players[playerId].elements[elementIndex]
-				if (!building) return
-				var damage = data.damage
-				var currentBuilding = players[playerId].buildings[buildingIndex]
-				var currentBuildingHealth = currentBuilding.health
-				var health = currentBuildingHealth - damage
-				var elementHealth = building.dynamics.health
-				var extra = 0
-
-				if (health < 1) {
-					players[playerId].buildings.splice(buildingIndex, 1)
-					extra = Math.abs(health) // but don't destroy the element just yet
-				}
-				else {
-					players[playerId].buildings[buildingIndex].health = health
-				}
-
-				if (elementHealth < 1) building.path = []
-				else building.dynamics.health = elementHealth - damage + extra
-
-				// find boundaries where the player would be able to build
-				boundaries({ playerId: playerId })
-
-				if (client) {
-					refreshBuildings({
-						players: players,
-						resources: resources,
-						canvas: canvas,
-						blockWidth: blockWidth,
-						blockHeight: blockHeight,
-						w: w,
-						h: h,
-						gm: gm
-					})
-				}
 				break
 
 			case SET_ELEMENTS:
@@ -783,7 +733,23 @@ export function game(roomId) {
 		// then run the last part because deep projectiles couldn't be updated otherwise
 		for (var p in players) {
 			players = elementCollision(players, p)
-			buildingCollision({ players: players, p: p, host: host, socket: socket, roomId: roomId })
+			players = buildingCollision({ players: players, p: p })
+			
+			// find boundaries where the player would be able to build
+			if (client) boundaries({ playerId: p })
+		}
+		
+		if (client) {
+			refreshBuildings({
+				players: players,
+				resources: resources,
+				canvas: canvas,
+				blockWidth: blockWidth,
+				blockHeight: blockHeight,
+				w: w,
+				h: h,
+				gm: gm
+			})
 		}
 	}, tick)
 
