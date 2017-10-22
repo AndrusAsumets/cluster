@@ -726,33 +726,33 @@ export function game(roomId) {
 			document.getElementsByClassName('energy-' + players[key].side)[0].innerHTML = Math.floor(players[key].energy)
 		}
 		
-		displayUpkeep(players)
+		displayProduction(players)
 	}
 	
-	function displayUpkeep(players) {
+	function displayProduction(players) {
 		for (var key in players) {
-			var upkeep = Math.floor(getUpkeep(players[key]))
-			if (upkeep) {
-				var string = 'Upkeep: +' + upkeep
-				document.getElementsByClassName('upkeep-' + players[key].side)[0].innerHTML = string
+			var production = Math.floor(getProduction(players[key]))
+			if (production) {
+				var string = 'Production: +' + production
+				document.getElementsByClassName('production-' + players[key].side)[0].innerHTML = string
 			}
 		}
 	}
 	
-	function getUpkeep(player) {
+	function getProduction(player) {
 		if (!player) return
 		
-		var upkeep = 0
+		var production = 0
 		for (var i = 0; i < player.buildings.length; i++) {
 			var building = player.buildings[i]
 
 			if (
 				building.producer == true
 			) {
-				upkeep = upkeep + building.level * building.resource * defaultEnergyMultiplier
+				production = production + building.level * building.resource * defaultEnergyMultiplier
 			}
 		}
-		return upkeep
+		return production
 	}
 
 	function boundaries(o) {
