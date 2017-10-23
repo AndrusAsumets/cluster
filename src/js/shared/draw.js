@@ -118,7 +118,7 @@ export function dot(o) {
 	var radians = degreesToRadians(-degrees)
 	var alpha = o.alpha ? o.alpha : 1
 	var fillStyle = o.shape.fillStyle(alpha)
-	var size = o.size / 3 / 0.66
+	var size = (o.size | 0) / 3 / 0.66
 	var radius = Math.sqrt((o.width + o.height) * size)
 
 	var cacheIndex = isCached(dots, { type: 'dot', radians: radians, radius: radius, alpha: alpha, fillStyle: fillStyle })
