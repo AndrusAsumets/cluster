@@ -23,7 +23,7 @@ import { join } from './src/js/backend/join'
 var rooms = {}
 var players = {}
 const timeout = 90 * 1000
-const maxWarnings = 2
+const maxWarnings = 200000000
 const disabledDuration = timeout
 
 // game
@@ -31,18 +31,18 @@ global.window = null
 
 io.on('connection', socket => {
 	socket.emit('message', { action: CONNECT })
-	
+
 	socket.on('message', (async(message) => {
 		const epoch = (new Date).getTime()
 		const action = message.action
 		const data = message.data
-		var roomId = message.roomId
+		let roomId = message.roomId
 		const user = message.user
-	
+
 		switch(action) {
 			case JOIN:
 				const me = data
-				
+
 				// see if the player should be temporarily removed from the pool due to inactivty
 				if (!players[me]) players[me] = { seen: epoch, warnings: 0 }
 				if (players[me] && 'disabled' in players[me]) {
@@ -54,72 +54,72 @@ io.on('connection', socket => {
 						players[me].warnings = 0
 					}
 				}
-				
+
 				const joined = join(rooms, me, socket)
 				roomId = joined.room.id
 				socket.join(roomId)
 				const room = joined.room
 				rooms[roomId] = room
-				
+
 				const query = joined.side == 'left'
 					? { side: 'left', id: joined.room.id, me: me, side: 'left' }
 					: { side: 'right', id: joined.room.id, me: me, side: 'right' }
 				socket.emit('message', { action: ON_JOIN, data: query })
-				
+
 				console.log('player (' + joined.room[query.side].id + ') joined to room (' + roomId + ') ', new Date())
 				break
-				
+
 			case HOST:
 				roomId = data
 				socket.join(roomId)
-				
+
 				console.log('host joined to room (' + roomId + ')', new Date())
 				break
-				
+
 			case RESTART:
 				require('child_process').exec('kill -HUP ' +  process.pid)
 				break
-				
+
 			default:
 				io.sockets.in(roomId).emit('message', message)
-				
+
 				if (user) {
 					const playerId = user
-					const side = rooms[roomId].left.id == user 
+					const side = rooms[roomId].left.id == user
 						? 'left'
 						: 'right'
-						
+
 					players[playerId].seen = epoch
 					players[playerId].warnings = 0 // on menu action, reset
 					rooms[roomId][side].seen = epoch
 				}
 		}
-		
+
 		const update = await db.update(roomId + '_' + epoch, message)
-		if (update.error) console.log('could not update database')
+		if (!update || update.error) console.log('could not update database')
 	}))
 })
 
 if (process.env.NODE_ENV == 'PRODUCTION') {
 	setInterval(() => {
 		const epoch = (new Date).getTime()
-		
+
 		for (var roomId in rooms) {
 			const room = rooms[roomId]
-			
+
 			//detect idle
 			var leftIdle = room && room.left
 				? (() => {
 					if (room.left.seen + timeout < epoch) return 'left'
 					})()
 				: false
-				
+
 			var rightIdle = room && room.right
 				? (() => {
 					if (room.right.seen + timeout < epoch) return 'right'
 					})()
 				: false
-				
+
 			// add idle warnings based on inactivty
 			if (leftIdle && room.right) { // also check for another player, the player might not have joined just yet
 				players[room.left.id].warnings++
@@ -129,7 +129,7 @@ if (process.env.NODE_ENV == 'PRODUCTION') {
 				players[room.right.id].warnings++
 				if (players[room.right.id].warnings >= maxWarnings) players[room.right.id].disabled = epoch + disabledDuration
 			}
-			
+
 			// remove the room with idle player(s)
 			if (leftIdle || rightIdle) {
 				delete rooms[roomId]

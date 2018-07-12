@@ -80,7 +80,7 @@ export function game(roomId) {
 		this.energy = defaultEnergy
 		this.boundaries = []
 	}
-	
+
 	//ui
 	var canvas = {}
 
@@ -88,7 +88,7 @@ export function game(roomId) {
 		var container = document.createElement('div')
 		container.className = 'player'
 		document.getElementsByClassName('game')[0].appendChild(container)
-		
+
 		canvas = {
 			background: ctx(container, 'background', w, h),
 			trail: ctx(container, 'trail', w, h),
@@ -102,7 +102,7 @@ export function game(roomId) {
 
 		document.getElementsByClassName(container.className)[0].addEventListener('touchstart', function(event) { createMenu(event) })
 		document.getElementsByClassName(container.className)[0].addEventListener('mousedown', function(event) { createMenu(event) })
-	
+
 		createBoard({
 			canvas: canvas,
 			w: w,
@@ -116,11 +116,11 @@ export function game(roomId) {
 
 	// networking
 	var me = 'host'
-	
+
 	if (client) {
 		var params = decodeQuery()
 		me = 'me' in params && params.me.length ? params.me : null
-		
+
 		if (!me) {
 			me = String(Math.random()).split('.')[1]
 			window.location.search = encodeQuery(Object.assign({}, params, { me: me } ))
@@ -129,7 +129,7 @@ export function game(roomId) {
 
 	// development
 	var dev = client && decodeQuery() && decodeQuery().dev ? true : false
-	
+
 	// websocket
 	var uri = process.env.WS_SERVER && process.env.WS_PORT
 		? 'ws://' + process.env.WS_SERVER + ':' + process.env.WS_PORT
@@ -150,9 +150,8 @@ export function game(roomId) {
 			case CONNECT:
 				if (client) socket.emit('message', { action: JOIN, data: me })
 				else socket.emit('message', { action: HOST, data: roomId })
-				
 				break
-				
+
 			case ON_JOIN:
 				if (client) {
 					roomId = data.id
@@ -171,17 +170,17 @@ export function game(roomId) {
 			case SET_STATE:
 				if (client) {
 					resources = data.resources
-					
+
 					var i = 0
 					for (var key in data.players) {
 						if (!players[key]) players[key] = new Player({ id: key, side: data.players[key].side })
-						
+
 						document.getElementsByClassName('name-' + data.players[key].side)[0].innerHTML = key
 
 						players[key].buildings = data.players[key].buildings
 						players[key].elements = data.players[key].elements
 						players[key].energy = data.players[key].energy
-						
+
 						boundaries({ playerId: key })
 
 						for (var j = 0; j < players[key].elements.length; j++) {
@@ -212,10 +211,10 @@ export function game(roomId) {
 							h: h,
 							gm: gm
 						})
-						
+
 						i++
 					}
-					
+
 					if (client) displayEnergy(players)
 				}
 				break
@@ -242,7 +241,7 @@ export function game(roomId) {
 
 				if (client) {
 					canvas.start.clearRect(0, 0, w, h)
-					
+
 					refreshBuildings({
 						players: players,
 						resources: resources,
@@ -253,7 +252,7 @@ export function game(roomId) {
 						h: h,
 						gm: gm
 					})
-					
+
 					displayEnergy(players)
 				}
 
@@ -264,19 +263,19 @@ export function game(roomId) {
 			case SET_ELEMENTS:
 				var playerId = data.playerId
 				var elements = data.elements[playerId]
-				
+
 				if (!elements) return
 
 				var side = getSide(players, playerId)
 				var shape = getSideColor(defaultShapes, side)
-				
+
 				for (var i = 0; i < elements.length; i++) {
 					elements[i].side = side
 					elements[i].shape = shape
 				}
 
 				for (var key in players) if (key != playerId) players[key].elements = elements
-				
+
 				if (client) canvas.trail.clearRect(0, 0, w, h)
 				break
 
@@ -296,9 +295,9 @@ export function game(roomId) {
 						w: w,
 						h: h,
 						gm: gm
-						
+
 					})
-					
+
 					displayEnergy(players)
 				}
 				break
@@ -322,7 +321,7 @@ export function game(roomId) {
 							blockWidth: blockWidth,
 							blockHeight: blockHeight,
 						})
-					
+
 					refreshBuildings({
 						players: players,
 						resources: resources,
@@ -333,7 +332,7 @@ export function game(roomId) {
 						h: h,
 						gm: gm
 					})
-					
+
 					displayEnergy(players)
 				}
 				break
@@ -351,13 +350,13 @@ export function game(roomId) {
 						w: w,
 						h: h,
 						gm: gm
-						
+
 					})
-					
+
 					displayEnergy(players)
 				}
 				break
-				
+
 			case DISCONNECT:
 				if (client) location.reload()
 		}
@@ -366,7 +365,7 @@ export function game(roomId) {
 	var gameMenu = {}
 	function createMenu(originalEvent) {
 		if (Object.keys(players).length != 2) return
-		
+
 		var event = originalEvent
 
 		event.preventDefault()
@@ -388,7 +387,7 @@ export function game(roomId) {
 
 		var x = event.clientX
 		var y = event.clientY
-			
+
 		var side = (function () {
 			if (dev) {
 				if (x < w / 2) return 'left'
@@ -398,7 +397,7 @@ export function game(roomId) {
 				return getSide(players, me)
 			}
 		})()
-		
+
 		var user = (function () {
 			if (dev) {
 				if (x < w / 2) return players[Object.keys(players)[0]].id
@@ -408,26 +407,26 @@ export function game(roomId) {
 				return me
 			}
 		})()
-		
+
 		var player = players[user]
 		var xBlock = Math.floor(x / blockWidth)
 		var yBlock = Math.floor(y / blockHeight)
 		var menuXBlock = side == 'left'
 			? Math.floor(x / (h / (smallVertical - 1)))
 			: Math.floor((event.clientX - w / 2) / (h / (smallVertical - 1)))
-			
+
 		var bottom = yBlock > smallVertical - 1
-			
+
 		var buildingIndex = findBuildingIndex(player.buildings, {
 			start: Number.isInteger(gameMenu.xBlock) && Number.isInteger(gameMenu.yBlock) && bottom
 				? [gameMenu.xBlock * gm, gameMenu.yBlock * gm]
 				: [xBlock * gm, yBlock * gm]
 		})
-		
+
 		var building = player.buildings[buildingIndex]
 		var buildingIsFound = buildingIndex > -1
 		var inBounds = findBoundary(players[user].boundaries, { x: xBlock * gm, y: yBlock * gm })
-		
+
 		var options = (
 							buildingIsFound
 					&&
@@ -460,7 +459,7 @@ export function game(roomId) {
 			canvas.selection.clearRect(0, 0, w, h)
 			return
 		}
-		
+
 		if (
 			!('pattern' in gameMenu) &&
 			!!gameMenu.options &&
@@ -468,35 +467,35 @@ export function game(roomId) {
 			bottom
 		) {
 			if (!buildingIndex && Number.isInteger(gameMenu.buildingIndex)) buildingIndex = gameMenu.buildingIndex
-			
+
 			building = player.buildings[buildingIndex]
-			
+
 			var optionType = Object.keys(defaultOptions)[menuXBlock]
 			var upgradeable = players[user].buildings[buildingIndex].level < 3 ? true : false
 			var type = players[user].buildings[buildingIndex].type
-			
+
 			// select repair instead
 			if (optionType == 'upgrade' && !upgradeable) optionType = 'repair'
-			
+
 			if (
 					optionType == 'upgrade' &&
 					building.offensive &&
 					!Number.isInteger(gameMenu.buildingIndex)
 			) {
-				
+
 				gameMenu.pattern = 'upgrade' in building.submenu ? defaultPatterns : building.submenu
 				gameMenu.isMenuOpen = false
 				gameMenu.buildingIndex = buildingIndex
-				
+
 				createMenu(originalEvent)
 			}
-			
+
 			else if (Number.isInteger(gameMenu.buildingIndex)) {
 				optionType = Object.keys('upgrade' in building.submenu ? defaultPatterns : building.submenu)[menuXBlock]
-				
+
 				var pattern = 'upgrade' in building.submenu ? defaultPatterns[optionType].pattern : building.submenu[optionType].pattern
 				var submenu = 'upgrade' in building.submenu ? defaultPatterns[optionType].submenu : building.submenu[optionType]
-				
+
 				var message = {
 					action: defaultOptions.upgrade.action,
 					data: {
@@ -504,39 +503,39 @@ export function game(roomId) {
 						buildingIndex: buildingIndex,
 						pattern: pattern,
 						submenu: submenu
-					}, 
+					},
 					roomId: roomId,
 					me: user
 				}
-				
+
 				socket.emit('message', message)
-			
+
 				gameMenu = {}
 			}
-			
+
 			else {
 				var message = {
 					action: defaultOptions[optionType].action,
 					data: { playerId: user, buildingIndex: buildingIndex },
 					roomId: roomId
 				}
-				
+
 				message.user = user
-			
+
 				socket.emit('message', message)
-			
+
 				gameMenu = {}
 			}
 		}
-		
+
 		else if (
 				gameMenu.isMenuOpen &&
 				bottom
 			) {
 				// select from the first level popup
 				var selectedBuildings = Object.keys(gameMenu.submenu ? gameMenu.submenu : defaultBuildings)
-				var type = selectedBuildings[menuXBlock]				
-				
+				var type = selectedBuildings[menuXBlock]
+
 				var message = selectFromPopup({
 					player: player,
 					side: side,
@@ -548,16 +547,16 @@ export function game(roomId) {
 					type: type,
 					horizontal: horizontal
 				})
-				
+
 				message.roomId = roomId
 				message.user = player.id
-		
+
 				socket.emit('message', message)
-		
+
 				gameMenu = {}
-				canvas.selection.clearRect(0, 0, w, h)			
+				canvas.selection.clearRect(0, 0, w, h)
 			}
-		
+
 		//build a first level popup
 		else if (
 				(
@@ -568,42 +567,42 @@ export function game(roomId) {
 				inBounds
 			||
 				options
-				
+
 			|| gameMenu.pattern
 		) {
 			canvas.selection.clearRect(0, 0, w, h)
-			
+
 			// make sure we're working with the current building
 			building = player.buildings[findBuildingIndex(player.buildings, { start: [xBlock * gm, yBlock * gm] })]
-			
+
 			if (!('pattern' in gameMenu) && options && !!building && !!building.level) {
 				var selectedBuildings = Object.keys(defaultOptions)
 				var type = selectedBuildings[menuXBlock]
 				var level = building.level
-				
+
 				options.sell = {}
 				options.sell.cost = level ? sellBackValue({ building: building }) : false
 				options.sell.level = level
-		
+
 				var repairCost = calculateRepairCost(building)
 				options.repair = {}
 				options.repair.cost = repairCost > 0
 					? repairCost
 					: false
-				
+
 				options.upgrade = {}
 				options.upgrade.cost = building.cost && level ? upgradeCost({ building: building }) : false
 				options.upgrade.level = building.level
 			}
-			
+
 			var buildings = !!options
 					? options
 					: defaultBuildings
-			
+
 			buildings = 'pattern' in gameMenu
 				? gameMenu.pattern
 				: buildings
-		
+
 			buildPopup({
 				canvas: canvas,
 				building: building,
@@ -620,10 +619,10 @@ export function game(roomId) {
 				w: w,
 				h: h
 			})
-			
+
 			gameMenu = { xBlock: xBlock, yBlock: yBlock, isMenuOpen: true, options: !!options ? options : null, buildingIndex: gameMenu.buildingIndex }
 		}
-		
+
 		else if (
 			(
 					dev
@@ -639,7 +638,7 @@ export function game(roomId) {
 		) {
 			socket.emit('message', { action: RESTART })
 		}
-		
+
 		// otherwise just clear the menu
 		else {
 			gameMenu = {}
@@ -657,7 +656,7 @@ export function game(roomId) {
 
 	function energy(player) {
 		if (!player) return
-		
+
 		for (var i = 0; i < player.buildings.length; i++) {
 			var building = player.buildings[i]
 
@@ -673,10 +672,10 @@ export function game(roomId) {
 		for (var key in players) {
 			document.getElementsByClassName('energy-' + players[key].side)[0].innerHTML = Math.floor(players[key].energy)
 		}
-		
+
 		displayProduction(players)
 	}
-	
+
 	function displayProduction(players) {
 		for (var key in players) {
 			var production = Math.floor(getProduction(players[key]))
@@ -686,10 +685,10 @@ export function game(roomId) {
 			}
 		}
 	}
-	
+
 	function getProduction(player) {
 		if (!player) return
-		
+
 		var production = 0
 		for (var i = 0; i < player.buildings.length; i++) {
 			var building = player.buildings[i]
@@ -705,7 +704,7 @@ export function game(roomId) {
 
 	function boundaries(o) {
 		var side = getSide(players, o.playerId)
-		
+
 		players[o.playerId].boundaries = createBoundaries({ side: side, buildings: players[o.playerId].buildings, width: horizontal, height: vertical, gm: gm })
 		if (client) drawBoundaries({ canvas: canvas.boundaries, boundaries: players[o.playerId].boundaries, width: w, height: h, blockWidth: blockWidth, blockHeight : blockHeight, gm: gm, side: side })
 	}
@@ -718,7 +717,7 @@ export function game(roomId) {
 
 	setInterval(function() {
 		time = (new Date).getTime()
-		
+
 		for (var p in players) players = resetElements(players, players[p])
 
 		for (var p in players) {
@@ -732,11 +731,11 @@ export function game(roomId) {
 		for (var p in players) {
 			players = elementCollision(players, p)
 			players = buildingCollision({ players: players, p: p })
-			
+
 			// find boundaries where the player would be able to build
 			if (client) boundaries({ playerId: p })
 		}
-		
+
 		if (client) {
 			refreshBuildings({
 				players: players,
@@ -792,7 +791,7 @@ export function game(roomId) {
 						socket: socket,
 						roomId: roomId
 					})
-					
+
 					socket.emit('message', { action: SET_ELEMENTS, data: { elements: elements, playerId: p }, roomId: roomId })
 					socket.emit('message', { action: SET_ENERGY, data: { playerId: p }, roomId: roomId })
 				}
