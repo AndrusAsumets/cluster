@@ -724,6 +724,7 @@ export function game(roomId) {
 			players = deepHit(players, players[p])
 			players = checkHealth(players, players[p])
 			players = resetProjectiles(players, players[p])
+			// move the timeline in the precalculated paths array
 			players = shiftPaths(players, players[p])
 		}
 
